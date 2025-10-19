@@ -1,29 +1,50 @@
-import React from "react";
+import React, { useState } from "react";
 import { BsCameraFill } from "react-icons/bs";
 import "./Navbar.css";
 
 const Navbar = ({ toggleCreatePost, toggleSearchUser, toggleClick }) => {
-  return (
-    <header className="app-header">
-      <h1>
-        <span className="Ti">
-          <img className="luminix-logo" src="./src/images/Luminix.jpg" alt="Luminix Logo" />
-        </span>
-        <span className="logo">Luminix</span>
-      </h1>
+  const [showMenu, setShowMenu] = useState(false);
 
-      <div className="action-buttons">
-        <button className="plus-button" onClick={toggleCreatePost}>
-          +
-        </button>
-        <button className="search-user-button" onClick={toggleSearchUser}>
-          🔍
-        </button>
-        <button className="camera-button" onClick={toggleClick}>
-          <BsCameraFill />
-        </button>
+  const handleLogoClick = () => {
+    setShowMenu(!showMenu);
+  };
+
+  const handleActionClick = (action) => {
+    action();
+    setShowMenu(false);
+  };
+
+  return (
+    <>
+      <div className="logo-button" onClick={handleLogoClick}>
+        <img className="luminix-logo" src="./src/images/Luminix.jpg" alt="Luminix Logo" />
       </div>
-    </header>
+
+      {showMenu && (
+        <div className="circular-menu">
+          <button 
+            className="menu-icon-btn search-btn" 
+            onClick={() => handleActionClick(toggleSearchUser)}
+          >
+            <span className="icon-wrapper">🔍</span>
+          </button>
+          
+          <button 
+            className="menu-icon-btn create-btn" 
+            onClick={() => handleActionClick(toggleCreatePost)}
+          >
+            <span className="icon-wrapper">+</span>
+          </button>
+          
+          <button 
+            className="menu-icon-btn camera-btn" 
+            onClick={() => handleActionClick(toggleClick)}
+          >
+            <span className="icon-wrapper"><BsCameraFill /></span>
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 
