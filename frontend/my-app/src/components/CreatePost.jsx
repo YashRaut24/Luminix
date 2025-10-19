@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "./Styles.css";
+import "./CreatePost.css";
 
 function CreatePost(props){
   const [file, setFile] = useState(null);
