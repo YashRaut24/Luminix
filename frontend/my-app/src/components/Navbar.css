@@ -1,100 +1,159 @@
-.app-header {
-  width: 100%;
-  background-color: #fff;
-  padding: 15px 20px;
-  text-align: center;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.logo-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.logo {
-  font-size: 36px;
-  font-weight: 800;
-  font-family: 'Orbitron', sans-serif;
-  background: linear-gradient(135deg, #8a2be2, #ff00ff, #00ffff);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-  letter-spacing: 2px;
-}
-
-.Ti {
-  font-size: 35px;
-  position: relative;
-  top: 5px;
-  right: 5px;
-  color: purple;
+.logo-button:hover {
+  transform: scale(1.1);
 }
 
 .luminix-logo {
-  height: 30px;
-  width: 30px;
-  border-radius: 30px;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.plus-button {
-  font-size: 2rem;
-  padding: 5px 15px;
-  background-color: #4caf50;
-  color: white;
+  height: 70px;
+  width: 70px;
   border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+.logo-button:hover .luminix-logo {
+  box-shadow: 0 6px 15px rgba(138, 43, 226, 0.4);
+}
+
+.circular-menu {
+  position: fixed;
+  top: 45px;
+  left: 45px;
+  z-index: 999;
+}
+
+.menu-icon-btn {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50% !important;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  opacity: 0;
+  overflow: hidden;
 }
 
-.plus-button:hover {
-  background-color: #388e3c;
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.search-user-button {
-  padding: 10px 15px;
-  font-size: 1rem;
-  background-color: #fffc37;
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #fff9c4, #ffeb3b) !important;
+  color: #333;
+  top: -25px;
+  left: 70px;
+  animation-delay: 0.05s;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.search-btn:hover {
+  background: linear-gradient(135deg, #ffeb3b, #fdd835) !important;
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(255, 235, 59, 0.6);
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #81c784, #4caf50);
   color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
+  font-size: 2.2rem;
+  font-weight: bold;
+  top: 45px;
+  left: 45px;
+  animation-delay: 0.1s;
 }
 
-.search-user-button:hover {
-  background-color: #97a500;
+.create-btn:hover {
+  background: linear-gradient(135deg, #4caf50, #388e3c);
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
 }
 
-.camera-button {
-  padding: 10px 15px;
-  font-size: 1rem;
-  background-color: #e91e63;
+.camera-btn {
+  background: linear-gradient(135deg, #f48fb1, #e91e63);
   color: white;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
+  top: 65px;
+  left: -25px;
+  animation-delay: 0.15s;
 }
 
-.camera-button:hover {
-  background-color: #c2185b;
+.camera-btn:hover {
+  background: linear-gradient(135deg, #e91e63, #c2185b);
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.6);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .app-header {
-    flex-direction: column;
-    gap: 15px;
+  .logo-button {
+    top: 15px;
+    left: 15px;
+  }
+
+  .luminix-logo {
+    height: 45px;
+    width: 45px;
   }
   
-  .logo {
-    font-size: 28px;
+  .circular-menu {
+    top: 40px;
+    left: 40px;
+  }
+
+  .menu-icon-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+
+  .create-btn {
+    font-size: 2rem;
+  }
+
+  .search-btn {
+    top: -35px;
+    left: 50px;
+    width: 45px !important;
+    height: 45px !important;
+  }
+
+  .create-btn {
+    top: 15px;
+    left: 45px;
+  }
+
+  .camera-btn {
+    top: 50px;
+    left: 0px;
   }
 }
