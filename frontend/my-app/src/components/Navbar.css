@@ -1,0 +1,100 @@
+.app-header {
+  width: 100%;
+  background-color: #fff;
+  padding: 15px 20px;
+  text-align: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 36px;
+  font-weight: 800;
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(135deg, #8a2be2, #ff00ff, #00ffff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  letter-spacing: 2px;
+}
+
+.Ti {
+  font-size: 35px;
+  position: relative;
+  top: 5px;
+  right: 5px;
+  color: purple;
+}
+
+.luminix-logo {
+  height: 30px;
+  width: 30px;
+  border-radius: 30px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.plus-button {
+  font-size: 2rem;
+  padding: 5px 15px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.plus-button:hover {
+  background-color: #388e3c;
+}
+
+.search-user-button {
+  padding: 10px 15px;
+  font-size: 1rem;
+  background-color: #fffc37;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+.search-user-button:hover {
+  background-color: #97a500;
+}
+
+.camera-button {
+  padding: 10px 15px;
+  font-size: 1rem;
+  background-color: #e91e63;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+.camera-button:hover {
+  background-color: #c2185b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .logo {
+    font-size: 28px;
+  }
+}
