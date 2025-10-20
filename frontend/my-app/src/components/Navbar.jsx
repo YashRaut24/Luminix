@@ -48,7 +48,12 @@ const Navbar = (props) => {
       )}
 
       <div>
-        <button className={props.mode? "dark-theme-toggle" : "theme-toggle"} onClick={props.changeTheme}>{props.mode?<MdDarkMode/>:<MdLightMode/>}</button>
+        <button 
+          className={props.mode ? "dark-theme-toggle" : "theme-toggle"} 
+          onClick={props.changeTheme}
+        >
+          {props.mode ? <MdLightMode /> : <MdDarkMode />}
+        </button>
       </div>
     </>
   );
