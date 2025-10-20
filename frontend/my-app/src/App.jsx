@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import Navbar from "./components/Navbar";
 import CreatePost from "./components/CreatePost";
 import ShowPost from "./components/ShowPost";
@@ -11,6 +11,22 @@ const App = () => {
   const [showSearchUser, setShowSearchUser] = useState(false);
   const [showClick, setShowClick] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  let [darkMode,setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
+
+  function changeTheme() {
+    localStorage.setItem("darkMode", !darkMode);
+    setDarkMode((prev)=>!prev);
+  }
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+      document.body.classList.remove("light-mode");
+    } else {
+      document.body.classList.add("light-mode");
+      document.body.classList.remove("dark-mode");
+    }
+  }, [darkMode]);
 
   const toggleCreatePost = () => setShowCreate((prev) => !prev);
   const refreshPosts = () => setRefreshTrigger((prev) => prev + 1);
@@ -21,17 +37,19 @@ const App = () => {
   return (
     <div className="app-container">
       <Navbar 
+        mode={darkMode}
+        changeTheme={changeTheme}
         toggleCreatePost={toggleCreatePost}
         toggleSearchUser={toggleSearchUser}
         toggleClick={toggleClick}
       />
 
       <main>
-        {showCreate && <CreatePost setRefreshTrigger={setRefreshTrigger} />}
-        {showSearchUser && <SearchUser />}
-        {showClick && <Click onClose={toggleClick} onUpload={refreshPosts} />}
+        {showCreate && <CreatePost mode = {darkMode} setRefreshTrigger={setRefreshTrigger} />}
+        {showSearchUser && <SearchUser mode = {darkMode}/>}
+        {showClick && <Click mode = {darkMode} onClose={toggleClick} onUpload={refreshPosts} />}
 
-        <ShowPost refreshTrigger={refreshTrigger} />
+        <ShowPost mode = {darkMode} refreshTrigger={refreshTrigger} />
       </main>
     </div>
   );
