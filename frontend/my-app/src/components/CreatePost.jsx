@@ -7,15 +7,22 @@ function CreatePost(props){
   const [username, setUsername] = useState("");
   const [caption, setCaption] = useState("");
   const [message, setMessage] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [target, setTarget] = useState("public");
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const generatedURL = URL.createObjectURL(selectedFile);
+      setPreview(generatedURL);
+    }
   };
 
   return (
-    <div className="create-post-container">
+    <div className={props.mode ? "dark-create-post-container" : "create-post-container"}>
       <h2>Create a New Post</h2>
-      <form onSubmit={()=>{alert("handleSubmit")}} className="upload-form">
+      <form onSubmit={(e) => { e.preventDefault(); alert("handleSubmit"); }} className="upload-form">
         <input
           type="text"
           placeholder="Username"
@@ -33,14 +40,44 @@ function CreatePost(props){
 
         <input
           type="file"
+          accept="image/*"
           onChange={handleFileChange}
           className="file-input"
         />
+
+        <select
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          className="audience-select"
+        >
+          <option value="public">🌍 Public</option>
+          <option value="followers">👥 Followers</option>
+          <option value="close-friends">💚 Close Friends</option>
+          <option value="private">🔒 Private</option>
+        </select>
+
+
+        {preview && (
+          <div className="preview-section">
+            <img src={preview} alt="preview" className="preview-img" />
+            <button 
+              type="button" 
+              onClick={() => { 
+                setFile(null); 
+                setPreview(null);
+                document.querySelector('.file-input').value = '';
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        )}
 
         <button type="submit" className="upload-button">
           Upload
         </button>
       </form>
+
       {message && <p className="message">{message}</p>}
     </div>
   );
