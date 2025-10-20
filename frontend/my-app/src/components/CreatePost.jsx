@@ -9,6 +9,8 @@ function CreatePost(props){
   const [message, setMessage] = useState("");
   const [preview, setPreview] = useState(null);
   const [target, setTarget] = useState("public");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState([]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -56,7 +58,6 @@ function CreatePost(props){
           <option value="private">🔒 Private</option>
         </select>
 
-
         {preview && (
           <div className="preview-section">
             <img src={preview} alt="preview" className="preview-img" />
@@ -72,6 +73,42 @@ function CreatePost(props){
             </button>
           </div>
         )}
+        <input
+          type="text"
+          placeholder="Add tags (press Enter)"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const value = tagInput.trim().replace(/^#/, "");
+              if (value && !tags.includes(value)) {
+                setTags([...tags, value]);
+                setTagInput("");
+              }
+            }
+          }}
+          className="tag-input"
+        />
+        <div className="tag-section">
+
+        <div className="tag-list">
+          {tags.map((tag, index) => (
+            <span key={index} className="tag-chip">
+              #{tag}
+              <button
+                type="button"
+                className="remove-tag"
+                onClick={() =>
+                  setTags(tags.filter((t) => t !== tag))
+                }
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
 
         <button type="submit" className="upload-button">
           Upload
