@@ -157,3 +157,33 @@
     left: 0px;
   }
 }
+
+.theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 30px;
+  transition: color 0.3s ease;
+  margin-left: 1490px;
+  margin-top:15px;
+}
+
+.theme-toggle:hover {
+  color: #000;
+}
+
+.dark-theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 30px;
+  transition: color 0.3s ease;
+  margin-left: 1490px;
+  margin-top:15px;
+}
+
+.dark-theme-toggle:hover {
+  color: #fff;
+}
