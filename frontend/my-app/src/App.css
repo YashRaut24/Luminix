@@ -6,7 +6,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #f0f2f5;
+  background-color: rgb(0, 0, 59);
   color: #333;
 }
 
@@ -15,66 +15,8 @@ main {
   flex-direction: column;
   gap: 30px;
   align-items: center;
-  padding: 20px;
-}
-
-.create-post-container {
-  width: 100%;
-  max-width: 600px;
-  background-color: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.create-post-container h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.upload-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.file-input,
-.text-input,
-.caption-input {
-  width: 100%;
-  max-width: 300px;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-.caption-input {
-  resize: vertical;
-  height: 80px;
-}
-
-.upload-button {
-  padding: 10px 20px;
-  background-color: #0095f6;
-  border: none;
-  color: white;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.upload-button:hover {
-  background-color: #007bb5;
-}
-
-.message {
-  text-align: center;
-  margin-top: 15px;
-  color: #007bb5;
+  position: relative;
+  z-index: 1;
 }
 
 .show-posts-container {
@@ -95,7 +37,7 @@ main {
 .post-card {
   background-color: white;
   border-radius: 10px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   transition: transform 0.2s ease;
   display: inline-block;
@@ -194,4 +136,123 @@ main {
   padding: 3px;
   position: relative;
   right: 3px;
+}
+
+/* App Container - Light Mode */
+.app-container {
+  background: linear-gradient(180deg, #f8f9fa 0%, #e8ecf0 100%);
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  color: #1e293b;
+}
+
+/* Subtle purple glow effect for light mode */
+.app-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* App Container - Dark Mode */
+.dark-app-container {
+  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  color: #f1f5f9;
+}
+
+/* Glowing effect for dark mode matching the logo */
+.dark-app-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 400px;
+  background: radial-gradient(
+    ellipse at top,
+    rgba(139, 92, 246, 0.15),
+    rgba(236, 72, 153, 0.08) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Sparkle effect for dark mode */
+.dark-app-container::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: sparkle 8s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Light Mode Scrollbar */
+.app-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.app-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.app-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6, #ec4899);
+  border-radius: 5px;
+}
+
+.app-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #7c3aed, #db2777);
+}
+
+/* Dark Mode Scrollbar */
+.dark-app-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark-app-container::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.dark-app-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a78bfa, #f472b6);
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+}
+
+.dark-app-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #8b5cf6, #ec4899);
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+}
+
+/* Smooth transitions */
+.app-container,
+.dark-app-container {
+  transition: background 0.5s ease;
 }
