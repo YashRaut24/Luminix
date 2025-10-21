@@ -35,7 +35,7 @@ const App = () => {
   
 
   return (
-    <div className="app-container">
+    <div className={darkMode? "dark-app-container" : "app-container"}>
       <Navbar 
         mode={darkMode}
         changeTheme={changeTheme}
