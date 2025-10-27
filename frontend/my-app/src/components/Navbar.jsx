@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { BsCameraFill } from "react-icons/bs";
 import { MdDarkMode } from "react-icons/md";
 import { MdLightMode } from "react-icons/md";
+import { CgProfile } from "react-icons/cg";
+
 import "./Navbar.css";
 
 const Navbar = (props) => {
@@ -47,14 +49,18 @@ const Navbar = (props) => {
         </div>
       )}
 
-      <div>
-        <button 
-          className={props.mode ? "dark-theme-toggle" : "theme-toggle"} 
-          onClick={props.changeTheme}
-        >
-          {props.mode ? <MdLightMode /> : <MdDarkMode />}
-        </button>
-      </div>
+      <button 
+        className={props.mode ? "dark-mode-profile" : "profile"}  
+        onClick={props.toggleProfile}
+      >
+        <CgProfile />
+      </button>
+      <button 
+        className={props.mode ? "dark-theme-toggle" : "theme-toggle"} 
+        onClick={props.changeTheme}
+      >
+        {props.mode ? <MdLightMode /> : <MdDarkMode />}
+      </button>
     </>
   );
 };
