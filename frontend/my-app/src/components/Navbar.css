@@ -158,15 +158,21 @@
   }
 }
 
-.theme-toggle {
+.theme-toggle,
+.dark-theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #555;
   font-size: 30px;
-  transition: color 0.3s ease;
-  margin-left: 1490px;
-  margin-top:15px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.theme-toggle {
+  color: #555;
 }
 
 .theme-toggle:hover {
@@ -174,16 +180,56 @@
 }
 
 .dark-theme-toggle {
-  background: transparent;
-  border: none;
-  cursor: pointer;
   color: #ccc;
-  font-size: 30px;
-  transition: color 0.3s ease;
-  margin-left: 1490px;
-  margin-top:15px;
 }
 
 .dark-theme-toggle:hover {
   color: #fff;
+}
+
+@media (max-width: 768px) {
+  .theme-toggle,
+  .dark-theme-toggle {
+    top: 25px;
+    right: 15px;
+    font-size: 26px;
+  }
+}
+
+.profile,
+.dark-mode-profile {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 70px;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.profile {
+  color: #555;
+}
+
+.profile:hover {
+  color: #000;
+}
+
+.dark-mode-profile {
+  color: #ccc;
+}
+
+.dark-mode-profile:hover {
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .profile,
+  .dark-mode-profile {
+    top: 15px;
+    right: 15px;
+    font-size: 26px;
+  }
 }
