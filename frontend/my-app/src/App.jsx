@@ -6,8 +6,10 @@ import SearchUser from "./components/SearchUser";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
 import "./App.css";
+import LandingPage from "../pages/LandingPage";
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showSearchUser, setShowSearchUser] = useState(false);
   const [showClick, setShowClick] = useState(false);
@@ -35,6 +37,14 @@ const App = () => {
   const toggleSearchUser = () => setShowSearchUser((prev) => !prev);
   const toggleClick = () => setShowClick((prev) => !prev);
   const toggleProfile = () => setShowProfile((prev) => !prev);
+
+  const handleGetStarted = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthenticated) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
 
   return (
     <div className={darkMode ? "dark-app-container" : "app-container"}>
