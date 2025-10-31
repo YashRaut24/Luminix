@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { BsCameraFill } from "react-icons/bs";
 import { MdDarkMode } from "react-icons/md";
 import { MdLightMode } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
@@ -41,10 +40,10 @@ const Navbar = (props) => {
           </button>
           
           <button 
-            className="menu-icon-btn camera-btn" 
+            className="menu-icon-btn camera-btns" 
             onClick={() => handleActionClick(props.toggleClick)}
           >
-            <span className="icon-wrapper"><BsCameraFill /></span>
+            <span className="icon-wrapper">📷</span>
           </button>
         </div>
       )}
