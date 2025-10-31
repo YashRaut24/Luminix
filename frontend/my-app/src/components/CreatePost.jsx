@@ -96,7 +96,6 @@ function CreatePost(props){
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-grid">
           
-          {/* LEFT COLUMN - Post Details */}
           <div className="form-column left-column">
             <div className="form-section">
               <label className="form-label">Username</label>
@@ -175,7 +174,6 @@ function CreatePost(props){
             </div>
           </div>
 
-          {/* RIGHT COLUMN - Media Upload */}
           <div className="form-column right-column">
             <div className="upload-section">
               <label className="form-label">Upload Image</label>
@@ -209,7 +207,6 @@ function CreatePost(props){
               )}
             </div>
 
-            {/* Progress Section */}
             {(isUploading || uploadComplete) && (
               <div className="progress-wrapper">
                 {isUploading && (
@@ -229,7 +226,6 @@ function CreatePost(props){
               </div>
             )}
 
-            {/* Submit Button */}
             <button 
               type="submit" 
               className="submit-btn" 
