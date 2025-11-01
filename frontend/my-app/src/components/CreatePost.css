@@ -1,7 +1,8 @@
-.create-post-container {
+.create-post-container,
+.dark-create-post-container {
   width: 100%;
   max-width: 1100px !important;
-  margin-top: 40px !important;
+  margin-top: 25px !important;
   background: #ffffff !important;
   padding: 40px !important;
   border-radius: 20px !important;
@@ -11,16 +12,9 @@
 }
 
 .dark-create-post-container {
-  width: 100%;
-  max-width: 1100px !important;
-  margin-top:40px;
   background: linear-gradient(145deg, #1e293b, #0f172a) !important;
-  padding: 40px !important;
-  border-radius: 20px !important;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;
-  animation: slideIn 0.4s ease-out;
-  box-sizing: border-box !important;
 }
 
 @keyframes slideIn {
