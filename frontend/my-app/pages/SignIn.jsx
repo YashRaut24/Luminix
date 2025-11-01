@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
 import "./SignIn.css";
+import axios from "axios";
 
 function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -21,17 +21,17 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
-    
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -39,59 +39,57 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSuccess && onSuccess();
+      axios.post("http://localhost:9000/signin", formData)
+        .then(() => {
+          alert("Signed in successfully!");
+          onSuccess && onSuccess();
+        })
+        .catch(() => {
+          alert("Invalid email or password!");
+        });
     }
   };
 
   return (
-    <div className="auth-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="auth-close-btn" onClick={onClose}>✕</button>
-        
-        <div className="auth-header">
+    <div className="signin-container" onClick={onClose}>
+      <div className="signin-page" onClick={(e) => e.stopPropagation()}>
+        <button className="close-button" onClick={onClose}>✕</button>
+
+        <div className="signin-header">
           <h2>Welcome Back</h2>
           <p>Sign in to continue to Luminix</p>
         </div>
 
-        <button className="google-btn">
-          <FcGoogle />
-          <span>Continue with Google</span>
-        </button>
-
-        <div className="divider">
-          <span>or</span>
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
+        <form onSubmit={handleSubmit} className="signin-form">
+          <div className="signin-form-containers">
             <label>Email</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdEmail className="input-icon" />
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                className={errors.email ? 'error' : ''}
+                onChange={(e) => handleChange("email", e.target.value)}
+                className={errors.email ? "error" : ""}
               />
             </div>
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
-          <div className="form-group">
+          <div className="signin-form-containers">
             <label>Password</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={formData.password}
-                onChange={(e) => handleChange('password', e.target.value)}
-                className={errors.password ? 'error' : ''}
+                onChange={(e) => handleChange("password", e.target.value)}
+                className={errors.password ? "error" : ""}
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="show-password-buttons"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
@@ -109,18 +107,14 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
               />
               <span>Remember me</span>
             </label>
-            <button type="button" className="forgot-password">
-              Forgot Password?
-            </button>
+            <button type="button" className="forgot-password">Forgot Password?</button>
           </div>
 
-          <button type="submit" className="submit-btn">
-            Sign In
-          </button>
+          <button type="submit" className="submit-button">Sign In</button>
         </form>
 
-        <div className="auth-footer">
-          <p>Don't have an account? <button onClick={onSwitchToSignUp}>Sign Up</button></p>
+        <div className="signin-footer">
+          <p>Don’t have an account? <button onClick={onSwitchToSignUp}>Sign Up</button></p>
         </div>
       </div>
     </div>
