@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { MdEmail, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import "./SignUp.css";
+import axios from "axios";
 
 function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -51,35 +52,39 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) {
+  e.preventDefault();
+
+  if (validate()) {
+    axios.post("http://localhost:9000/signup", {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password
+    })
+    .then(() => {
+      alert("Account created successfully!");
       onSuccess && onSuccess();
-    }
-  };
+      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+    })
+    .catch(() => {
+      alert("Error while signing up!");
+    });
+  }
+};
 
   return (
-    <div className="auth-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="auth-close-btn" onClick={onClose}>✕</button>
+    <div className="signup-container" onClick={onClose}>
+      <div className="signup-page" onClick={(e) => e.stopPropagation()}>
+        <button className="close-button" onClick={onClose}>✕</button>
         
-        <div className="auth-header">
+        <div className="signup-header">
           <h2>Create Account</h2>
           <p>Join Luminix and start sharing your moments</p>
         </div>
 
-        <button className="google-btn">
-          <FcGoogle />
-          <span>Continue with Google</span>
-        </button>
-
-        <div className="divider">
-          <span>or</span>
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
+        <form onSubmit={handleSubmit} className="signup-form">
+          <div className="signup-form-containers">
             <label>Full Name</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdPerson className="input-icon" />
               <input
                 type="text"
@@ -92,9 +97,9 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
             {errors.name && <span className="error-text">{errors.name}</span>}
           </div>
 
-          <div className="form-group">
+          <div className="signup-form-containers">
             <label>Email</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdEmail className="input-icon" />
               <input
                 type="email"
@@ -107,9 +112,9 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
-          <div className="form-group">
+          <div className="signup-form-containers">
             <label>Password</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showPassword ? "text" : "password"}
@@ -120,7 +125,7 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="show-password-buttons"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
@@ -129,9 +134,9 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
             {errors.password && <span className="error-text">{errors.password}</span>}
           </div>
 
-          <div className="form-group">
+          <div className="signup-form-containers">
             <label>Confirm Password</label>
-            <div className="input-wrapper">
+            <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -142,7 +147,7 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className="show-password-buttons"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
@@ -151,12 +156,12 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
             {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
           </div>
 
-          <button type="submit" className="submit-btn">
+          <button type="submit" className="submit-button">
             Create Account
           </button>
         </form>
 
-        <div className="auth-footer">
+        <div className="signup-footer">
           <p>Already have an account? <button onClick={onSwitchToSignIn}>Sign In</button></p>
         </div>
       </div>
