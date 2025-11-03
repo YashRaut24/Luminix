@@ -33,7 +33,7 @@ function CreatePost(props){
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file) {
+      if (!file || !username.trim() || !caption.trim() || !target.trim()) {
       setMessage("Please select a file before uploading.");
       return;
     }
@@ -49,7 +49,7 @@ function CreatePost(props){
       setIsUploading(true);
       setUploadProgress(0);
 
-      await axios.post("/api/posts", formData, {
+      await axios.post("http://localhost:9000/post", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
           if (!progressEvent.total) return;
@@ -59,7 +59,7 @@ function CreatePost(props){
           setUploadProgress(percent);
         },
       });
-
+ 
       setMessage("Uploaded Successfully!");
       setUploadProgress(100);
       setUploadComplete(true);
