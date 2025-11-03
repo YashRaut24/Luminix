@@ -2,20 +2,20 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./ShowPost.css";
 
-function ShowPost(props){
+function ShowPost(props) {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
     fetchFiles();
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchFiles();
-  },[props.refreshTrigger]);
+  }, [props.refreshTrigger]);
 
   const fetchFiles = () => {
     axios
-      .get("http://localhost:3000/files")
+      .get("http://localhost:9000/files")
       .then((response) => {
         setFiles(response.data);
       })
@@ -26,7 +26,7 @@ function ShowPost(props){
 
   const handleDelete = (id) => {
     axios
-      .delete(`http://localhost:3000/delete/${id}`)
+      .delete(`http://localhost:9000/delete/${id}`)
       .then(() => {
         fetchFiles();
       })
@@ -37,15 +37,22 @@ function ShowPost(props){
 
   const formatTime = (time) => {
     const date = new Date(time);
-    return date.toLocaleString(); 
+    return date.toLocaleString();
   };
 
   return (
-    <div className="show-posts-container">
+    <div className={props.mode ? "dark-show-posts-container" : "show-posts-container"}>
       <h2>Your Feed</h2>
       <div className="posts-grid">
         {files.map((file) => (
           <div key={file._id} className="post-card">
+            <div className="post-header">
+              <h4>{file.username}</h4>
+              <span className="post-audience">
+                {file.target === "public" ? "🌍 Public" : "🔒 Private"}
+              </span>
+            </div>
+
             <div className="post-image-container">
               <img
                 src={file.file_url}
@@ -53,9 +60,22 @@ function ShowPost(props){
                 className="post-image"
               />
             </div>
+
             <div className="post-footer">
               <p className="post-caption">{file.caption}</p>
+
+              {file.tags && file.tags.length > 0 && (
+                <div className="post-tags">
+                  {file.tags.map((tag, index) => (
+                    <span key={index} className="tag-chip">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <p className="post-time">{formatTime(file.upload_time)}</p>
+
               <button
                 className="delete-button"
                 onClick={() => handleDelete(file._id)}
@@ -68,6 +88,6 @@ function ShowPost(props){
       </div>
     </div>
   );
-};
+}
 
 export default ShowPost;
