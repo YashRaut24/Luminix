@@ -7,7 +7,7 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
   const [formData, setFormData] = useState({
     email: "",
     password: ""
-  });
+  }); 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [rememberMe, setRememberMe] = useState(false);
@@ -40,9 +40,11 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
     e.preventDefault();
     if (validate()) {
       axios.post("http://localhost:9000/signin", formData)
-        .then(() => {
+        .then((response) => {
           alert("Signed in successfully!");
-          onSuccess && onSuccess();
+          if (onSuccess && response.data.user) {
+            onSuccess(response.data.user);
+          }
         })
         .catch(() => {
           alert("Invalid email or password!");
@@ -114,7 +116,7 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
         </form>
 
         <div className="signin-footer">
-          <p>Don’t have an account? <button onClick={onSwitchToSignUp}>Sign Up</button></p>
+          <p>Don't have an account? <button onClick={onSwitchToSignUp}>Sign Up</button></p>
         </div>
       </div>
     </div>
