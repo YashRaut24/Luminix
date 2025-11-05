@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { MdEmail, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
 import "./SignUp.css";
 import axios from "axios";
 
@@ -52,24 +51,33 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
   };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (validate()) {
-    axios.post("http://localhost:9000/signup", {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password
-    })
-    .then(() => {
-      alert("Account created successfully!");
-      onSuccess && onSuccess();
-      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
-    })
-    .catch(() => {
-      alert("Error while signing up!");
-    });
-  }
-};
+    if (validate()) {
+      axios.post("http://localhost:9000/signup", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      })
+      .then((response) => {
+        alert("Account created successfully!");
+        if (onSuccess) {
+          onSuccess({
+            name: formData.name,
+            email: formData.email
+          });
+        }
+        setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+      })
+      .catch((error) => {
+        if (error.response?.data?.error) {
+          alert(error.response.data.error);
+        } else {
+          alert("Error while signing up!");
+        }
+      });
+    }
+  };
 
   return (
     <div className="signup-container" onClick={onClose}>
