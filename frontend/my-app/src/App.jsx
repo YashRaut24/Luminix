@@ -5,17 +5,18 @@ import ShowPost from "./components/ShowPost";
 import SearchUser from "./components/SearchUser";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
-import "./App.css";
 import LandingPage from "../pages/LandingPage";
+import "./App.css";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showSearchUser, setShowSearchUser] = useState(false);
   const [showClick, setShowClick] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  let [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
 
   function changeTheme() {
     localStorage.setItem("darkMode", !darkMode);
@@ -23,14 +24,35 @@ const App = () => {
   }
 
   useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add("dark-mode");
-      document.body.classList.remove("light-mode");
-    } else {
-      document.body.classList.add("light-mode");
-      document.body.classList.remove("dark-mode");
-    }
+    document.body.classList.toggle("dark-mode", darkMode);
+    document.body.classList.toggle("light-mode", !darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("userData");
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUserData(parsedUser);
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.error("Error parsing saved user data:", err);
+        localStorage.removeItem("userData");
+      }
+    }
+  }, []);
+
+  const handleAuthSuccess = (user) => {
+    setUserData(user);
+    setIsAuthenticated(true);
+    localStorage.setItem("userData", JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUserData(null);
+    localStorage.removeItem("userData");
+  };
 
   const toggleCreatePost = () => setShowCreate((prev) => !prev);
   const refreshPosts = () => setRefreshTrigger((prev) => prev + 1);
@@ -38,31 +60,28 @@ const App = () => {
   const toggleClick = () => setShowClick((prev) => !prev);
   const toggleProfile = () => setShowProfile((prev) => !prev);
 
-  const handleGetStarted = () => {
-    setIsAuthenticated(true);
-  };
-
   if (!isAuthenticated) {
-    return <LandingPage onGetStarted={handleGetStarted} />;
+    return <LandingPage onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
     <div className={darkMode ? "dark-app-container" : "app-container"}>
-      <Navbar 
+      <Navbar
         mode={darkMode}
         changeTheme={changeTheme}
         toggleCreatePost={toggleCreatePost}
         toggleSearchUser={toggleSearchUser}
         toggleClick={toggleClick}
         toggleProfile={toggleProfile}
+        onLogout={handleLogout}
+        user={userData}
       />
 
       <main>
-        {showCreate && <CreatePost mode={darkMode} setRefreshTrigger={setRefreshTrigger} />}
+        {showCreate && <CreatePost mode={darkMode} setRefreshTrigger={setRefreshTrigger} user={userData} />}
         {showSearchUser && <SearchUser mode={darkMode} />}
         {showClick && <Click mode={darkMode} onClose={toggleClick} onUpload={refreshPosts} />}
-        {showProfile && <Profile mode={darkMode} onClose={toggleProfile} />}
-
+        {showProfile && <Profile mode={darkMode} onClose={toggleProfile} user={userData} />}
         <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} />
       </main>
     </div>
