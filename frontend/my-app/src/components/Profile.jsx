@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CgProfile } from "react-icons/cg";
 import { BsCameraFill, BsTrophy, BsFire } from "react-icons/bs";
 import { MdVerified, MdEdit, MdSettings } from "react-icons/md";
@@ -6,16 +6,16 @@ import { AiOutlineHeart, AiOutlineStar } from "react-icons/ai";
 import { FiTrendingUp, FiMail, FiMapPin, FiCalendar } from "react-icons/fi";
 import "./Profile.css";
 
-function Profile({ mode, onClose }) {
+function Profile({ mode, onClose, user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [moodStatus, setMoodStatus] = useState("😊");
   const [activeTab, setActiveTab] = useState("all");
   
   const [profile, setProfile] = useState({
-    name: "Alex Johnson",
-    handle: "@alexcreates",
+    name: user?.name || "User",
+    handle: `@${user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
     bio: "Digital artist & photographer 📸 | Capturing moments ✨ | #Creative #Photography",
-    email: "alex.creates@luminix.com",
+    email: user?.email || "user@luminix.com",
     location: "San Francisco, CA",
     joinDate: "January 2024",
     profilePic: "https://via.placeholder.com/150",
@@ -26,6 +26,23 @@ function Profile({ mode, onClose }) {
   });
 
   const [editedProfile, setEditedProfile] = useState(profile);
+
+  useEffect(() => {
+    if (user) {
+      setProfile(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        handle: `@${user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`
+      }));
+      setEditedProfile(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        handle: `@${user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`
+      }));
+    }
+  }, [user]);
 
   const stats = {
     inspiringPosts: 23,
