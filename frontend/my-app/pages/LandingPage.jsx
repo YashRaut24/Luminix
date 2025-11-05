@@ -7,9 +7,17 @@ import SignUp from "./SignUp";
 import SignIn from "./SignIn";
 import "./LandingPage.css";
 
-function LandingPage({ onGetStarted }) {
+function LandingPage({ onAuthSuccess }) {
   const [showSignUp, setShowSignUp] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+
+  const handleSuccess = (userData) => {
+    setShowSignUp(false);
+    setShowSignIn(false);
+    if (onAuthSuccess) {
+      onAuthSuccess(userData);
+    }
+  };
 
   const features = [
     {
@@ -219,8 +227,26 @@ function LandingPage({ onGetStarted }) {
         </div>
       </footer>
 
-      {showSignUp && <SignUp onClose={() => setShowSignUp(false)} onSwitchToSignIn={() => { setShowSignUp(false); setShowSignIn(true); }} onSuccess={onGetStarted} />}
-      {showSignIn && <SignIn onClose={() => setShowSignIn(false)} onSwitchToSignUp={() => { setShowSignIn(false); setShowSignUp(true); }} onSuccess={onGetStarted} />}
+      {showSignUp && (
+        <SignUp 
+          onClose={() => setShowSignUp(false)} 
+          onSwitchToSignIn={() => { 
+            setShowSignUp(false); 
+            setShowSignIn(true); 
+          }} 
+          onSuccess={handleSuccess} 
+        />
+      )}
+      {showSignIn && (
+        <SignIn 
+          onClose={() => setShowSignIn(false)} 
+          onSwitchToSignUp={() => { 
+            setShowSignIn(false); 
+            setShowSignUp(true); 
+          }} 
+          onSuccess={handleSuccess} 
+        />
+      )}
     </div>
   );
 }
