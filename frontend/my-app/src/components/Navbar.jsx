@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { MdDarkMode } from "react-icons/md";
 import { MdLightMode } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
+import { IoMdLogOut } from "react-icons/io";
+import LandingPage from "../../pages/LandingPage";
 
 import "./Navbar.css";
 
@@ -16,6 +18,12 @@ const Navbar = (props) => {
     action();
     setShowMenu(false); 
   };
+
+   const logout = () => {
+  props.onLogout(); 
+  };
+
+
 
   return (
     <>
@@ -60,8 +68,12 @@ const Navbar = (props) => {
       >
         {props.mode ? <MdLightMode /> : <MdDarkMode />}
       </button>
+
+      <button className={props.mode? "dark-logout" : "logout"} onClick={logout}>
+        <IoMdLogOut />
+      </button>
     </>
   );
 };
-
+ 
 export default Navbar;
