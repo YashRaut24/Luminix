@@ -4,7 +4,7 @@ import "./ShowPost.css";
 
 function ShowPost(props) {
   const [files, setFiles] = useState([]);
-
+  const[displayEdit,setDisplayEdit] = useState(false);
   useEffect(() => {
     fetchFiles();
   }, []);
@@ -13,16 +13,21 @@ function ShowPost(props) {
     fetchFiles();
   }, [props.refreshTrigger]);
 
-  const fetchFiles = () => {
-    axios
-      .get("http://localhost:9000/files")
-      .then((response) => {
-        setFiles(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching files", error);
-      });
-  };
+ const fetchFiles = () => {
+  if (!props.user?.email) return; 
+
+  axios
+    .get("http://localhost:9000/files", {
+      params: { email: props.user.email },
+    })
+    .then((response) => {
+      setFiles(response.data);
+    })
+    .catch((error) => {
+      console.error("Error fetching files", error);
+    });
+};
+
 
   const handleDelete = (id) => {
     axios
@@ -76,12 +81,23 @@ function ShowPost(props) {
 
               <p className="post-time">{formatTime(file.upload_time)}</p>
 
-              <button
-                className="delete-button"
-                onClick={() => handleDelete(file._id)}
-              >
-                Delete
-              </button>
+              {file.email === props.user?.email && (
+                <button
+                  className="delete-button"
+                  onClick={() => handleDelete(file._id)}
+                >
+                  Delete
+                </button>   
+              )}
+
+              {file.email === props.user?.email && (
+                <button
+                  className="edit-button"
+                >
+                  Edit
+                </button>   
+              )}
+
             </div>
           </div>
         ))}
