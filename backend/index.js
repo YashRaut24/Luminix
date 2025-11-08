@@ -86,6 +86,7 @@ app.post("/post", upload.single("image"), async (req, res) => {
 
     let newPost = {
       username: req.body.username,
+      email: req.body.email,
       caption: req.body.caption,
       target: req.body.target,
       tags: parsedTags,
@@ -104,20 +105,31 @@ app.post("/post", upload.single("image"), async (req, res) => {
 });
 
 app.get("/files", async (req, res) => {
+  const email = req.query.email; 
   try {
     let client = new MongoClient(url);
     await client.connect();
     let db = client.db("luminix");
     let posts = db.collection("posts");
 
-    let allPosts = await posts.find().sort({ upload_time: -1 }).toArray();
-    res.send(allPosts);
+    const files = await posts
+      .find({
+        $or: [
+          { target: "public" },
+          { target: "private", email: email },
+        ],
+      })
+      .toArray();
+
+    res.json(files);
     await client.close();
-  } catch (error) {
-    console.error("Fetch error:", error);
-    res.status(500).send({ error: "Failed to fetch posts" });
+  } catch (err) {
+    console.error("Error fetching files:", err);
+    res.status(500).json({ message: "Error fetching files" });
   }
 });
+
+
 
 app.delete("/delete/:id", async (req, res) => {
   try {
@@ -141,4 +153,4 @@ app.delete("/delete/:id", async (req, res) => {
   }
 });
 
-app.listen(9000, () => console.log("✅ Server running on port 9000"));
+app.listen(9000, () => console.log("Server running on port 9000"));
