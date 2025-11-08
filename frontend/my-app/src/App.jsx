@@ -82,7 +82,7 @@ const App = () => {
         {showSearchUser && <SearchUser mode={darkMode} />}
         {showClick && <Click mode={darkMode} onClose={toggleClick} onUpload={refreshPosts} />}
         {showProfile && <Profile mode={darkMode} onClose={toggleProfile} user={userData} />}
-        <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} />
+        <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} user={userData} />
       </main>
     </div>
   );
