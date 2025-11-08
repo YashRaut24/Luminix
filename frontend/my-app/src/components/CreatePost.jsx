@@ -40,6 +40,7 @@ function CreatePost(props){
 
     const formData = new FormData();
     formData.append("username", username);
+    formData.append("email", props.user?.email);
     formData.append("caption", caption);
     formData.append("target", target);
     formData.append("tags", JSON.stringify(tags));
