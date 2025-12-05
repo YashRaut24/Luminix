@@ -19,19 +19,16 @@ main {
   z-index: 1;
 }
 
-.show-posts-container {
+/* .show-posts-container {
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto 50px;
-  padding: 20px;
   text-align: center;
-}
+} */
 
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  padding: 20px;
 }
 
 .post-card {
@@ -109,7 +106,7 @@ main {
 .app-container {
   background: #f1f5f9;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
   color: #1e293b;
 }
@@ -117,7 +114,7 @@ main {
 .dark-app-container {
   background: #0f172a;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
   color: #f1f5f9;
 }
