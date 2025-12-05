@@ -17,6 +17,7 @@ const App = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
+  const [feedHeading, setFeedHeading] = useState("");
 
   function changeTheme() {
     localStorage.setItem("darkMode", !darkMode);
@@ -75,6 +76,7 @@ const App = () => {
         toggleProfile={toggleProfile}
         onLogout={handleLogout}
         user={userData}
+        setFeedHeading={setFeedHeading} 
       />
 
       <main>
@@ -82,7 +84,7 @@ const App = () => {
         {showSearchUser && <SearchUser mode={darkMode} />}
         {showClick && <Click mode={darkMode} onClose={toggleClick} onUpload={refreshPosts} />}
         {showProfile && <Profile mode={darkMode} onClose={toggleProfile} user={userData} />}
-        <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} user={userData} />
+        <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} user={userData} feedHeading={feedHeading} />
       </main>
     </div>
   );
