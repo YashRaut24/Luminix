@@ -44,65 +44,76 @@ function ShowPost(props) {
     const date = new Date(time);
     return date.toLocaleString();
   };
-
+ 
   return (
     <div className={props.mode ? "dark-show-posts-container" : "show-posts-container"}>
-      <h2>Your Feed</h2>
-      <div className="posts-grid">
-        {files.map((file) => (
-          <div key={file._id} className="post-card">
-            <div className="post-header">
-              <h4>{file.username}</h4>
-              <span className="post-audience">
-                {file.target === "public" ? "🌍 Public" : "🔒 Private"}
-              </span>
+      <div className={props.mode ? "dark-show-posts-wrapper" : "show-posts-wrapper"}></div>
+          <h2>
+            <div className="h2-content">
+              {(props.feedHeading || "").split("").map((char, idx) =>
+                char === " "
+                  ? <span key={idx} className="space"></span>
+                  : <span key={idx}>{char}</span>
+              )}
+
             </div>
+          </h2>
 
-            <div className="post-image-container">
-              <img
-                src={file.file_url}
-                alt={file.file_name}
-                className="post-image"
-              />
-            </div>
-
-            <div className="post-footer">
-              <p className="post-caption">{file.caption}</p>
-
-              {file.tags && file.tags.length > 0 && (
-                <div className="post-tags">
-                  {file.tags.map((tag, index) => (
-                    <span key={index} className="tag-chip">
-                      #{tag}
-                    </span>
-                  ))}
+          <div className={props.mode ? "dark-posts-grid" : "posts-grid"}>
+            {files.map((file) => (
+              <div key={file._id} className="post-card">
+                <div className="post-header">
+                  <h4>{file.username}</h4>
+                  <span className="post-audience">
+                    {file.target === "public" ? "🌍 Public" : "🔒 Private"}
+                  </span>
                 </div>
-              )}
 
-              <p className="post-time">{formatTime(file.upload_time)}</p>
+                <div className="post-image-container">
+                  <img
+                    src={file.file_url}
+                    alt={file.file_name}
+                    className="post-image"
+                  />
+                </div>
 
-              {file.email === props.user?.email && (
-                <button
-                  className="delete-button"
-                  onClick={() => handleDelete(file._id)}
-                >
-                  Delete
-                </button>   
-              )}
+                <div className="post-footer">
+                  <p className="post-caption">{file.caption}</p>
 
-              {file.email === props.user?.email && (
-                <button
-                  className="edit-button"
-                >
-                  Edit
-                </button>   
-              )}
+                  {file.tags && file.tags.length > 0 && (
+                    <div className="post-tags">
+                      {file.tags.map((tag, index) => (
+                        <span key={index} className="tag-chip">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-            </div>
+                  <p className="post-time">{formatTime(file.upload_time)}</p>
+
+                  {file.email === props.user?.email && (
+                    <button
+                      className="delete-button"
+                      onClick={() => handleDelete(file._id)}
+                    >
+                      Delete
+                    </button>   
+                  )}
+
+                  {file.email === props.user?.email && (
+                    <button
+                      className="edit-button"
+                    >
+                      Edit
+                    </button>   
+                  )}
+
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
   );
 }
 
