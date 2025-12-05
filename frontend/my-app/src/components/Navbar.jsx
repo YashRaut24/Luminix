@@ -4,26 +4,70 @@ import { MdLightMode } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
 import LandingPage from "../../pages/LandingPage";
+import { MdOutlineRssFeed } from "react-icons/md";
 
 import "./Navbar.css";
 
 const Navbar = (props) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showFeed, setShowFeed] = useState(false);
+  const [displayFeed, setDisplayFeed] = useState(false);
+  const [feedContent, setFeedContent] = useState([]);
 
   const handleLogoClick = () => {
     setShowMenu(!showMenu);
   };
 
+  const handleFeedClick = () => {
+    setShowFeed(!showFeed);
+  };
+  
   const handleActionClick = (action) => {
     action();
     setShowMenu(false); 
   };
 
-   const logout = () => {
-  props.onLogout(); 
+  const logout = () => {
+    props.onLogout(); 
   };
 
+  const categories = [
+    "Your feed",
+    "📰 News",
+    "😂 Memes",
+    "😭 Emotional Posts",
+    "🎥 Reels (Entertainment)",
+    "💡 Knowledge",
+    "🎨 Creative",
+    "💬 Discussions",
+    "⛳ Sports",
+    "🏆 Achievements",
+    "🎵 Music",
+    "💻 Tech Posts",
+    "⚠️ Sensitive"
+  ];
 
+  const content = [
+    "Your feed",
+    "News feed",
+    "Memes page",
+    "Emotional Cards",
+    "Reels effect",
+    "Knowledge gain",
+    "Creative design",
+    "Discussion forum",
+    "Sports keeda",
+    "Achievements section",
+    "Music loves",
+    "Tech posts",
+    "Sensitive feed"
+  ]
+  
+  const handleDisplayFeed = (index) => {
+    props.setFeedHeading(content[index]);
+    setFeedContent(content[index]);
+    setDisplayFeed(true);
+  };
 
   return (
     <>
@@ -56,6 +100,19 @@ const Navbar = (props) => {
         </div>
       )}
 
+      <div>
+        <button className={props.mode ? "dark-feed-button" : "feedbutton"} onClick={handleFeedClick}><MdOutlineRssFeed /></button>
+        {showFeed && (
+          <div className="feed-menu">
+              {categories.map((item, index) => (
+              <button key={index} className="category-item" onClick={()=>{handleDisplayFeed(index)}}>
+                {item}
+              </button>
+              ))}
+          </div>
+        )}
+      </div>
+      
       <button 
         className={props.mode ? "dark-mode-profile" : "profile"}  
         onClick={props.toggleProfile}
