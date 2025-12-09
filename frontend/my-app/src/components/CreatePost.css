@@ -2,21 +2,26 @@
 .dark-create-post-container {
   width: 100%;
   max-width: 1100px !important;
-  margin-top: 25px !important;
+  margin-top: 40px !important;
   background: #ffffff !important;
   padding: 40px !important;
   border-radius: 20px !important;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
   animation: slideIn 0.4s ease-out;
   box-sizing: border-box !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #8b5cf6 #e2e8f0;
 }
 
 .dark-create-post-container {
   background: linear-gradient(145deg, #1e293b, #0f172a) !important;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;
-}
+    scrollbar-color: #a78bfa #1e293b;
 
+}
 @keyframes slideIn {
   from {
     opacity: 0;
