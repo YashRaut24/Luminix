@@ -7,6 +7,7 @@ function CreatePost(props){
   const [username, setUsername] = useState("");
   const [caption, setCaption] = useState("");
   const [message, setMessage] = useState("");
+  const [postType, setPostType] = useState("");
   const [preview, setPreview] = useState(null);
   const [target, setTarget] = useState("public");
   const [tagInput, setTagInput] = useState("");
@@ -32,8 +33,7 @@ function CreatePost(props){
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-      if (!file || !username.trim() || !caption.trim() || !target.trim()) {
+      if (!file || !username.trim() || !caption.trim() || !target.trim() ||  !postType.trim()) {
       setMessage("Please select a file before uploading.");
       return;
     }
@@ -44,6 +44,7 @@ function CreatePost(props){
     formData.append("caption", caption);
     formData.append("target", target);
     formData.append("tags", JSON.stringify(tags));
+    formData.append("postType",postType)
     formData.append("image", file);
 
     try {
@@ -73,6 +74,7 @@ function CreatePost(props){
         setPreview(null);
         setUsername("");
         setCaption("");
+        setPostType("");
         setTags([]);
         setTarget("public");
         document.querySelector('.file-input').value = "";
@@ -173,9 +175,23 @@ function CreatePost(props){
                 </div>
               )}
             </div>
+            
           </div>
 
+       
+
           <div className="form-column right-column">
+            <div className="form-section">
+              <label className="form-label">Post Type</label>
+              <input
+                type="text"
+                placeholder="Enter post type"
+                value={postType}
+                onChange={(e) => setPostType(e.target.value)}
+                className="form-input"
+                required
+              />
+            </div>
             <div className="upload-section">
               <label className="form-label">Upload Image</label>
               
