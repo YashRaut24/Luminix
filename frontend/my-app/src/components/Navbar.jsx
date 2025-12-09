@@ -33,18 +33,18 @@ const Navbar = (props) => {
 
   const categories = [
     "Your feed",
-    "📰 News",
-    "😂 Memes",
-    "😭 Emotional Posts",
-    "🎥 Reels (Entertainment)",
-    "💡 Knowledge",
-    "🎨 Creative",
-    "💬 Discussions",
-    "⛳ Sports",
-    "🏆 Achievements",
-    "🎵 Music",
-    "💻 Tech Posts",
-    "⚠️ Sensitive"
+    "News",
+    "Memes",
+    "Emotional",
+    "Entertainment",
+    "Knowledge",
+    "Creative",
+    "Discussions",
+    "Sports",
+    "Achievements",
+    "Music",
+    "Tech Posts",
+    "Sensitive"
   ];
 
   const content = [
@@ -112,6 +112,12 @@ const Navbar = (props) => {
           </div>
         )}
       </div>
+      {displayFeed && (
+        <div className={props.mode ? "dark-feed-page" : "feed-page"}>
+          <h2>{props.feedHeading}</h2>
+        </div>
+      )}
+
       
       <button 
         className={props.mode ? "dark-mode-profile" : "profile"}  
