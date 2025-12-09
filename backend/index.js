@@ -90,6 +90,7 @@ app.post("/post", upload.single("image"), async (req, res) => {
       caption: req.body.caption,
       target: req.body.target,
       tags: parsedTags,
+      postType: req.body.postType,
       file_name: req.file.filename,
       file_url: `http://localhost:9000/uploads/${req.file.filename}`,
       upload_time: new Date(),
