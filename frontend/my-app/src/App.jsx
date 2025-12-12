@@ -18,6 +18,8 @@ const App = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
   const [feedHeading, setFeedHeading] = useState("");
+  const [selectedPostType, setSelectedPostType] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   function changeTheme() {
     localStorage.setItem("darkMode", !darkMode);
@@ -77,14 +79,26 @@ const App = () => {
         onLogout={handleLogout}
         user={userData}
         setFeedHeading={setFeedHeading} 
+        refreshTrigger={refreshTrigger} 
+        feedHeading={feedHeading}
+        setSelectedPostType={setSelectedPostType}
+        setSelectedCategory={setSelectedCategory}
+
       />
+  
 
       <main>
         {showCreate && <CreatePost mode={darkMode} setRefreshTrigger={setRefreshTrigger} user={userData} />}
         {showSearchUser && <SearchUser mode={darkMode} />}
         {showClick && <Click mode={darkMode} onClose={toggleClick} onUpload={refreshPosts} />}
         {showProfile && <Profile mode={darkMode} onClose={toggleProfile} user={userData} />}
-        <ShowPost mode={darkMode} refreshTrigger={refreshTrigger} user={userData} feedHeading={feedHeading} />
+        <ShowPost
+          mode={darkMode}
+          refreshTrigger={refreshTrigger}
+          user={userData}
+          feedHeading={feedHeading}
+          selectedCategory={selectedCategory}
+        />
       </main>
     </div>
   );
