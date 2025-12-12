@@ -4,30 +4,30 @@ import "./ShowPost.css";
 
 function ShowPost(props) {
   const [files, setFiles] = useState([]);
-  const[displayEdit,setDisplayEdit] = useState(false);
-  useEffect(() => {
-    fetchFiles();
-  }, []);
+  const [displayEdit, setDisplayEdit] = useState(false);
 
   useEffect(() => {
     fetchFiles();
-  }, [props.refreshTrigger]);
+  }, [props.selectedCategory, props.refreshTrigger]);
 
- const fetchFiles = () => {
-  if (!props.user?.email) return; 
+  const fetchFiles = () => {
+    // Build query params
+    const params = { email: props.user?.email };
+    
+    // Add postType filter only if a specific category is selected
+    if (props.selectedCategory && props.selectedCategory !== "Your feed") {
+      params.postType = props.selectedCategory;
+    }
 
-  axios
-    .get("http://localhost:9000/files", {
-      params: { email: props.user.email },
-    })
-    .then((response) => {
-      setFiles(response.data);
-    })
-    .catch((error) => {
-      console.error("Error fetching files", error);
-    });
-};
-
+    axios
+      .get("http://localhost:9000/files", { params })
+      .then((response) => {
+        setFiles(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching files", error);
+      });
+  };
 
   const handleDelete = (id) => {
     axios
@@ -44,21 +44,15 @@ function ShowPost(props) {
     const date = new Date(time);
     return date.toLocaleString();
   };
- 
+
   return (
-    <div className={props.mode ? "dark-show-posts-container" : "show-posts-container"}>
-      <div className={props.mode ? "dark-show-posts-wrapper" : "show-posts-wrapper"}></div>
-          <h2>
-            <div className="h2-content">
-              {(props.feedHeading || "").split("").map((char, idx) =>
-                char === " "
-                  ? <span key={idx} className="space"></span>
-                  : <span key={idx}>{char}</span>
-              )}
-
-            </div>
-          </h2>
-
+    <div className={props.mode ? "dark-show-posts-wrapper" : "show-posts-wrapper"}>
+      <div className={props.mode ? "dark-show-posts-container" : "show-posts-container"}>
+        {files.length === 0 ? (
+          <div className="no-posts-message">
+            <p>No posts available for this feed</p>
+          </div>
+        ) : (
           <div className={props.mode ? "dark-posts-grid" : "posts-grid"}>
             {files.map((file) => (
               <div key={file._id} className="post-card">
@@ -93,27 +87,23 @@ function ShowPost(props) {
                   <p className="post-time">{formatTime(file.upload_time)}</p>
 
                   {file.email === props.user?.email && (
-                    <button
-                      className="delete-button"
-                      onClick={() => handleDelete(file._id)}
-                    >
-                      Delete
-                    </button>   
+                    <>
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDelete(file._id)}
+                      >
+                        Delete
+                      </button>
+                      <button className="edit-button">Edit</button>
+                    </>
                   )}
-
-                  {file.email === props.user?.email && (
-                    <button
-                      className="edit-button"
-                    >
-                      Edit
-                    </button>   
-                  )}
-
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
   );
 }
 
