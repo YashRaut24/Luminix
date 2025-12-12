@@ -105,22 +105,31 @@ app.post("/post", upload.single("image"), async (req, res) => {
   }
 });
 
+// Updated /files endpoint - for feed pages (both public and user's private posts)
 app.get("/files", async (req, res) => {
-  const email = req.query.email; 
+  const email = req.query.email;
+  const postType = req.query.postType;
+  
   try {
     let client = new MongoClient(url);
     await client.connect();
     let db = client.db("luminix");
     let posts = db.collection("posts");
 
-    const files = await posts
-      .find({
-        $or: [
-          { target: "public" },
-          { target: "private", email: email },
-        ],
-      })
-      .toArray();
+    // Build filter: public posts OR user's private posts
+    let filter = {
+      $or: [
+        { target: "public" },
+        { target: "private", email: email }
+      ]
+    };
+
+    // Add postType filter if specified
+    if (postType && postType !== "Your feed") {
+      filter.postType = postType;
+    }
+
+    const files = await posts.find(filter).sort({ upload_time: -1 }).toArray();
 
     res.json(files);
     await client.close();
@@ -130,7 +139,31 @@ app.get("/files", async (req, res) => {
   }
 });
 
+// Keep /posts endpoint for backward compatibility (public only)
+app.get("/posts", async (req, res) => {
+  try {
+    let { type } = req.query;
 
+    let client = new MongoClient(url);
+    await client.connect();
+    let db = client.db("luminix");
+    let posts = db.collection("posts");
+
+    let filter = { target: "public" };
+
+    if (type && type !== "All") {
+      filter.postType = type;
+    }
+
+    const files = await posts.find(filter).sort({ upload_time: -1 }).toArray();
+
+    res.json(files);
+    await client.close();
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    res.status(500).json({ message: "Error fetching posts" });
+  }
+});
 
 app.delete("/delete/:id", async (req, res) => {
   try {
