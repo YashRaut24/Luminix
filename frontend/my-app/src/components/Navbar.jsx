@@ -12,7 +12,6 @@ const Navbar = (props) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showFeed, setShowFeed] = useState(false);
   const [displayFeed, setDisplayFeed] = useState(false);
-  const [feedContent, setFeedContent] = useState([]);
 
   const handleLogoClick = () => {
     setShowMenu(!showMenu);
@@ -47,25 +46,26 @@ const Navbar = (props) => {
     "Sensitive"
   ];
 
-  const content = [
-    "Your feed",
-    "News feed",
-    "Memes page",
-    "Emotional Cards",
-    "Reels effect",
-    "Knowledge gain",
-    "Creative design",
-    "Discussion forum",
-    "Sports keeda",
-    "Achievements section",
-    "Music loves",
-    "Tech posts",
-    "Sensitive feed"
-  ]
-  
+  const categoryToPostType = {
+    "Your feed": null,       
+    "News": "News",
+    "Memes": "Memes",
+    "Emotional": "Emotional",
+    "Entertainment": "Entertainment",
+    "Knowledge": "Knowledge",
+    "Creative": "Creative",
+    "Discussions": "Discussions",
+    "Sports": "Sports",
+    "Achievements": "Achievements",
+    "Music": "Music",
+    "Tech Posts": "Tech",
+    "Sensitive": "Sensitive"
+  };
+
   const handleDisplayFeed = (index) => {
-    props.setFeedHeading(content[index]);
-    setFeedContent(content[index]);
+    const selectedCategory = categories[index];
+    props.setFeedHeading(selectedCategory);
+    props.setSelectedCategory(selectedCategory);
     setDisplayFeed(true);
   };
 
@@ -101,23 +101,33 @@ const Navbar = (props) => {
       )}
 
       <div>
-        <button className={props.mode ? "dark-feed-button" : "feedbutton"} onClick={handleFeedClick}><MdOutlineRssFeed /></button>
+        <button className={props.mode ? "dark-feed-button" : "feedbutton"} onClick={handleFeedClick}>
+          <MdOutlineRssFeed />
+        </button>
         {showFeed && (
           <div className="feed-menu">
-              {categories.map((item, index) => (
-              <button key={index} className="category-item" onClick={()=>{handleDisplayFeed(index)}}>
+            {categories.map((item, index) => (
+              <button key={index} className="category-item" onClick={() => {handleDisplayFeed(index)}}>
                 {item}
               </button>
-              ))}
+            ))}
           </div>
         )}
       </div>
+
       {displayFeed && (
         <div className={props.mode ? "dark-feed-page" : "feed-page"}>
-          <h2>{props.feedHeading}</h2>
+          <h2 className={props.mode ? "dark-side-feed" : "side-feed"}>
+            <div className="h2-content">
+              {(props.feedHeading || "").split("").map((char, idx) =>
+                char === " "
+                  ? <span key={idx} className="space"></span>
+                  : <span key={idx}>{char}</span>
+              )}
+            </div>
+          </h2>
         </div>
       )}
-
       
       <button 
         className={props.mode ? "dark-mode-profile" : "profile"}  
@@ -125,6 +135,7 @@ const Navbar = (props) => {
       >
         <CgProfile />
       </button>
+      
       <button 
         className={props.mode ? "dark-theme-toggle" : "theme-toggle"} 
         onClick={props.changeTheme}
@@ -132,7 +143,7 @@ const Navbar = (props) => {
         {props.mode ? <MdLightMode /> : <MdDarkMode />}
       </button>
 
-      <button className={props.mode? "dark-logout" : "logout"} onClick={logout}>
+      <button className={props.mode ? "dark-logout" : "logout"} onClick={logout}>
         <IoMdLogOut />
       </button>
     </>
