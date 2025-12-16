@@ -10,7 +10,7 @@ function Profile({ mode, onClose, user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [moodStatus, setMoodStatus] = useState("😊");
   const [activeTab, setActiveTab] = useState("all");
-  
+   
   const [profile, setProfile] = useState({
     name: user?.name || "User",
     handle: `@${user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
@@ -34,6 +34,7 @@ function Profile({ mode, onClose, user }) {
         name: user.name || prev.name,
         email: user.email || prev.email,
         handle: `@${user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`
+        
       }));
       setEditedProfile(prev => ({
         ...prev,

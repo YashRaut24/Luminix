@@ -11,10 +11,8 @@ function ShowPost(props) {
   }, [props.selectedCategory, props.refreshTrigger]);
 
   const fetchFiles = () => {
-    // Build query params
     const params = { email: props.user?.email };
     
-    // Add postType filter only if a specific category is selected
     if (props.selectedCategory && props.selectedCategory !== "Your feed") {
       params.postType = props.selectedCategory;
     }
