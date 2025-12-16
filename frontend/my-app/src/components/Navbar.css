@@ -27,7 +27,7 @@
   position: fixed;
   top: 45px;
   left: 45px;
-  z-index: 999;
+  /* z-index: 999; */
 }
 
 .menu-icon-btn {
@@ -313,7 +313,7 @@
   cursor: pointer;
   font-size: 50px;
   transition: all 0.3s ease;
-  z-index: 1000;
+  /* z-index: 1000; */
 }
 
 .feedbutton {
@@ -338,7 +338,7 @@
   position: fixed;
   top: 45px;
   left: 45px;
-  z-index: 999;
+  /* z-index: 999; */
 }
 
 .feed-menu {
@@ -348,7 +348,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 999;
+  /* z-index: 999; */
   width: 160px;
   max-height: calc(100vh - 180px); 
   overflow-y: auto;
@@ -419,7 +419,6 @@
   right: 165px;
   height: 100vh;
   width: 78%;
-  border-radius: 20px 0 0 20px;
   padding: 20px;
   overflow-y: auto;      
   overflow-x: hidden;
@@ -429,13 +428,11 @@
 .feed-page {
   background: rgba(200, 200, 200, 0.15);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .dark-feed-page {
   background: rgba(30, 60, 120, 0.15);
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .side-feed,
@@ -452,7 +449,7 @@
   align-items: center;
   font-size: 28px;
   font-weight: 700;
-  z-index: 100000 !important;
+  /* z-index: 100000 !important; */
 }
 
 .side-feed{
@@ -462,14 +459,14 @@
 .dark-feed-page {
   position: fixed;
   top: -1px;
-  right: 117px;
+  right: 120px;
   height: 100.2vh;
-  width: 78%;
+  width: 81%;
   padding: 20px 60px 20px 20px; 
   overflow-y: auto;
   overflow-x: hidden;
   display: block;
-  z-index: 100000 !important;
+  /* z-index: 1000 !important; */
 }
 
 .h2-content {
