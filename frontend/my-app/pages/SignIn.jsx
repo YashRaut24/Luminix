@@ -1,56 +1,45 @@
 import React, { useState } from "react";
-import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
-import "./SignIn.css";
 import axios from "axios";
 
-function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
+import {
+  MdEmail,
+  MdLock,
+  MdVisibility,
+  MdVisibilityOff
+} from "react-icons/md";
+import "./SignIn.css";
+
+function SignIn({ onClose, onSwitchToSignUp }) {
+  const [showPassword, setShowPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     password: ""
-  }); 
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [rememberMe, setRememberMe] = useState(false);
+  });
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const validate = () => {
-    const newErrors = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      axios.post("http://localhost:9000/signin", formData)
-        .then((response) => {
-          alert("Signed in successfully!");
-          if (onSuccess && response.data.user) {
-            onSuccess(response.data.user);
-          }
-        })
-        .catch(() => {
-          alert("Invalid email or password!");
-        });
+
+    try {
+      const res = await axios.post(
+        "http://localhost:9000/signin",
+        formData
+      );
+
+      alert("Login success:", res.data);
+
+    } catch (err) {
+      alert.error("Login failed:", err.response?.data?.message);
     }
   };
+
 
   return (
     <div className="signin-container" onClick={onClose}>
@@ -62,20 +51,21 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
           <p>Sign in to continue to Luminix</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="signin-form">
+        <form className="signin-form" onSubmit={handleSubmit}>
+
           <div className="signin-form-containers">
             <label>Email</label>
             <div className="input-containers">
               <MdEmail className="input-icon" />
               <input
                 type="email"
+                name="email"
                 placeholder="Enter your email"
+                required
                 value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                className={errors.email ? "error" : ""}
+                onChange={handleChange}
               />
             </div>
-            {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
           <div className="signin-form-containers">
@@ -85,9 +75,10 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                name="password"
+                required
                 value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                className={errors.password ? "error" : ""}
+                onChange={handleChange}
               />
               <button
                 type="button"
@@ -97,26 +88,28 @@ function SignIn({ onClose, onSwitchToSignUp, onSuccess }) {
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
               </button>
             </div>
-            {errors.password && <span className="error-text">{errors.password}</span>}
           </div>
 
           <div className="form-options">
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
+              <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <button type="button" className="forgot-password">Forgot Password?</button>
+            <button type="button" className="forgot-password">
+              Forgot Password?
+            </button>
           </div>
 
-          <button type="submit" className="submit-button">Sign In</button>
+          <button type="submit" className="submit-button">
+            Sign In
+          </button>
         </form>
 
         <div className="signin-footer">
-          <p>Don't have an account? <button onClick={onSwitchToSignUp}>Sign Up</button></p>
+          <p>
+            Don't have an account?
+            <button onClick={onSwitchToSignUp}> Sign Up</button>
+          </p>
         </div>
       </div>
     </div>
