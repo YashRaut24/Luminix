@@ -18,28 +18,26 @@ function SignUp({ onClose, onSwitchToSignIn }) {
   const[password,setPassword] = useState("");
   const[confirmPassword,setConfirmPassword] = useState("");
 
-    const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault(); 
 
-      const formData = {
-        name,
-        email,
-        password
-      };
+    const formData = {
+      name,
+      email,
+      password
+    };
 
     if(password !== confirmPassword){
-        alert("Password doesn't match please try again!")
-      }else{
-        axios.post("http://localhost:9000/signup",formData)
-        .then(res=>{alert(res.data.message);})
-        .catch(err => {
-  console.error(err);
-  alert(err.response?.data?.message || "Server error");
-});
-
-      }
-console.log("Submitting:", { name, email, password });
-
+      alert("Password doesn't match please try again!")
+    }else{
+      axios.post("http://localhost:9000/signup",formData)
+      .then(res=>{alert(res.data.message);})
+      .catch(err => {
+      console.error(err);
+      alert(err.response?.data?.message || "Server error");
+    });
+    }
+    console.log("Submitting:", { name, email, password });
   };
 
 
