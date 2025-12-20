@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import {
   MdEmail,
@@ -9,8 +10,10 @@ import {
 } from "react-icons/md";
 import "./SignIn.css";
 
-function SignIn({ onClose, onSwitchToSignUp }) {
+
+function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -24,7 +27,7 @@ function SignIn({ onClose, onSwitchToSignUp }) {
     });
   };
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
@@ -33,10 +36,13 @@ function SignIn({ onClose, onSwitchToSignUp }) {
         formData
       );
 
-      alert("Login success:", res.data);
+      onAuthSuccess(res.data.user);
+      console.log("LOGIN RESPONSE:", res.data);
+
+      navigate("/feed");
 
     } catch (err) {
-      alert.error("Login failed:", err.response?.data?.message);
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 
