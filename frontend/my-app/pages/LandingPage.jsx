@@ -11,14 +11,6 @@ function LandingPage({ onAuthSuccess }) {
   const [showSignUp, setShowSignUp] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
-  const handleSuccess = (userData) => {
-    setShowSignUp(false);
-    setShowSignIn(false);
-    if (onAuthSuccess) {
-      onAuthSuccess(userData);
-    }
-  };
-
   const features = [
     {
       icon: <BsFire />,
@@ -238,14 +230,18 @@ function LandingPage({ onAuthSuccess }) {
         />
       )}
       {showSignIn && (
-        <SignIn 
-          onClose={() => setShowSignIn(false)} 
+        <SignIn
+          onClose={() => setShowSignIn(false)}
           onSwitchToSignUp={() => { 
             setShowSignIn(false); 
             setShowSignUp(true); 
-          }} 
-          onSuccess={handleSuccess} 
+          }}
+          onAuthSuccess={(user) => {
+            setShowSignIn(false);
+            onAuthSuccess(user);   // ← user is already correct
+          }}
         />
+
       )}
     </div>
   );
