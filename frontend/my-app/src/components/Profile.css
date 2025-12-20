@@ -12,7 +12,7 @@
   align-items: center;
   padding: 20px;
   animation: fadeIn 0.3s ease;
-  z-index:100000;
+  z-index:100000 !important;
 }
 
 @keyframes fadeIn {

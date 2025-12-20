@@ -1,46 +1,39 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import "./ShowPost.css";
 
 function ShowPost(props) {
-  const [files, setFiles] = useState([]);
-  const [displayEdit, setDisplayEdit] = useState(false);
-
-  useEffect(() => {
-    fetchFiles();
-  }, [props.selectedCategory, props.refreshTrigger]);
-
-  const fetchFiles = () => {
-    const params = { email: props.user?.email };
-    
-    if (props.selectedCategory && props.selectedCategory !== "Your feed") {
-      params.postType = props.selectedCategory;
+  const [files, setFiles] = useState([
+    {
+      _id: "1",
+      username: "John Doe",
+      email: "user@luminix.com",
+      target: "public",
+      file_url: "https://via.placeholder.com/400",
+      file_name: "post1.jpg",
+      caption: "Exploring creativity ✨",
+      tags: ["art", "design"],
+      upload_time: new Date()
+    },
+    {
+      _id: "2",
+      username: "John Doe",
+      email: "user@luminix.com",
+      target: "private",
+      file_url: "https://via.placeholder.com/400",
+      file_name: "post2.jpg",
+      caption: "Late night vibes 🌙",
+      tags: ["mood", "night"],
+      upload_time: new Date()
     }
-
-    axios
-      .get("http://localhost:9000/files", { params })
-      .then((response) => {
-        setFiles(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching files", error);
-      });
-  };
-
-  const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:9000/delete/${id}`)
-      .then(() => {
-        fetchFiles();
-      })
-      .catch((error) => {
-        console.error("Error deleting file", error);
-      });
-  };
+  ]);
 
   const formatTime = (time) => {
     const date = new Date(time);
     return date.toLocaleString();
+  };
+
+  const handleDelete = (id) => {
+    setFiles(prev => prev.filter(file => file._id !== id));
   };
 
   return (
@@ -84,17 +77,15 @@ function ShowPost(props) {
 
                   <p className="post-time">{formatTime(file.upload_time)}</p>
 
-                  {file.email === props.user?.email && (
-                    <>
-                      <button
-                        className="delete-button"
-                        onClick={() => handleDelete(file._id)}
-                      >
-                        Delete
-                      </button>
-                      <button className="edit-button">Edit</button>
-                    </>
-                  )}
+                  {/* OWNER ACTIONS (frontend-only) */}
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(file._id)}
+                  >
+                    Delete
+                  </button>
+                  <button className="edit-button">Edit</button>
+
                 </div>
               </div>
             ))}

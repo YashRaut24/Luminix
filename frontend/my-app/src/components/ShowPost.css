@@ -51,6 +51,15 @@
   box-shadow: 0 8px 30px rgba(0,0,0,0.45);
 }
 
+.show-posts-wrapper,
+.show-posts-container,
+.dark-show-posts-wrapper,
+.dark-show-posts-container {
+  pointer-events: auto;
+  z-index: 1;
+}
+
+
 .post-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 40px rgba(2,6,23,0.12);

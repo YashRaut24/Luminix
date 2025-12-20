@@ -18,6 +18,8 @@ const Navbar = (props) => {
   };
 
   const handleFeedClick = () => {
+      console.log("FEED CLICKED");
+
     setShowFeed(!showFeed);
   };
   

@@ -434,6 +434,18 @@
   background: rgba(30, 60, 120, 0.15);
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
 }
+.feedbutton,
+.dark-feed-button,
+.logo-button,
+.profile,
+.dark-mode-profile,
+.theme-toggle,
+.dark-theme-toggle,
+.logout,
+.dark-logout {
+  z-index: 100000 !important;
+  pointer-events: auto !important;
+}
 
 .side-feed,
 .dark-side-feed {
@@ -449,12 +461,18 @@
   align-items: center;
   font-size: 28px;
   font-weight: 700;
-  /* z-index: 100000 !important; */
+  pointer-events: none;
+}
+
+.feed-menu {
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 .side-feed{
   background-color: #bbb;
 }
+
 .feed-page,
 .dark-feed-page {
   position: fixed;
@@ -466,7 +484,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   display: block;
-  /* z-index: 1000 !important; */
+  /* z-index: 2000 !important; */
 }
 
 .h2-content {

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import "./SearchUser.css";
 
 function SearchUser({ mode }) {
@@ -9,7 +8,38 @@ function SearchUser({ mode }) {
   const [searched, setSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSearch = async () => {
+  // 🔹 Dummy posts (frontend-only)
+  const dummyPosts = [
+    {
+      _id: "1",
+      username: "john",
+      file_url: "https://via.placeholder.com/400",
+      file_name: "post1.jpg",
+      caption: "Creative vibes ✨",
+      tags: ["art", "design"],
+      createdAt: new Date()
+    },
+    {
+      _id: "2",
+      username: "john",
+      file_url: "https://via.placeholder.com/400",
+      file_name: "post2.jpg",
+      caption: "Late night thoughts 🌙",
+      tags: ["mood"],
+      createdAt: new Date()
+    },
+    {
+      _id: "3",
+      username: "emma",
+      file_url: "https://via.placeholder.com/400",
+      file_name: "post3.jpg",
+      caption: "Sunset love 🌅",
+      tags: ["nature"],
+      createdAt: new Date()
+    }
+  ];
+
+  const handleSearch = () => {
     if (!username.trim()) {
       setError("Please enter a username");
       return;
@@ -19,18 +49,16 @@ function SearchUser({ mode }) {
     setError("");
     setSearched(false);
 
-    try {
-      const response = await axios.get(`/api/users/${username}/posts`);
-      setSearchResults(response.data);
+    // 🔁 Simulate API delay
+    setTimeout(() => {
+      const results = dummyPosts.filter(
+        post => post.username.toLowerCase() === username.toLowerCase()
+      );
+
+      setSearchResults(results);
       setSearched(true);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Failed to fetch posts");
-      setSearchResults([]);
-      setSearched(true);
-    } finally {
       setIsLoading(false);
-    }
+    }, 800);
   };
 
   const handleKeyPress = (e) => {
@@ -55,7 +83,7 @@ function SearchUser({ mode }) {
           onKeyPress={handleKeyPress}
           className="search-input"
         />
-        <button 
+        <button
           onClick={handleSearch}
           className="search-btn"
           disabled={isLoading}
@@ -98,16 +126,13 @@ function SearchUser({ mode }) {
                       />
                     </div>
                     <div className="post-footer">
-                      <p className="post-username">@{file.username || username}</p>
+                      <p className="post-username">@{file.username}</p>
                       {file.caption && (
                         <p className="post-caption">{file.caption}</p>
                       )}
                       <div className="post-meta">
                         <span className="post-time">
-                          {file.createdAt 
-                            ? new Date(file.createdAt).toLocaleDateString()
-                            : "Recent"
-                          }
+                          {new Date(file.createdAt).toLocaleDateString()}
                         </span>
                         {file.tags && file.tags.length > 0 && (
                           <div className="post-stats">
@@ -126,7 +151,7 @@ function SearchUser({ mode }) {
               <div className="no-results">
                 <div className="no-results-icon">🔍</div>
                 <p>No posts found for "{username}"</p>
-                <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.7 }}>
+                <p style={{ fontSize: "14px", marginTop: "8px", opacity: 0.7 }}>
                   Try searching for a different username
                 </p>
               </div>

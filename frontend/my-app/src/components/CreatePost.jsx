@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import "./CreatePost.css";
 
 function CreatePost(props){
@@ -20,73 +19,57 @@ function CreatePost(props){
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      const generatedURL = URL.createObjectURL(selectedFile);
-      setPreview(generatedURL);
+      setPreview(URL.createObjectURL(selectedFile));
     }
   };
 
   const handleRemoveFile = () => {
     setFile(null);
     setPreview(null);
-    document.querySelector('.file-input').value = '';
+    document.querySelector(".file-input").value = "";
   };
 
-  const handleSubmit = async (e) => {
+  // ✅ FRONTEND-ONLY SUBMIT
+  const handleSubmit = (e) => {
     e.preventDefault();
-      if (!file || !username.trim() || !caption.trim() || !target.trim() ||  !postType.trim()) {
-      setMessage("Please select a file before uploading.");
+
+    if (!file || !username.trim() || !caption.trim() || !target.trim() || !postType.trim()) {
+      setMessage("Please fill all fields before posting.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("email", props.user?.email);
-    formData.append("caption", caption);
-    formData.append("target", target);
-    formData.append("tags", JSON.stringify(tags));
-    formData.append("postType",postType)
-    formData.append("image", file);
+    setIsUploading(true);
+    setUploadProgress(0);
+    setMessage("");
 
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
+    // 🔁 Fake upload progress (UI only)
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsUploading(false);
+          setUploadComplete(true);
+          setMessage("Uploaded Successfully!");
 
-      await axios.post("http://localhost:9000/post", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          if (!progressEvent.total) return;
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setUploadProgress(percent);
-        },
+          setTimeout(() => {
+            setUploadComplete(false);
+            setUploadProgress(0);
+            setMessage("");
+            setFile(null);
+            setPreview(null);
+            setUsername("");
+            setCaption("");
+            setPostType("");
+            setTags([]);
+            setTarget("public");
+            document.querySelector(".file-input").value = "";
+          }, 2000);
+
+          return 100;
+        }
+        return prev + 10;
       });
- 
-      setMessage("Uploaded Successfully!");
-      setUploadProgress(100);
-      setUploadComplete(true);
-
-      setTimeout(() => {
-        setUploadComplete(false);
-        setUploadProgress(0);
-        setMessage("");
-        setFile(null);
-        setPreview(null);
-        setUsername("");
-        setCaption("");
-        setPostType("");
-        setTags([]);
-        setTarget("public");
-        document.querySelector('.file-input').value = "";
-      }, 2000);
-
-    } catch (err) {
-      console.error(err);
-      setMessage("Upload failed. Please try again.");
-      setIsUploading(false);
-    } finally {
-      setIsUploading(false);
-    }
+    }, 150);
   };
 
   return (
@@ -98,7 +81,8 @@ function CreatePost(props){
 
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-grid">
-          
+
+          {/* LEFT COLUMN */}
           <div className="form-column left-column">
             <div className="form-section">
               <label className="form-label">Username</label>
@@ -156,7 +140,7 @@ function CreatePost(props){
                 }}
                 className="form-input"
               />
-              
+
               {tags.length > 0 && (
                 <div className="tags-container">
                   {tags.map((tag, index) => (
@@ -165,8 +149,7 @@ function CreatePost(props){
                       <button
                         type="button"
                         className="tag-remove"
-                        onClick={() => setTags(tags.filter((t) => t !== tag))}
-                        aria-label="Remove tag"
+                        onClick={() => setTags(tags.filter(t => t !== tag))}
                       >
                         ×
                       </button>
@@ -175,11 +158,9 @@ function CreatePost(props){
                 </div>
               )}
             </div>
-            
           </div>
 
-       
-
+          {/* RIGHT COLUMN */}
           <div className="form-column right-column">
             <div className="form-section">
               <label className="form-label">Post Type</label>
@@ -192,9 +173,10 @@ function CreatePost(props){
                 required
               />
             </div>
+
             <div className="upload-section">
               <label className="form-label">Upload Image</label>
-              
+
               {!preview ? (
                 <div className="upload-area">
                   <input
@@ -213,12 +195,12 @@ function CreatePost(props){
               ) : (
                 <div className="preview-container">
                   <img src={preview} alt="Preview" className="preview-image" />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="remove-image-btn"
                     onClick={handleRemoveFile}
                   >
-                    <span>✕</span> Remove Image
+                    ✕ Remove Image
                   </button>
                 </div>
               )}
@@ -228,12 +210,15 @@ function CreatePost(props){
               <div className="progress-wrapper">
                 {isUploading && (
                   <div className="progress-container">
-                    <div className="progress-bar" style={{ width: `${uploadProgress}%` }}>
+                    <div
+                      className="progress-bar"
+                      style={{ width: `${uploadProgress}%` }}
+                    >
                       <span className="progress-label">{uploadProgress}%</span>
                     </div>
                   </div>
                 )}
-                
+
                 {uploadComplete && (
                   <div className="success-message">
                     <span className="success-icon">✓</span>
@@ -243,9 +228,9 @@ function CreatePost(props){
               </div>
             )}
 
-            <button 
-              type="submit" 
-              className="submit-btn" 
+            <button
+              type="submit"
+              className="submit-btn"
               disabled={isUploading || !file}
             >
               {isUploading ? (
@@ -264,7 +249,7 @@ function CreatePost(props){
         </div>
 
         {message && !uploadComplete && (
-          <div className={`alert ${message.includes('Success') ? 'alert-success' : 'alert-error'}`}>
+          <div className={`alert ${message.includes("Success") ? "alert-success" : "alert-error"}`}>
             {message}
           </div>
         )}
