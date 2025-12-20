@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState,useEffect } from "react";
 import { CgProfile } from "react-icons/cg";
 import { BsCameraFill, BsTrophy, BsFire } from "react-icons/bs";
 import { MdVerified, MdEdit, MdSettings } from "react-icons/md";
@@ -10,14 +10,30 @@ function Profile({ mode, onClose, user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [moodStatus, setMoodStatus] = useState("😊");
   const [activeTab, setActiveTab] = useState("all");
-   
+  useEffect(() => {
+    if (!user) return;
+
+    setProfile(prev => ({
+      ...prev,
+      name: user.name || "",
+      handle: user.email || "",
+      email: user.email || "",
+      bio: user.bio || "Tell something about yourself",
+      location: user.location || "Unknown",
+      joinDate: user.createdAt
+        ? new Date(user.createdAt).toLocaleDateString()
+        : "Recently joined"
+    }));
+  }, [user]);
+console.log("USER PROP:", user);
+
   const [profile, setProfile] = useState({
-    name: user?.name || "User",
-    handle: `@${user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
-    bio: "Digital artist & photographer 📸 | Capturing moments ✨ | #Creative #Photography",
-    email: user?.email || "user@luminix.com",
-    location: "San Francisco, CA",
-    joinDate: "January 2024",
+    name: "",
+    handle: "",
+    bio: "",
+    email: "",
+    location: "",
+    joinDate: "",
     profilePic: "https://via.placeholder.com/150",
     verified: true,
     level: 12,
@@ -25,25 +41,8 @@ function Profile({ mode, onClose, user }) {
     maxXP: 3000
   });
 
-  const [editedProfile, setEditedProfile] = useState(profile);
 
-  useEffect(() => {
-    if (user) {
-      setProfile(prev => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        handle: `@${user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`
-        
-      }));
-      setEditedProfile(prev => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        handle: `@${user.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`
-      }));
-    }
-  }, [user]);
+  const [editedProfile, setEditedProfile] = useState(profile);
 
   const stats = {
     inspiringPosts: 23,
@@ -77,13 +76,12 @@ function Profile({ mode, onClose, user }) {
 
   const handleMoodChange = () => {
     const currentIndex = moods.indexOf(moodStatus);
-    const nextIndex = (currentIndex + 1) % moods.length;
-    setMoodStatus(moods[nextIndex]);
+    setMoodStatus(moods[(currentIndex + 1) % moods.length]);
   };
 
   const handleEdit = () => {
-    setIsEditing(true);
     setEditedProfile(profile);
+    setIsEditing(true);
   };
 
   const handleSave = () => {
@@ -105,17 +103,18 @@ function Profile({ mode, onClose, user }) {
 
   return (
     <div className={mode ? "dark-profile-overlay" : "profile-overlay"} onClick={onClose}>
-      <div 
-        className={mode ? "dark-profile-wrapper" : "profile-wrapper"} 
+      <div
+        className={mode ? "dark-profile-wrapper" : "profile-wrapper"}
         onClick={(e) => e.stopPropagation()}
       >
         <button className="profile-close-btn" onClick={onClose}>✕</button>
 
+        {/* LEFT SECTION */}
         <div className="profile-left-section">
           <div className="profile-card-main">
             <div className="profile-cover-section">
               <div className="cover-gradient"></div>
-              
+
               <div className="profile-avatar-wrapper">
                 <div className="avatar-glow"></div>
                 <img src={profile.profilePic} alt="Profile" className="profile-avatar" />
@@ -139,25 +138,20 @@ function Profile({ mode, onClose, user }) {
               ) : (
                 <>
                   <input
-                    type="text"
                     className="edit-name-input"
                     value={editedProfile.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    placeholder="Your name"
+                    onChange={(e) => handleChange("name", e.target.value)}
                   />
                   <input
-                    type="text"
                     className="edit-handle-input"
                     value={editedProfile.handle}
-                    onChange={(e) => handleChange('handle', e.target.value)}
-                    placeholder="@username"
+                    onChange={(e) => handleChange("handle", e.target.value)}
                   />
                   <textarea
                     className="edit-bio-textarea"
-                    value={editedProfile.bio}
-                    onChange={(e) => handleChange('bio', e.target.value)}
-                    placeholder="Tell us about yourself"
                     rows="3"
+                    value={editedProfile.bio}
+                    onChange={(e) => handleChange("bio", e.target.value)}
                   />
                 </>
               )}
@@ -169,26 +163,26 @@ function Profile({ mode, onClose, user }) {
                     <span>{profile.email}</span>
                   ) : (
                     <input
-                      type="email"
                       className="detail-edit-input"
                       value={editedProfile.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
+                      onChange={(e) => handleChange("email", e.target.value)}
                     />
                   )}
                 </div>
+
                 <div className="detail-row">
                   <FiMapPin />
                   {!isEditing ? (
                     <span>{profile.location}</span>
                   ) : (
                     <input
-                      type="text"
                       className="detail-edit-input"
                       value={editedProfile.location}
-                      onChange={(e) => handleChange('location', e.target.value)}
+                      onChange={(e) => handleChange("location", e.target.value)}
                     />
                   )}
                 </div>
+
                 <div className="detail-row">
                   <FiCalendar />
                   <span>Joined {profile.joinDate}</span>
@@ -203,12 +197,8 @@ function Profile({ mode, onClose, user }) {
                   </button>
                 ) : (
                   <div className="edit-action-group">
-                    <button className="save-profile-btn" onClick={handleSave}>
-                      <span>Save</span>
-                    </button>
-                    <button className="cancel-profile-btn" onClick={handleCancel}>
-                      <span>Cancel</span>
-                    </button>
+                    <button className="save-profile-btn" onClick={handleSave}>Save</button>
+                    <button className="cancel-profile-btn" onClick={handleCancel}>Cancel</button>
                   </div>
                 )}
               </div>
@@ -221,77 +211,43 @@ function Profile({ mode, onClose, user }) {
           </div>
         </div>
 
+        {/* RIGHT SECTION */}
         <div className="profile-right-section">
           <div className="stats-grid">
             <div className="mini-stat-card">
-              <div className="stat-icon-box">
-                <AiOutlineStar />
-              </div>
-              <div className="stat-content">
-                <span className="stat-number">{stats.inspiringPosts}</span>
-                <span className="stat-text">Inspiring Posts</span>
-              </div>
+              <AiOutlineStar />
+              <span>{stats.inspiringPosts}</span>
             </div>
-
             <div className="mini-stat-card">
-              <div className="stat-icon-box">
-                <BsFire />
-              </div>
-              <div className="stat-content">
-                <span className="stat-number">{stats.streakDays}</span>
-                <span className="stat-text">Day Streak</span>
-              </div>
+              <BsFire />
+              <span>{stats.streakDays}</span>
             </div>
-
             <div className="mini-stat-card">
-              <div className="stat-icon-box">
-                <FiTrendingUp />
-              </div>
-              <div className="stat-content">
-                <span className="stat-number">{stats.topLikedMonth}</span>
-                <span className="stat-text">Top Post Likes</span>
-              </div>
+              <FiTrendingUp />
+              <span>{stats.topLikedMonth}</span>
             </div>
-          </div>
-
-          <div className="quick-actions-row">
-            <button className="quick-action-btn primary">
-              <BsCameraFill />
-              <span>Upload Post</span>
-            </button>
-            <button className="quick-action-btn secondary">
-              <MdSettings />
-              <span>Settings</span>
-            </button>
           </div>
 
           <div className="level-progress-section">
             <div className="level-header-row">
-              <div className="level-badge-chip">
-                <BsTrophy />
-                <span>Level {profile.level}</span>
-              </div>
-              <span className="xp-progress-text">{profile.xp} / {profile.maxXP} XP</span>
+              <BsTrophy />
+              <span>Level {profile.level}</span>
             </div>
             <div className="xp-progress-bar">
-              <div 
-                className="xp-progress-fill" 
+              <div
+                className="xp-progress-fill"
                 style={{ width: `${(profile.xp / profile.maxXP) * 100}%` }}
-              ></div>
+              />
             </div>
           </div>
 
           <div className="achievements-section">
             <h3 className="subsection-title">Achievements</h3>
             <div className="badges-row">
-              {badges.map(badge => (
-                <div 
-                  key={badge.id} 
-                  className={`badge-box ${badge.unlocked ? 'unlocked' : 'locked'}`}
-                  title={badge.name}
-                >
-                  <span className="badge-emoji">{badge.icon}</span>
-                  <span className="badge-title">{badge.name}</span>
+              {badges.map(b => (
+                <div key={b.id} className={`badge-box ${b.unlocked ? "unlocked" : "locked"}`}>
+                  <span className="badge-emoji">{b.icon}</span>
+                  <span className="badge-title">{b.name}</span>
                 </div>
               ))}
             </div>
@@ -300,12 +256,12 @@ function Profile({ mode, onClose, user }) {
           <div className="pinned-posts-section">
             <h3 className="subsection-title">Pinned Creations</h3>
             <div className="pinned-posts-grid">
-              {pinnedPosts.map(post => (
-                <div key={post.id} className="pinned-post-item">
-                  <img src={post.image} alt="Pinned" />
+              {pinnedPosts.map(p => (
+                <div key={p.id} className="pinned-post-item">
+                  <img src={p.image} alt="" />
                   <div className="pinned-post-overlay">
                     <AiOutlineHeart />
-                    <span>{post.likes}</span>
+                    <span>{p.likes}</span>
                   </div>
                 </div>
               ))}
@@ -314,37 +270,29 @@ function Profile({ mode, onClose, user }) {
 
           <div className="recent-posts-section">
             <div className="posts-tabs-row">
-              <button 
-                className={`post-tab ${activeTab === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveTab('all')}
-              >
-                All Posts
-              </button>
-              <button 
-                className={`post-tab ${activeTab === 'mood' ? 'active' : ''}`}
-                onClick={() => setActiveTab('mood')}
-              >
-                By Mood
-              </button>
-              <button 
-                className={`post-tab ${activeTab === 'popular' ? 'active' : ''}`}
-                onClick={() => setActiveTab('popular')}
-              >
-                Popular
-              </button>
+              {["all", "mood", "popular"].map(tab => (
+                <button
+                  key={tab}
+                  className={`post-tab ${activeTab === tab ? "active" : ""}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab.toUpperCase()}
+                </button>
+              ))}
             </div>
 
             <div className="recent-posts-grid">
-              {recentPosts.map(post => (
-                <div key={post.id} className="recent-post-item">
-                  <img src={post.image} alt="Post" />
+              {recentPosts.map(p => (
+                <div key={p.id} className="recent-post-item">
+                  <img src={p.image} alt="" />
                   <div className="recent-post-overlay">
-                    <span className="post-mood-badge">{post.mood}</span>
+                    <span className="post-mood-badge">{p.mood}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
       </div>
     </div>
