@@ -33,8 +33,10 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
     try {
       const res = await axios.post(
         "http://localhost:9000/signin",
-        formData
+        formData,
+        { withCredentials: true }
       );
+
 
       onAuthSuccess(res.data.user);
       console.log("LOGIN RESPONSE:", res.data);
