@@ -51,6 +51,12 @@ function LandingPage({ onAuthSuccess }) {
     { number: "24/7", label: "Community Support" }
   ];
 
+  const handleSuccess = (user) => {
+  setShowSignUp(false);
+  onAuthSuccess(user);
+};
+
+
   return (
     <div className="landing-container">
       <section className="hero-section">
@@ -238,7 +244,7 @@ function LandingPage({ onAuthSuccess }) {
           }}
           onAuthSuccess={(user) => {
             setShowSignIn(false);
-            onAuthSuccess(user);   // ← user is already correct
+            onAuthSuccess(user);  
           }}
         />
 
