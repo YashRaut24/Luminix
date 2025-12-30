@@ -10,37 +10,45 @@ function Profile({ mode, onClose, user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [moodStatus, setMoodStatus] = useState("😊");
   const [activeTab, setActiveTab] = useState("all");
-  useEffect(() => {
-    if (!user) return;
+  const [image,setImage] = useState(null);
 
-    setProfile(prev => ({
-      ...prev,
-      name: user.name || "",
-      handle: user.email || "",
-      email: user.email || "",
-      bio: user.bio || "Tell something about yourself",
-      location: user.location || "Unknown",
-      joinDate: user.createdAt
-        ? new Date(user.createdAt).toLocaleDateString()
-        : "Recently joined"
-    }));
-  }, [user]);
-console.log("USER PROP:", user);
+  const handleUpload = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    setImage(URL.createObjectURL(file));
+  };
+    const [profile, setProfile] = useState({
+      name: "",
+      handle: "",
+      bio: "",
+      email: "",
+      location: "",
+      joinDate: "",
+      profilePic: "https://via.placeholder.com/150",
+      verified: true,
+      level: 12,
+      xp: 2850,
+      maxXP: 3000
+    });
+    useEffect(() => {
+      setEditedProfile(profile);
+    }, [profile]);
 
-  const [profile, setProfile] = useState({
-    name: "",
-    handle: "",
-    bio: "",
-    email: "",
-    location: "",
-    joinDate: "",
-    profilePic: "https://via.placeholder.com/150",
-    verified: true,
-    level: 12,
-    xp: 2850,
-    maxXP: 3000
-  });
+    useEffect(() => {
+      if (!user) return;
 
+      setProfile(prev => ({
+        ...prev,
+        name: user.name || "",
+        handle: user.email || "",
+        email: user.email || "",
+        bio: user.bio || "Tell something about yourself",
+        location: user.location || "Unknown",
+        joinDate: user.createdAt
+          ? new Date(user.createdAt).toLocaleDateString()
+          : "Recently joined"
+      }));
+    }, [user]);
 
   const [editedProfile, setEditedProfile] = useState(profile);
 
@@ -109,10 +117,9 @@ console.log("USER PROP:", user);
       >
         <button className="profile-close-btn" onClick={onClose}>✕</button>
 
-        {/* LEFT SECTION */}
         <div className="profile-left-section">
           <div className="profile-card-main">
-            <div className="profile-cover-section">
+            {/* <div className="profile-cover-section">
               <div className="cover-gradient"></div>
 
               <div className="profile-avatar-wrapper">
@@ -124,9 +131,19 @@ console.log("USER PROP:", user);
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
 
             <div className="profile-main-info">
+              
+              
+              <label className="file-upload">
+                {image && 
+                <img className="profile-image" src={image}/>
+              }
+                <input type="file" onChange={handleUpload} />
+              </label>
+
+
               {!isEditing ? (
                 <>
                   <div className="name-section">
@@ -142,11 +159,7 @@ console.log("USER PROP:", user);
                     value={editedProfile.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                   />
-                  <input
-                    className="edit-handle-input"
-                    value={editedProfile.handle}
-                    onChange={(e) => handleChange("handle", e.target.value)}
-                  />
+                  <span className="user-handle">{profile.handle}</span>
                   <textarea
                     className="edit-bio-textarea"
                     rows="3"
@@ -162,11 +175,7 @@ console.log("USER PROP:", user);
                   {!isEditing ? (
                     <span>{profile.email}</span>
                   ) : (
-                    <input
-                      className="detail-edit-input"
-                      value={editedProfile.email}
-                      onChange={(e) => handleChange("email", e.target.value)}
-                    />
+                    <span>{profile.email}</span>
                   )}
                 </div>
 
@@ -211,7 +220,6 @@ console.log("USER PROP:", user);
           </div>
         </div>
 
-        {/* RIGHT SECTION */}
         <div className="profile-right-section">
           <div className="stats-grid">
             <div className="mini-stat-card">
