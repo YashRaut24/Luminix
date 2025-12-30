@@ -49,6 +49,37 @@
   overflow: hidden;
 }
 
+.profile-image{
+  height:24vh;
+  width:15vw;
+  border-radius: 50% !important;
+}
+
+.file-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24vh;
+  width: 13.25vw;
+  padding: 10px 16px;
+  margin-left: 65px;
+  border-radius: 50%!important;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.file-upload:hover {
+  background-color: #1c2230;
+}
+
+.file-upload input {
+  display: none;
+}
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -121,47 +152,6 @@
   flex-direction: column;
 }
 
-.profile-cover-section {
-  position: relative;
-  height: 180px;
-  background: #6366f1;
-  overflow: hidden;
-}
-
-.dark-profile-wrapper .profile-cover-section {
-  background: #4338ca;
-}
-
-.cover-gradient {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  animation: coverShine 8s ease-in-out infinite;
-}
-
-@keyframes coverShine {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-}
-
-.profile-avatar-wrapper {
-  position: absolute;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140px;
-  height: 140px;
-}
-
-.avatar-glow {
-  position: absolute;
-  inset: -6px;
-  background: #6366f1;
-  border-radius: 50%;
-  animation: avatarPulse 2.5s ease-in-out infinite;
-  z-index: 0;
-}
-
 @keyframes avatarPulse {
   0%, 100% {
     opacity: 0.4;
@@ -173,43 +163,8 @@
   }
 }
 
-.profile-avatar {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 5px solid #ffffff;
-  object-fit: cover;
-  z-index: 1;
-}
-
-.dark-profile-wrapper .profile-avatar {
-  border-color: #0f172a;
-}
-
-.verified-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: #3b82f6;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  border: 3px solid #ffffff;
-  z-index: 2;
-}
-
-.dark-profile-wrapper .verified-badge {
-  border-color: #0f172a;
-}
-
 .profile-main-info {
-  padding: 70px 30px 30px;
+  padding:30px 30px;
   display: flex;
   flex-direction: column;
   gap: 20px;
