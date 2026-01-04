@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate
-} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+import LandingPage from "../pages/LandingPage";
 import Navbar from "./components/Navbar";
-import CreatePost from "./components/CreatePost";
 import ShowPost from "./components/ShowPost";
+import CreatePost from "./components/CreatePost";
 import SearchUser from "./components/SearchUser";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
-import LandingPage from "../pages/LandingPage";
-import "./App.css";
 
-const App = () => {
+import "./App.css";
+import HomePage from "../pages/HomePage";
+import Connect from "../pages/Connect";
+
+function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
+
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
 
   const [showCreate, setShowCreate] = useState(false);
   const [showSearchUser, setShowSearchUser] = useState(false);
@@ -25,36 +27,42 @@ const App = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("darkMode") === "true"
-  );
-
   const [feedHeading, setFeedHeading] = useState("");
-  const [selectedPostType, setSelectedPostType] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const handleAuthSuccess = (user) => {
+    setUserData(user);
+    setIsAuthenticated(true);
+    localStorage.setItem("userData", JSON.stringify(user));
+  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://localhost:9000/me", {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error();
 
-  function changeTheme() {
-    localStorage.setItem("darkMode", !darkMode);
-    setDarkMode(prev => !prev);
-  }
+        const data = await res.json();
+        setUserData(data.user);
+        setIsAuthenticated(true);
+        localStorage.setItem("userData", JSON.stringify(data.user));
+      } catch {
+        setIsAuthenticated(false);
+        setUserData(null);
+        localStorage.removeItem("userData");
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle("dark-mode", darkMode);
     document.body.classList.toggle("light-mode", !darkMode);
   }, [darkMode]);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("userData");
-    if (savedUser) {
-      setUserData(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleAuthSuccess = (user) => {
-    setUserData(user);
-    setIsAuthenticated(true);
-    localStorage.setItem("userData", JSON.stringify(user));
+  const changeTheme = () => {
+    localStorage.setItem("darkMode", !darkMode);
+    setDarkMode(prev => !prev);
   };
 
   const handleLogout = () => {
@@ -63,100 +71,83 @@ const App = () => {
     localStorage.removeItem("userData");
   };
 
-  const toggleCreatePost = () => setShowCreate(prev => !prev);
-  const toggleSearchUser = () => setShowSearchUser(prev => !prev);
-  const toggleClick = () => setShowClick(prev => !prev);
-  const toggleProfile = () => setShowProfile(prev => !prev);
-  const refreshPosts = () => setRefreshTrigger(prev => prev + 1);
-
   return (
-    <BrowserRouter>
-      <Routes>
+    <main>
+    <Routes>
 
-        <Route
-          path="/"
-          element={
-            isAuthenticated
-              ? <Navigate to="/feed" />
-              : <LandingPage onAuthSuccess={handleAuthSuccess} />
-          }
+  <Route
+    path="/"
+    element={
+      isAuthenticated
+        ? <Navigate to="/feed" />
+        : <LandingPage onAuthSuccess={handleAuthSuccess} />
+    }
+  />
+
+  <Route
+    path="/feed"
+    element={
+      <HomePage
+        isAuthenticated={isAuthenticated}
+        userData={userData}
+        darkMode={darkMode}
+        changeTheme={changeTheme}
+        handleLogout={handleLogout}
+        setFeedHeading={setFeedHeading}
+        setSelectedCategory={setSelectedCategory}
+      />
+    }
+  >
+    <Route
+      index
+      element={
+        <ShowPost
+          mode={darkMode}
+          refreshTrigger={refreshTrigger}
+          user={userData}
+          feedHeading={feedHeading}
+          selectedCategory={selectedCategory}
         />
+      }
+    />
 
-        <Route
-          path="/feed"
-          element={
-            isAuthenticated ? (
-              <div className={darkMode ? "dark-app-container" : "app-container"}>
-                <Navbar
-                  mode={darkMode}
-                  changeTheme={changeTheme}
-                  toggleCreatePost={toggleCreatePost}
-                  toggleSearchUser={toggleSearchUser}
-                  toggleClick={toggleClick}
-                  toggleProfile={toggleProfile}
-                  onLogout={handleLogout}
-                  user={userData}
-                  setFeedHeading={setFeedHeading}
-                  refreshTrigger={refreshTrigger}
-                  feedHeading={feedHeading}
-                  setSelectedPostType={setSelectedPostType}
-                  setSelectedCategory={setSelectedCategory}
-                />
+    <Route
+      path="profile"
+      element={<Profile mode={darkMode} user={userData} />}
+    />
 
-                <main>
-                  {showCreate && (
-                    <CreatePost
-                      mode={darkMode}
-                      setRefreshTrigger={setRefreshTrigger}
-                      user={userData}
-                    />
-                  )}
+    <Route
+      path="search"
+      element={<SearchUser mode={darkMode} />}
+    />
 
-                  {showSearchUser && <SearchUser mode={darkMode} />}
-
-                  {showClick && (
-                    <Click
-                      mode={darkMode}
-                      onClose={toggleClick}
-                      onUpload={refreshPosts}
-                    />
-                  )}
-
-                  {showProfile && (
-                    <Profile
-                      mode={darkMode}
-                      onClose={toggleProfile}
-                      user={userData}
-                    />
-                  )}
-
-                  <ShowPost
-                    mode={darkMode}
-                    refreshTrigger={refreshTrigger}
-                    user={userData}
-                    feedHeading={feedHeading}
-                    selectedCategory={selectedCategory}
-                  />
-                </main>
-              </div>
-            ) : (
-              <Navigate to="/" />
-            )
-          }
+    <Route
+      path="create"
+      element={
+        <CreatePost
+          mode={darkMode}
+          user={userData}
+          setRefreshTrigger={setRefreshTrigger}
         />
-
-        <Route
-          path="/profile"
-          element={
-            isAuthenticated
-              ? <Profile mode={darkMode} user={userData} />
-              : <Navigate to="/" />
-          }
+      }
+    />
+    
+    <Route
+      path="connect"
+      element={
+        <Connect
+          mode={darkMode}
+          user={userData}
         />
+      }
+    />
+  </Route>
 
-      </Routes>
-    </BrowserRouter>
+
+</Routes>
+
+    </main>
   );
-};
+}
 
 export default App;
