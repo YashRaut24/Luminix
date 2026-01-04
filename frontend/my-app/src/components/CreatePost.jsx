@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./CreatePost.css";
+import axios from "axios";
 
 function CreatePost(props){
   const [file, setFile] = useState(null);
-  const [username, setUsername] = useState("");
   const [caption, setCaption] = useState("");
   const [message, setMessage] = useState("");
   const [postType, setPostType] = useState("");
@@ -14,6 +14,7 @@ function CreatePost(props){
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -26,51 +27,60 @@ function CreatePost(props){
   const handleRemoveFile = () => {
     setFile(null);
     setPreview(null);
-    document.querySelector(".file-input").value = "";
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  // ✅ FRONTEND-ONLY SUBMIT
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!file || !username.trim() || !caption.trim() || !target.trim() || !postType.trim()) {
-      setMessage("Please fill all fields before posting.");
-      return;
-    }
+  if (!file || !caption.trim() || !target.trim() || !postType.trim()) {
+    setMessage("Please fill all fields before posting.");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("caption", caption);
+    formData.append("postType", postType);
+    formData.append("target", target);
+    formData.append("file_url", file);
 
     setIsUploading(true);
-    setUploadProgress(0);
     setMessage("");
 
-    // 🔁 Fake upload progress (UI only)
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          setUploadComplete(true);
-          setMessage("Uploaded Successfully!");
+    await axios.post(
+      "http://localhost:9000/post",
+      formData,
+      { withCredentials: true }
+    );
 
-          setTimeout(() => {
-            setUploadComplete(false);
-            setUploadProgress(0);
-            setMessage("");
-            setFile(null);
-            setPreview(null);
-            setUsername("");
-            setCaption("");
-            setPostType("");
-            setTags([]);
-            setTarget("public");
-            document.querySelector(".file-input").value = "";
-          }, 2000);
+    setIsUploading(false);
+    setUploadComplete(true);
+    setMessage("Uploaded Successfully!");
 
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 150);
-  };
+    setTimeout(() => {
+      setUploadComplete(false);
+      setFile(null);
+      setPreview(null);
+      setCaption("");
+      setPostType("");
+      setTags([]);
+      setTarget("public");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }, 2000);
+
+  } catch (err) {
+    setIsUploading(false); // ❗ VERY IMPORTANT
+    alert(err.response?.data?.message || "Upload failed");
+  }
+};
+
+
 
   return (
     <div className={props.mode ? "dark-create-post-container" : "create-post-container"}>
@@ -82,15 +92,14 @@ function CreatePost(props){
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-grid">
 
-          {/* LEFT COLUMN */}
           <div className="form-column left-column">
             <div className="form-section">
-              <label className="form-label">Username</label>
+               <label className="form-label">Post Type</label>
               <input
                 type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter post type"
+                value={postType}
+                onChange={(e) => setPostType(e.target.value)}
                 className="form-input"
                 required
               />
@@ -160,19 +169,7 @@ function CreatePost(props){
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="form-column right-column">
-            <div className="form-section">
-              <label className="form-label">Post Type</label>
-              <input
-                type="text"
-                placeholder="Enter post type"
-                value={postType}
-                onChange={(e) => setPostType(e.target.value)}
-                className="form-input"
-                required
-              />
-            </div>
 
             <div className="upload-section">
               <label className="form-label">Upload Image</label>
@@ -184,6 +181,7 @@ function CreatePost(props){
                     accept="image/*"
                     onChange={handleFileChange}
                     className="file-input"
+                    ref={fileInputRef}
                     id="file-input"
                   />
                   <label htmlFor="file-input" className="file-input-label">
