@@ -242,7 +242,7 @@
   cursor: pointer;
   font-size: 76px;
   transition: all 0.3s ease;
-  z-index: 1000;
+  z-index: 10;
 }
 
 .profile {
@@ -269,6 +269,47 @@
     top: 15px;
     right: 55px;
     font-size: 32px;
+  }
+}
+
+.people-button,
+.dark-theme-people-button {
+  position: fixed;
+  top: 115px;
+  right: 35px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 42px;
+  transition: all 0.3s ease;
+  z-index: 9;
+}
+
+.people-button {
+  color: #333;
+}
+
+.people-button:hover {
+  color: #000;
+  transform: scale(1.1);
+}
+
+.dark-theme-people-button {
+  color: #aaa;
+}
+
+.dark-theme-people-button:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+
+  .people-button,
+  .dark-theme-people-button {
+    top: 65px;
+    right: 55px;
+    font-size: 24px;
   }
 }
 
@@ -434,11 +475,7 @@
   background: rgba(30, 60, 120, 0.15);
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
 }
-.feedbutton,
-.dark-feed-button,
 .logo-button,
-.profile,
-.dark-mode-profile,
 .theme-toggle,
 .dark-theme-toggle,
 .logout,
@@ -497,7 +534,11 @@
   line-height: 1.2;
 }
 
-
+.profile-display-image{
+  height:8vh;
+  width:4.5vw;
+  border-radius: 50%;
+}
 /* 
 
 
