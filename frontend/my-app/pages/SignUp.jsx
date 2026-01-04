@@ -9,7 +9,7 @@ import {
 import "./SignUp.css";
 import axios from 'axios';
 
-function SignUp({ onClose, onSwitchToSignIn }) {
+function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -31,7 +31,11 @@ function SignUp({ onClose, onSwitchToSignIn }) {
       alert("Password doesn't match please try again!")
     }else{
       axios.post("http://localhost:9000/signup",formData)
-      .then(res=>{alert(res.data.message);})
+      .then(res=>{
+        alert(res.data.message);
+        onSuccess?.(res.data.user);
+        onSwitchToSignIn();
+      })
       .catch(err => {
       console.error(err);
       alert(err.response?.data?.message || "Server error");
