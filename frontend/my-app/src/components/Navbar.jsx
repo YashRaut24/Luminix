@@ -1,36 +1,18 @@
-import React, { useState } from "react";
-import { MdDarkMode } from "react-icons/md";
-import { MdLightMode } from "react-icons/md";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { MdDarkMode, MdLightMode, MdOutlineRssFeed } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
-import LandingPage from "../../pages/LandingPage";
-import { MdOutlineRssFeed } from "react-icons/md";
+import { MdOutlinePeopleAlt } from "react-icons/md";
 
 import "./Navbar.css";
 
 const Navbar = (props) => {
+  const navigate = useNavigate();
+
   const [showMenu, setShowMenu] = useState(false);
-  const [showFeed, setShowFeed] = useState(false);
-  const [displayFeed, setDisplayFeed] = useState(false);
-
-  const handleLogoClick = () => {
-    setShowMenu(!showMenu);
-  };
-
-  const handleFeedClick = () => {
-      console.log("FEED CLICKED");
-
-    setShowFeed(!showFeed);
-  };
-  
-  const handleActionClick = (action) => {
-    action();
-    setShowMenu(false); 
-  };
-
-  const logout = () => {
-    props.onLogout(); 
-  };
+  const [showFeedMenu, setShowFeedMenu] = useState(false);
 
   const categories = [
     "Your feed",
@@ -45,111 +27,117 @@ const Navbar = (props) => {
     "Achievements",
     "Music",
     "Tech Posts",
-    "Sensitive"
+    "Sensitive",
   ];
 
-  const categoryToPostType = {
-    "Your feed": null,       
-    "News": "News",
-    "Memes": "Memes",
-    "Emotional": "Emotional",
-    "Entertainment": "Entertainment",
-    "Knowledge": "Knowledge",
-    "Creative": "Creative",
-    "Discussions": "Discussions",
-    "Sports": "Sports",
-    "Achievements": "Achievements",
-    "Music": "Music",
-    "Tech Posts": "Tech",
-    "Sensitive": "Sensitive"
+  const handleCategoryClick = (category) => {
+    props.setFeedHeading(category);
+    props.setSelectedCategory(category);
+    navigate("/feed"); // ensure feed page
+    setShowFeedMenu(false);
   };
 
-  const handleDisplayFeed = (index) => {
-    const selectedCategory = categories[index];
-    props.setFeedHeading(selectedCategory);
-    props.setSelectedCategory(selectedCategory);
-    setDisplayFeed(true);
+  const logout = () => {
+    props.onLogout();
+    navigate("/");
   };
 
   return (
     <>
-      <div className="logo-button" onClick={handleLogoClick}>
-        <img className="luminix-logo" src="./src/images/Luminix.jpg" alt="Luminix Logo" />
+      <div className="logo-button" onClick={() => setShowMenu(!showMenu)}>
+        <img
+          className="luminix-logo"
+          src="./src/images/Luminix.jpg"
+          alt="Luminix Logo"
+        />
       </div>
 
       {showMenu && (
         <div className="circular-menu">
-          <button 
-            className="menu-icon-btn search-btn" 
-            onClick={() => handleActionClick(props.toggleSearchUser)}
+          <button
+            className="menu-icon-btn search-btn"
+            onClick={() => navigate("/feed/search")}
           >
-            <span className="icon-wrapper">🔍</span>
+            🔍
           </button>
-          
-          <button 
-            className="menu-icon-btn create-btn" 
-            onClick={() => handleActionClick(props.toggleCreatePost)}
+
+          <button
+            className="menu-icon-btn create-btn"
+            onClick={() => navigate("/feed/create")}
           >
-            <span className="icon-wrapper">+</span>
+            +
           </button>
-          
-          <button 
-            className="menu-icon-btn camera-btns" 
-            onClick={() => handleActionClick(props.toggleClick)}
+
+          <button
+            className="menu-icon-btn camera-btns"
+            onClick={() => navigate("/feed/camera")}
           >
-            <span className="icon-wrapper">📷</span>
+            📷
           </button>
         </div>
       )}
 
-      <div>
-        <button className={props.mode ? "dark-feed-button" : "feedbutton"} onClick={handleFeedClick}>
-          <MdOutlineRssFeed />
-        </button>
-        {showFeed && (
-          <div className="feed-menu">
-            {categories.map((item, index) => (
-              <button key={index} className="category-item" onClick={() => {handleDisplayFeed(index)}}>
-                {item}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {displayFeed && (
-        <div className={props.mode ? "dark-feed-page" : "feed-page"}>
-          <h2 className={props.mode ? "dark-side-feed" : "side-feed"}>
-            <div className="h2-content">
-              {(props.feedHeading || "").split("").map((char, idx) =>
-                char === " "
-                  ? <span key={idx} className="space"></span>
-                  : <span key={idx}>{char}</span>
-              )}
-            </div>
-          </h2>
-        </div>
-      )}
-      
-      <button 
-        className={props.mode ? "dark-mode-profile" : "profile"}  
-        onClick={props.toggleProfile}
+      <button
+        className={props.mode ? "dark-feed-button" : "feedbutton"}
+        onClick={() => {
+          navigate("/feed");
+          setShowFeedMenu(!showFeedMenu);
+        }}
       >
-        <CgProfile />
+        <MdOutlineRssFeed />
       </button>
-      
-      <button 
-        className={props.mode ? "dark-theme-toggle" : "theme-toggle"} 
+
+      {showFeedMenu && (
+        <div className="feed-menu">
+          {categories.map((item, index) => (
+            <button
+              key={index}
+              className="category-item"
+              onClick={() => handleCategoryClick(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <button
+        className={props.mode ? "dark-mode-profile" : "profile"}
+        onClick={() => navigate("/feed/profile")}
+      >
+        {props.user?.profileImage ? (
+          <img
+            className="profile-display-image"
+            src={`http://localhost:9000${props.user.profileImage}`}
+            alt="profile"
+          />
+        ) : (
+          <CgProfile />
+        )}
+      </button>
+
+      <button
+        className={props.mode ? "dark-theme-people-button" : "people-button"}
+        onClick={() => navigate("/feed/connect")}
+      >
+        <MdOutlinePeopleAlt />
+      </button>
+
+      <button
+        className={props.mode ? "dark-theme-toggle" : "theme-toggle"}
         onClick={props.changeTheme}
       >
         {props.mode ? <MdLightMode /> : <MdDarkMode />}
       </button>
 
-      <button className={props.mode ? "dark-logout" : "logout"} onClick={logout}>
+      <button
+        className={props.mode ? "dark-logout" : "logout"}
+        onClick={logout}
+      >
         <IoMdLogOut />
       </button>
     </>
   );
 };
- 
+
 export default Navbar;
