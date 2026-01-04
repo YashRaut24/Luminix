@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 import {
   MdEmail,
@@ -13,7 +12,6 @@ import "./SignIn.css";
 
 function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -41,7 +39,6 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
       onAuthSuccess(res.data.user);
       console.log("LOGIN RESPONSE:", res.data);
 
-      navigate("/feed");
 
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
