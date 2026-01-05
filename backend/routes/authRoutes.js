@@ -144,7 +144,7 @@ router.post("/post", upload.single("file_url"), async(req, res) => {
 
 router.get("/posts", async (req, res) => {
   try{
-    const token = req.cookies.token;
+    const token = req.cookies.luminix_token;
     let currentUserId = null;
 
     if(token) {
@@ -183,6 +183,33 @@ router.get("/posts", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to fetch posts" });
+  }
+});
+
+router.get("/contacts", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    let currentUserId = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUserId = decoded.id;
+      } catch (err) {
+        console.log("Invalid token");
+      }
+    }
+
+    const query = currentUserId ? { _id: { $ne: currentUserId } } : {};
+    const contacts = await User.find(query)
+      .select("-password")
+      .populate("followers", "name")
+      .populate("following", "name");
+
+    res.status(200).json(contacts);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Failed to fetch contacts" });
   }
 });
 
