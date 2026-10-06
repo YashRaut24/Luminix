@@ -38,7 +38,15 @@ const userSchema = new mongoose.Schema({
   following: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
-  }]
+  }],
+  growthRate: {
+    type: Number,
+    default: 0
+  },
+  spotlightBadge: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 });

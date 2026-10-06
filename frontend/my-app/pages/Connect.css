@@ -158,3 +158,448 @@
         font-size: 18px;
     }
 }
+
+/* =========================================
+   CREATOR SPOTLIGHT OF THE WEEK
+   ========================================= */
+
+.spotlight-section {
+    width: 100%;
+    margin-bottom: 10px;
+    animation: fadeIn 0.4s ease;
+}
+
+.spotlight-banner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.spotlight-badge-pill {
+    background: linear-gradient(135deg, #f59e0b, #ec4899);
+    color: white;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.growth-metric-badge {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.growth-subtext {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.spotlight-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.dark-connect-container .spotlight-card {
+    background-image: linear-gradient(#1e293b, #0f172a), linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.spotlight-card:hover {
+    transform: translateY(-3px);
+}
+
+.spotlight-creator-info {
+    display: flex;
+    gap: 20px;
+    flex: 1.2;
+    align-items: flex-start;
+}
+
+.spotlight-avatar-box {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+}
+
+.spotlight-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ec4899;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
+}
+
+.spotlight-star-marker {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 22px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.spotlight-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.spotlight-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.spotlight-name-row h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: -0.3px;
+}
+
+.dark-connect-container .spotlight-name-row h3 {
+    color: #f8fafc;
+}
+
+.emerging-tier-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.spotlight-handle {
+    font-size: 13px;
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+.spotlight-role-title {
+    margin: 4px 0 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.dark-connect-container .spotlight-role-title {
+    color: #cbd5e1;
+}
+
+.spotlight-bio {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.dark-connect-container .spotlight-bio {
+    color: #94a3b8;
+}
+
+.spotlight-action-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.spotlight-follow-btn {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    border: none;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+    transition: all 0.2s;
+}
+
+.spotlight-follow-btn.followed {
+    background: #10b981;
+}
+
+.spotlight-remix-btn {
+    background: transparent;
+    border: 1px solid #8b5cf6;
+    color: #8b5cf6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.spotlight-remix-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.spotlight-featured-piece {
+    flex: 1;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.featured-piece-preview {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.featured-piece-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.featured-piece-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(15, 23, 42, 0.85));
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 12px;
+}
+
+.featured-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    background: #ec4899;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.featured-stats {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+}
+
+.featured-caption {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: #64748b;
+  text-align: center;
+}
+
+.dark-connect-container .featured-caption {
+  color: #94a3b8;
+}
+
+/* =========================================
+   CREATIVE REMIX TREES SECTION
+   ========================================= */
+
+.remix-trees-section {
+    width: 100%;
+}
+
+.remix-trees-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.section-subtext {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.dark-connect-container .section-subtext {
+    color: #94a3b8;
+}
+
+.explore-create-btn {
+    background: transparent;
+    border: 1px solid #8b5cf6;
+    color: #8b5cf6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.explore-create-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.remix-chain-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 20px 24px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.dark-connect-container .remix-chain-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.chain-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.chain-node-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.chain-node-tag.remix-tag {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    color: white;
+}
+
+.chain-thumb {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chain-creator {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dark-connect-container .chain-creator {
+    color: #f1f5f9;
+}
+
+.chain-title {
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.chain-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #8b5cf6;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.remix-flavor-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    padding: 2px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.chain-remix-action-btn {
+    margin-left: auto;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+@media (max-width: 900px) {
+    .spotlight-card {
+        flex-direction: column;
+    }
+    .spotlight-featured-piece {
+        max-width: 100%;
+        width: 100%;
+    }
+}
