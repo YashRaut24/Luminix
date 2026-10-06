@@ -8,6 +8,7 @@ const upload = require("../middleware/upload");
 const Post = require("../models/Post");
 const Collection = require("../models/Collection");
 const Flash = require("../models/Flash");
+const aiService = require("../services/aiService");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -940,6 +941,165 @@ router.get("/network-graph", async (req, res) => {
   } catch (err) {
     console.error("Network graph error:", err);
     res.status(500).json({ message: "Failed to generate network graph" });
+  }
+});
+
+// ==========================================
+// AI FEATURES (VISION, SEMANTICS & RANKING)
+// ==========================================
+
+// 1. Auto-tagging, Caption Variations & Smart Category Classification
+router.post("/ai/suggest", async (req, res) => {
+  try {
+    const { fileName, captionHint } = req.body;
+    const suggestions = aiService.analyzeImageAndSuggest(fileName, captionHint);
+    res.status(200).json(suggestions);
+  } catch (err) {
+    console.error("AI Suggestion error:", err);
+    res.status(500).json({ message: "Failed to generate AI suggestions" });
+  }
+});
+
+// 2. Pre-flight Content Safety & Toxicity Check
+router.post("/ai/safety-check", async (req, res) => {
+  try {
+    const { text, fileName } = req.body;
+    const safetyReport = aiService.checkContentSafety(text, fileName);
+    res.status(200).json(safetyReport);
+  } catch (err) {
+    console.error("Content safety check error:", err);
+    res.status(500).json({ message: "Failed to run safety audit" });
+  }
+});
+
+// 3. Semantic Search over Posts & Creators
+router.get("/ai/semantic-search", async (req, res) => {
+  try {
+    const query = req.query.q || "";
+
+    const posts = await Post.find()
+      .populate("author", "name email profileImage lumiTag role creatorRole")
+      .populate({
+        path: "remix_of",
+        select: "username email caption file_url createdAt tags author",
+      })
+      .sort({ createdAt: -1 });
+
+    const postsWithData = posts.map(post => ({
+      _id: post._id,
+      author: post.author,
+      username: post.username,
+      email: post.email,
+      target: post.target,
+      file_url: post.file_url,
+      file_name: post.file_name,
+      caption: post.caption,
+      tags: post.tags,
+      upload_time: post.createdAt,
+      likes: post.likes ? post.likes.length : 0,
+      likesList: post.likes || [],
+      comments: post.comments || [],
+      reposts: post.reposts ? post.reposts.length : 0,
+      shares: post.shares || 0,
+      views: post.views || 0,
+      process_steps: post.process_steps || [],
+      remix_of: post.remix_of || null,
+      remix_type: post.remix_type || "Remix",
+      remix_count: post.remix_count || 0
+    }));
+
+    // Perform Semantic Search via AiService
+    const semanticPosts = aiService.semanticSearch(query, postsWithData);
+
+    // Also find matching Creators
+    const queryLower = query.toLowerCase();
+    const matchingCreators = await User.find({
+      $or: [
+        { name: { $regex: queryLower, $options: "i" } },
+        { lumiTag: { $regex: queryLower, $options: "i" } },
+        { bio: { $regex: queryLower, $options: "i" } },
+        { creatorRole: { $regex: queryLower, $options: "i" } }
+      ]
+    }).select("-password").limit(6);
+
+    res.status(200).json({
+      query,
+      resultsCount: semanticPosts.length,
+      posts: semanticPosts,
+      creators: matchingCreators
+    });
+  } catch (err) {
+    console.error("Semantic search error:", err);
+    res.status(500).json({ message: "Semantic search failed" });
+  }
+});
+
+// 4. Personalized "For You" Feed based on User Interaction Profile
+router.get("/posts/for-you", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    let currentUser = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUser = await User.findById(decoded.id).populate("following");
+      } catch (err) {}
+    }
+
+    const posts = await Post.find()
+      .populate("author", "name email profileImage lumiTag role creatorRole")
+      .populate({
+        path: "remix_of",
+        select: "username email caption file_url createdAt tags author",
+      })
+      .sort({ createdAt: -1 });
+
+    const postsWithData = posts.map(post => ({
+      _id: post._id,
+      author: post.author,
+      username: post.username,
+      email: post.email,
+      target: post.target,
+      file_url: post.file_url,
+      file_name: post.file_name,
+      caption: post.caption,
+      tags: post.tags,
+      upload_time: post.createdAt,
+      likes: post.likes ? post.likes.length : 0,
+      likesList: post.likes || [],
+      comments: post.comments || [],
+      reposts: post.reposts ? post.reposts.length : 0,
+      shares: post.shares || 0,
+      views: post.views || 0,
+      process_steps: post.process_steps || [],
+      remix_of: post.remix_of || null,
+      remix_type: post.remix_type || "Remix",
+      remix_count: post.remix_count || 0
+    }));
+
+    if (!currentUser) {
+      // Default to general ranking if not logged in
+      return res.status(200).json({ posts: postsWithData });
+    }
+
+    // Find all posts that current user has liked
+    const userLikedPosts = await Post.find({ likes: currentUser._id }).select("tags target");
+
+    // Rank candidate posts with AiService
+    const personalizedPosts = aiService.rankForYouFeed(
+      postsWithData,
+      userLikedPosts,
+      currentUser.following || []
+    );
+
+    res.status(200).json({
+      message: "Personalized 'For You' feed ranked successfully",
+      posts: personalizedPosts
+    });
+  } catch (err) {
+    console.error("For You feed ranking error:", err);
+    res.status(500).json({ message: "Failed to rank personalized feed" });
   }
 });
 

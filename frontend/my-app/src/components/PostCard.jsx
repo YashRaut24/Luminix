@@ -18,7 +18,7 @@ import {
   FiCheckCircle,
   FiMessageCircle
 } from "react-icons/fi";
-import { BsPaletteFill } from "react-icons/bs";
+import { BsPaletteFill, BsStars } from "react-icons/bs";
 
 function PostCard({ post, mode }) {
   const navigate = useNavigate();
@@ -174,6 +174,11 @@ function PostCard({ post, mode }) {
           </div>
 
           <div className="post-header-badges">
+            {post.recommendationReason && (
+              <span className="for-you-affinity-badge" title={`Affinity: ${post.recommendationScore || 0}%`}>
+                <BsStars /> {post.recommendationReason}
+              </span>
+            )}
             {hasProcessSteps && (
               <button
                 type="button"

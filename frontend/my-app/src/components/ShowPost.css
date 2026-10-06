@@ -364,3 +364,138 @@
     right: 16px;
   }
 }
+
+/* ========================================== */
+/* AI "FOR YOU" FEED SWITCHER & AFFINITY      */
+/* ========================================== */
+
+.feed-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.feed-view-switch-row {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.dark-show-posts-wrapper .feed-view-switch-row {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.feed-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dark-show-posts-wrapper .feed-switch-btn {
+  color: #94a3b8;
+}
+
+.feed-switch-btn.active {
+  background: #ffffff;
+  color: #7c3aed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dark-show-posts-wrapper .feed-switch-btn.active {
+  background: #1e293b;
+  color: #c084fc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.feed-switch-icon {
+  font-size: 15px;
+}
+
+.feed-switch-sub {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding-left: 2px;
+}
+
+.for-you-affinity-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.affinity-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7c3aed;
+  letter-spacing: 0.5px;
+}
+
+.dark-show-posts-wrapper .affinity-label {
+  color: #c084fc;
+}
+
+.affinity-tag-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6d28d9;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.dark-show-posts-wrapper .affinity-tag-chip {
+  color: #d8b4fe;
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.affinity-subtext {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.dark-show-posts-wrapper .affinity-subtext {
+  color: #94a3b8;
+}
+
+/* For You Affinity Badge on Post Card */
+.for-you-affinity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  padding: 4px 9px;
+  border-radius: 14px;
+  letter-spacing: 0.2px;
+}
+
+.dark-theme .for-you-affinity-badge {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+}

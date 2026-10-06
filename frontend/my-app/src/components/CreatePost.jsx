@@ -10,9 +10,13 @@ import {
   FiCheck,
   FiRepeat,
   FiImage,
-  FiUploadCloud
+  FiUploadCloud,
+  FiShield,
+  FiAlertTriangle,
+  FiCheckCircle,
+  FiZap
 } from "react-icons/fi";
-import { BsPaletteFill } from "react-icons/bs";
+import { BsPaletteFill, BsStars } from "react-icons/bs";
 
 function CreatePost(props) {
   const location = useLocation();
@@ -23,7 +27,7 @@ function CreatePost(props) {
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
   const [message, setMessage] = useState("");
-  const [postType, setPostType] = useState("Artwork");
+  const [postType, setPostType] = useState("Creative");
   const [preview, setPreview] = useState(null);
   const [target, setTarget] = useState("public");
   const [tagInput, setTagInput] = useState("");
@@ -32,6 +36,11 @@ function CreatePost(props) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef(null);
+
+  // AI Feature States: Auto-tagging, Captions, Category, Safety Check
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const [safetyReport, setSafetyReport] = useState(null);
 
   // Creative Feature 1: Process / WIP thread builder
   const [enableProcessThread, setEnableProcessThread] = useState(false);
@@ -74,17 +83,45 @@ function CreatePost(props) {
     }
   }, [location.state, searchParams]);
 
+  const triggerAiAnalysis = async (selectedFile, textHint) => {
+    if (!selectedFile) return;
+    setAiLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:9000/ai/suggest",
+        {
+          fileName: selectedFile.name,
+          captionHint: textHint !== undefined ? textHint : caption,
+        },
+        { withCredentials: true }
+      );
+      if (res.data) {
+        setAiSuggestions(res.data);
+        if (res.data.safety) {
+          setSafetyReport(res.data.safety);
+        }
+      }
+    } catch (err) {
+      console.error("AI Assistant error:", err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       setPreview(URL.createObjectURL(selectedFile));
+      triggerAiAnalysis(selectedFile, caption);
     }
   };
 
   const handleRemoveFile = () => {
     setFile(null);
     setPreview(null);
+    setAiSuggestions(null);
+    setSafetyReport(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -136,6 +173,11 @@ function CreatePost(props) {
 
     if (!file || !caption.trim() || !target.trim()) {
       setMessage("Please add an image, caption, and select an audience.");
+      return;
+    }
+
+    if (safetyReport && !safetyReport.isSafe) {
+      setMessage(`Upload blocked by Content Safety Shield: ${safetyReport.flags?.join(", ") || "Inappropriate/Toxic content detected."}`);
       return;
     }
 
@@ -403,6 +445,145 @@ function CreatePost(props) {
                 </div>
               )}
             </div>
+
+            {/* AI Creative Co-Pilot: Auto-tagging, Captions, Category, Safety Check */}
+            {file && (
+              <div className="ai-copilot-card">
+                <div className="ai-copilot-header">
+                  <div className="ai-badge-row">
+                    <span className="ai-engine-pill">
+                      <BsStars className="ai-sparkle-icon" /> AI Co-Pilot
+                    </span>
+                    {safetyReport && (
+                      <span className={`safety-shield-pill ${safetyReport.isSafe ? "safe" : "flagged"}`}>
+                        {safetyReport.isSafe ? <FiCheckCircle /> : <FiAlertTriangle />}
+                        {safetyReport.isSafe ? `Safe (${safetyReport.safetyScore}%)` : `Flagged (${safetyReport.safetyScore}%)`}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="ai-refresh-btn"
+                    onClick={() => triggerAiAnalysis(file, caption)}
+                    disabled={aiLoading}
+                    title="Re-run AI Analysis"
+                  >
+                    <FiZap /> {aiLoading ? "Thinking..." : "Re-Analyze"}
+                  </button>
+                </div>
+
+                {aiLoading ? (
+                  <div className="ai-loading-state">
+                    <div className="ai-pulse-bar">
+                      <div className="ai-pulse-fill"></div>
+                    </div>
+                    <p>AI Engine analyzing style semantics, tags & content safety...</p>
+                  </div>
+                ) : aiSuggestions ? (
+                  <div className="ai-results-body">
+                    {/* Smart Category Classification */}
+                    {aiSuggestions.classifiedCategory && (
+                      <div className="ai-category-strip">
+                        <div className="ai-category-info">
+                          <span className="ai-label">Smart Category:</span>
+                          <span className="ai-cat-name">{aiSuggestions.classifiedCategory}</span>
+                          <span className="ai-cat-confidence">{aiSuggestions.categoryConfidence}% match</span>
+                        </div>
+                        {postType !== aiSuggestions.classifiedCategory && (
+                          <button
+                            type="button"
+                            className="ai-apply-cat-btn"
+                            onClick={() => setPostType(aiSuggestions.classifiedCategory)}
+                          >
+                            Apply "{aiSuggestions.classifiedCategory}"
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Auto Caption Suggestions */}
+                    {aiSuggestions.captionVariations && (
+                      <div className="ai-caption-suggestions">
+                        <span className="ai-label">Caption Suggestions (click to apply):</span>
+                        <div className="ai-captions-grid">
+                          <div
+                            className="ai-caption-card"
+                            onClick={() => setCaption(aiSuggestions.captionVariations.poetic)}
+                          >
+                            <span className="caption-flavor">🎭 Artistic / Poetic</span>
+                            <p>"{aiSuggestions.captionVariations.poetic}"</p>
+                          </div>
+                          <div
+                            className="ai-caption-card"
+                            onClick={() => setCaption(aiSuggestions.captionVariations.punchy)}
+                          >
+                            <span className="caption-flavor">⚡ Punchy & Social</span>
+                            <p>"{aiSuggestions.captionVariations.punchy}"</p>
+                          </div>
+                          <div
+                            className="ai-caption-card"
+                            onClick={() => setCaption(aiSuggestions.captionVariations.technical)}
+                          >
+                            <span className="caption-flavor">📐 Workflow / Technical</span>
+                            <p>"{aiSuggestions.captionVariations.technical}"</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Auto Tagging Suggestions */}
+                    {aiSuggestions.suggestedTags && aiSuggestions.suggestedTags.length > 0 && (
+                      <div className="ai-tags-section">
+                        <div className="ai-tags-header">
+                          <span className="ai-label">Suggested Tags:</span>
+                          <button
+                            type="button"
+                            className="ai-add-all-tags-btn"
+                            onClick={() => {
+                              const newTags = Array.from(new Set([...tags, ...aiSuggestions.suggestedTags]));
+                              setTags(newTags);
+                            }}
+                          >
+                            + Add All Tags
+                          </button>
+                        </div>
+                        <div className="ai-tags-pills">
+                          {aiSuggestions.suggestedTags.map((t, idx) => {
+                            const isAdded = tags.includes(t);
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                className={`ai-tag-pill ${isAdded ? "added" : ""}`}
+                                onClick={() => {
+                                  if (!isAdded) {
+                                    setTags([...tags, t]);
+                                  }
+                                }}
+                              >
+                                {isAdded ? "✓" : "+"} #{t}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Content Safety Check Report */}
+                    {safetyReport && !safetyReport.isSafe && (
+                      <div className="ai-safety-warning">
+                        <FiAlertTriangle />
+                        <div>
+                          <strong>Content Safety Alert:</strong>
+                          <p>{safetyReport.flags?.join(", ")}</p>
+                          <small>Upload is blocked until flagged content is removed.</small>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             {/* Process / WIP Steps List */}
             {enableProcessThread && (
