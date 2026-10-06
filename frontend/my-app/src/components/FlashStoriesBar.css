@@ -1,0 +1,160 @@
+.flash-bar-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 20px auto;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.flash-bar-container.dark-theme {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.flash-stories-scroll {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 2px;
+}
+
+.flash-stories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.flash-story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  width: 76px;
+}
+
+.flash-story-item:hover {
+  transform: translateY(-3px);
+}
+
+.story-ring-wrapper {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-ring-wrapper.active-ring {
+  background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+  animation: pulseGlow 3s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.story-ring-wrapper.add-ring {
+  border: 2px dashed #8b5cf6;
+  background: transparent;
+}
+
+.story-avatar-holder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: #0f172a;
+  border: 2px solid #ffffff;
+}
+
+.dark-theme .story-avatar-holder {
+  border-color: #1e293b;
+}
+
+.story-avatar-holder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-avatar-holder.add-avatar {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-initial {
+  font-weight: 800;
+  font-size: 20px;
+  color: #8b5cf6;
+}
+
+.add-badge-plus {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border: 2px solid white;
+}
+
+.flash-zap-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  border: 2px solid white;
+}
+
+.story-author-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  max-width: 72px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.dark-theme .story-author-name {
+  color: #f1f5f9;
+}
+
+.story-time-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #f59e0b;
+}

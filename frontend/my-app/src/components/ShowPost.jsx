@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PostCard from "./PostCard";
+import FlashStoriesBar from "./FlashStoriesBar";
 import "./ShowPost.css";
 
-function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory }) {
+function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,9 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory }) {
   return (
     <div className={mode ? "dark-show-posts-wrapper" : "show-posts-wrapper"}>
       <div className={mode ? "dark-show-posts-container" : "show-posts-container"}>
+        {/* 24-Hour Ephemeral Flash Stories */}
+        <FlashStoriesBar user={user} mode={mode} />
+
         {feedHeading && feedHeading !== "Your feed" && (
           <div className="feed-heading-banner">
             <h2>{feedHeading} Feed</h2>
