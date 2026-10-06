@@ -56,6 +56,15 @@ const userSchema = new mongoose.Schema({
   profileViews: {
     type: Number,
     default: 0
+  },
+  accentColor: {
+    type: String,
+    default: "#8b5cf6"
+  },
+  profileLayout: {
+    type: String,
+    enum: ["grid", "list", "showcase"],
+    default: "grid"
   }
 }, {
   timestamps: true

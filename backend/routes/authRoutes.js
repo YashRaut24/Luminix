@@ -1408,6 +1408,32 @@ router.post("/users/:id/view", async (req, res) => {
   }
 });
 
+// 4. Update Profile Themes (accentColor, profileBackground, profileLayout)
+router.post("/profile/theme", authMiddleware, async (req, res) => {
+  try {
+    const { accentColor, profileBackground, profileLayout } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (accentColor) user.accentColor = accentColor;
+    if (profileBackground) user.profileBackground = profileBackground;
+    if (profileLayout) user.profileLayout = profileLayout;
+
+    await user.save();
+    res.status(200).json({
+      message: "Profile theme updated successfully",
+      theme: {
+        accentColor: user.accentColor,
+        profileBackground: user.profileBackground,
+        profileLayout: user.profileLayout
+      }
+    });
+  } catch (err) {
+    console.error("Profile theme update error:", err);
+    res.status(500).json({ message: "Failed to update profile theme" });
+  }
+});
+
 router.post("/logout", (req, res) => {
   res.clearCookie("luminix_token");
   res.json({ message: "Logged out" });

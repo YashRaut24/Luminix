@@ -17,6 +17,13 @@ function Profile({ mode, user }) {
     const [collections, setCollections] = useState([]);
     const [selectedCollection, setSelectedCollection] = useState(null);
     const [skillBadges, setSkillBadges] = useState([]);
+    const [showThemePanel, setShowThemePanel] = useState(false);
+    const [accentColor, setAccentColor] = useState(user?.accentColor || "#8b5cf6");
+    const [bannerGradient, setBannerGradient] = useState(
+      user?.profileBackground || "linear-gradient(135deg, #4f46e5, #7c3aed, #db2777)"
+    );
+    const [profileLayout, setProfileLayout] = useState(user?.profileLayout || "grid");
+    const [savingTheme, setSavingTheme] = useState(false);
     const navigate = useNavigate();
     useEffect(() => {
       const fetchUser = async () => {
@@ -39,6 +46,9 @@ function Profile({ mode, user }) {
           }));
 
           setImage(res.data.user.profileImage || null);
+          if (res.data.user.accentColor) setAccentColor(res.data.user.accentColor);
+          if (res.data.user.profileBackground) setBannerGradient(res.data.user.profileBackground);
+          if (res.data.user.profileLayout) setProfileLayout(res.data.user.profileLayout);
 
           // Record profile view
           if (res.data.user._id) {
@@ -140,6 +150,44 @@ function Profile({ mode, user }) {
       }));
     }, [user]);
 
+  const handleSaveTheme = async (newAccent, newBanner, newLayout) => {
+    try {
+      setSavingTheme(true);
+      const acc = newAccent !== undefined ? newAccent : accentColor;
+      const ban = newBanner !== undefined ? newBanner : bannerGradient;
+      const lay = newLayout !== undefined ? newLayout : profileLayout;
+
+      await axios.post(
+        "http://localhost:9000/profile/theme",
+        {
+          accentColor: acc,
+          profileBackground: ban,
+          profileLayout: lay,
+        },
+        { withCredentials: true }
+      );
+      setSavingTheme(false);
+    } catch (e) {
+      setSavingTheme(false);
+    }
+  };
+
+  const ACCENT_PRESETS = [
+    { label: "Purple Nebula", color: "#8b5cf6" },
+    { label: "Hot Pink", color: "#ec4899" },
+    { label: "Electric Cyan", color: "#38bdf8" },
+    { label: "Emerald Glow", color: "#10b981" },
+    { label: "Golden Amber", color: "#f59e0b" },
+    { label: "Deep Indigo", color: "#6366f1" },
+  ];
+
+  const BANNER_PRESETS = [
+    { name: "Nebula Glow", gradient: "linear-gradient(135deg, #4f46e5, #7c3aed, #db2777)" },
+    { name: "Cyber Neon", gradient: "linear-gradient(135deg, #0f172a, #0284c7, #ec4899)" },
+    { name: "Sunset Horizon", gradient: "linear-gradient(135deg, #ea580c, #db2777, #7c3aed)" },
+    { name: "Emerald Forest", gradient: "linear-gradient(135deg, #065f46, #059669, #10b981)" },
+  ];
+
   const [editedProfile, setEditedProfile] = useState(profile);
 
   const stats = {
@@ -215,20 +263,90 @@ function Profile({ mode, user }) {
               <button className="profile-close-btn" onClick={handleClose}>✕</button>
 
               <div className="profile-left-section">
-                <div className="profile-card-main">
-                  {/* <div className="profile-cover-section">
-                    <div className="cover-gradient"></div>
+                <div
+                  className="profile-card-main"
+                  style={{
+                    "--profile-accent": accentColor,
+                    borderColor: accentColor,
+                  }}
+                >
+                  {/* Creator Themed Banner Header */}
+                  <div
+                    className="profile-cover-banner"
+                    style={{ background: bannerGradient }}
+                  >
+                    <button
+                      type="button"
+                      className="customize-theme-btn"
+                      onClick={() => setShowThemePanel(!showThemePanel)}
+                      title="Customize Profile Theme (Accents, Banner & Layout)"
+                    >
+                      🎨 Theme
+                    </button>
+                  </div>
 
-                    <div className="profile-avatar-wrapper">
-                      <div className="avatar-glow"></div>
-                      <img src={profile.profilePic} alt="Profile" className="profile-avatar" />
-                      {profile.verified && (
-                        <div className="verified-badge">
-                          <MdVerified />
+                  {/* Theme Customizer Panel */}
+                  {showThemePanel && (
+                    <div className="profile-theme-picker-panel">
+                      <div className="theme-picker-section">
+                        <span className="picker-label">Accent Color:</span>
+                        <div className="color-swatches-row">
+                          {ACCENT_PRESETS.map((p) => (
+                            <button
+                              key={p.color}
+                              type="button"
+                              className={`color-swatch-circle ${accentColor === p.color ? "active" : ""}`}
+                              style={{ background: p.color }}
+                              onClick={() => {
+                                setAccentColor(p.color);
+                                handleSaveTheme(p.color, undefined, undefined);
+                              }}
+                              title={p.label}
+                            />
+                          ))}
                         </div>
-                      )}
+                      </div>
+
+                      <div className="theme-picker-section">
+                        <span className="picker-label">Banner Gradient:</span>
+                        <div className="banner-presets-row">
+                          {BANNER_PRESETS.map((b) => (
+                            <button
+                              key={b.name}
+                              type="button"
+                              className={`banner-thumb-btn ${bannerGradient === b.gradient ? "active" : ""}`}
+                              style={{ background: b.gradient }}
+                              onClick={() => {
+                                setBannerGradient(b.gradient);
+                                handleSaveTheme(undefined, b.gradient, undefined);
+                              }}
+                            >
+                              <span>{b.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="theme-picker-section">
+                        <span className="picker-label">Gallery Layout:</span>
+                        <div className="layout-picker-row">
+                          {["grid", "list", "showcase"].map((lay) => (
+                            <button
+                              key={lay}
+                              type="button"
+                              className={`layout-choice-btn ${profileLayout === lay ? "active" : ""}`}
+                              onClick={() => {
+                                setProfileLayout(lay);
+                                handleSaveTheme(undefined, undefined, lay);
+                              }}
+                            >
+                              {lay === "grid" ? "▦ Grid" : lay === "list" ? "▤ List" : "💎 Showcase"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div> */}
+                  )}
 
                   <div className="profile-main-info">
                     
@@ -482,7 +600,7 @@ function Profile({ mode, user }) {
                       )}
                     </div>
                   ) : (
-                    <div className="recent-posts-grid">
+                    <div className={`recent-posts-grid layout-${profileLayout || "grid"}`}>
                       {recentPosts.map(p => (
                         <div key={p.id} className="recent-post-item">
                           <img src={p.image} alt="" />
