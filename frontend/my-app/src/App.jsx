@@ -12,6 +12,7 @@ import Profile from "./components/Profile";
 import "./App.css";
 import HomePage from "../pages/HomePage";
 import Connect from "../pages/Connect";
+import NotificationToast from "./components/NotificationToast";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -141,11 +142,22 @@ function App() {
         />
       }
     />
-  </Route>
 
+    <Route
+      path="camera"
+      element={
+        <Click
+          mode={darkMode}
+          onClose={() => {}}
+          onUpload={() => setRefreshTrigger(prev => prev + 1)}
+        />
+      }
+    />
+  </Route>
 
 </Routes>
 
+      <NotificationToast user={userData} />
     </main>
   );
 }
