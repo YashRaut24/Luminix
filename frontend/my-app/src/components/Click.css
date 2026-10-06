@@ -412,3 +412,329 @@
   align-items: center;
   gap: 6px;
 }
+
+/* ========================================== */
+/* CREATOR WEBCAM STUDIO & PHOTO EDITOR       */
+/* ========================================== */
+
+.camera-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.2));
+  color: #d97706;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dark-camera-container .camera-badge-pill {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+/* Flash snap effect */
+.camera-flash-overlay {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  z-index: 50;
+  pointer-events: none;
+  animation: flashFade 0.3s ease-out forwards;
+}
+
+@keyframes flashFade {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+/* Countdown Overlay */
+.camera-countdown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  animation: fadeIn 0.2s ease;
+}
+
+.countdown-number {
+  font-size: 88px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 30px #ec4899;
+  animation: countdownPulse 1s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+  0% { transform: scale(1.4); opacity: 0.4; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.countdown-subtext {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fbcfe8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Rule of Thirds 3x3 Grid Overlay */
+.rule-of-thirds-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.grid-line.horizontal-1 {
+  top: 33.333%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.grid-line.horizontal-2 {
+  top: 66.666%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.grid-line.vertical-1 {
+  left: 33.333%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.grid-line.vertical-2 {
+  left: 66.666%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+/* Toolbar Strip */
+.creator-toolbar-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dark-camera-container .creator-toolbar-strip {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: uppercase;
+}
+
+.dark-camera-container .toolbar-label {
+  color: #94a3b8;
+}
+
+.timer-pill-buttons {
+  display: flex;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.timer-pill {
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-pill.active {
+  background: #ffffff;
+  color: #ec4899;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-camera-container .timer-pill.active {
+  background: #334155;
+  color: #f472b6;
+}
+
+.grid-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dark-camera-container .grid-toggle-btn {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.grid-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+  border-color: #3b82f6;
+}
+
+.dark-camera-container .grid-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+/* Photo Studio Adjustments Panel */
+.photo-editor-panel {
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+
+.dark-camera-container .photo-editor-panel {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: #334155;
+}
+
+.editor-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.editor-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dark-camera-container .editor-panel-title {
+  color: #cbd5e1;
+}
+
+.reset-adjustments-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+}
+
+.reset-adjustments-btn:hover {
+  text-decoration: underline;
+}
+
+.sliders-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .sliders-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.slider-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slider-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dark-camera-container .slider-label {
+  color: #94a3b8;
+}
+
+.slider-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.range-slider {
+  width: 100%;
+  accent-color: #ec4899;
+  cursor: pointer;
+}
+
+.chip-check {
+  font-size: 11px;
+  margin-right: 4px;
+}

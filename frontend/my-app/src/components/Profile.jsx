@@ -16,6 +16,7 @@ function Profile({ mode, user }) {
     const [close,setClose] = useState(null);
     const [collections, setCollections] = useState([]);
     const [selectedCollection, setSelectedCollection] = useState(null);
+    const [skillBadges, setSkillBadges] = useState([]);
     const navigate = useNavigate();
     useEffect(() => {
       const fetchUser = async () => {
@@ -38,6 +39,21 @@ function Profile({ mode, user }) {
           }));
 
           setImage(res.data.user.profileImage || null);
+
+          // Record profile view
+          if (res.data.user._id) {
+            axios.post(`http://localhost:9000/users/${res.data.user._id}/view`).catch(() => {});
+          }
+
+          // Fetch verified skill badges
+          try {
+            const badgeRes = await axios.get("http://localhost:9000/creator/badges", {
+              withCredentials: true,
+            });
+            setSkillBadges(badgeRes.data.badges || []);
+          } catch (bErr) {
+            console.log("Badges err:", bErr);
+          }
 
           try {
             const colRes = await axios.get("http://localhost:9000/collections", {
@@ -335,14 +351,44 @@ function Profile({ mode, user }) {
                 </div>
 
                 <div className="achievements-section">
-                  <h3 className="subsection-title">Achievements</h3>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                    <h3 className="subsection-title" style={{ margin: 0 }}>Verified Skill & Milestone Badges</h3>
+                    <button
+                      type="button"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "5px 12px",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        cursor: "pointer"
+                      }}
+                      onClick={() => navigate("/feed/analytics")}
+                    >
+                      <FiTrendingUp /> Studio Analytics
+                    </button>
+                  </div>
                   <div className="badges-row">
-                    {badges.map(b => (
-                      <div key={b.id} className={`badge-box ${b.unlocked ? "unlocked" : "locked"}`}>
-                        <span className="badge-emoji">{b.icon}</span>
-                        <span className="badge-title">{b.name}</span>
-                      </div>
-                    ))}
+                    {skillBadges.length > 0 ? (
+                      skillBadges.map((b, idx) => (
+                        <div key={idx} className="badge-box unlocked" title={b.description}>
+                          <span className="badge-emoji">{b.icon || "⭐"}</span>
+                          <span className="badge-title">{b.title}</span>
+                        </div>
+                      ))
+                    ) : (
+                      badges.map(b => (
+                        <div key={b.id} className={`badge-box ${b.unlocked ? "unlocked" : "locked"}`}>
+                          <span className="badge-emoji">{b.icon}</span>
+                          <span className="badge-title">{b.name}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 

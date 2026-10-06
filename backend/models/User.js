@@ -46,6 +46,16 @@ const userSchema = new mongoose.Schema({
   spotlightBadge: {
     type: Boolean,
     default: false
+  },
+  skillBadges: [{
+    title: { type: String },
+    icon: { type: String },
+    earnedAt: { type: Date, default: Date.now },
+    description: { type: String }
+  }],
+  profileViews: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

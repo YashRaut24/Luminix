@@ -1447,3 +1447,107 @@
 .ai-safety-warning small {
   opacity: 0.85;
 }
+
+/* ========================================== */
+/* CREATOR TOOL: POST SCHEDULING (NODE-CRON)  */
+/* ========================================== */
+
+.schedule-toggle-section {
+  margin-top: 14px;
+}
+
+.schedule-feature-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(241, 245, 249, 0.7);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dark-create-post-container .schedule-feature-toggle {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #334155;
+}
+
+.schedule-feature-toggle:hover {
+  border-color: #3b82f6;
+}
+
+.schedule-feature-toggle.enabled {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3b82f6;
+}
+
+.dark-create-post-container .schedule-feature-toggle.enabled {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #60a5fa;
+}
+
+.schedule-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.schedule-toggle-left .toggle-icon {
+  font-size: 20px;
+  color: #3b82f6;
+}
+
+.schedule-picker-box {
+  margin-top: 10px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  animation: fadeIn 0.25s ease;
+}
+
+.dark-create-post-container .schedule-picker-box {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.schedule-picker-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.dark-create-post-container .schedule-picker-label {
+  color: #94a3b8;
+}
+
+.schedule-datetime-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: inherit;
+  font-size: 14px;
+}
+
+.dark-create-post-container .schedule-datetime-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.schedule-hint {
+  display: block;
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.dark-create-post-container .schedule-hint {
+  color: #60a5fa;
+}

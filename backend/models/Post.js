@@ -130,6 +130,21 @@ const postSchema = new mongoose.Schema(
     remix_count: {
       type: Number,
       default: 0
+    },
+
+    is_scheduled: {
+      type: Boolean,
+      default: false
+    },
+
+    scheduled_for: {
+      type: Date,
+      default: null
+    },
+
+    published: {
+      type: Boolean,
+      default: true
     }
   },
   {

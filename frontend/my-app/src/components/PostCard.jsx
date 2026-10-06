@@ -166,7 +166,14 @@ function PostCard({ post, mode }) {
               )}
             </div>
             <div className="post-user-info">
-              <h4 className="post-author-name">{post.username}</h4>
+              <h4 className="post-author-name">
+                {post.username}
+                {post.author?.skillBadges && post.author.skillBadges.length > 0 && (
+                  <span className="author-skill-badge" title={post.author.skillBadges[0].description}>
+                    {post.author.skillBadges[0].icon} {post.author.skillBadges[0].title}
+                  </span>
+                )}
+              </h4>
               <span className="post-author-tag">
                 {post.author?.lumiTag || `@${post.username?.toLowerCase()}`}
               </span>

@@ -8,6 +8,7 @@ import CreatePost from "./components/CreatePost";
 import SearchUser from "./components/SearchUser";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
+import CreatorAnalytics from "./components/CreatorAnalytics";
 
 import "./App.css";
 import HomePage from "../pages/HomePage";
@@ -150,6 +151,16 @@ function App() {
           mode={darkMode}
           onClose={() => {}}
           onUpload={() => setRefreshTrigger(prev => prev + 1)}
+        />
+      }
+    />
+
+    <Route
+      path="analytics"
+      element={
+        <CreatorAnalytics
+          mode={darkMode}
+          user={userData}
         />
       }
     />

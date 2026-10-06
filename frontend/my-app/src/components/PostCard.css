@@ -391,3 +391,22 @@
 .dark-theme .remix-chain-indicator {
   color: #c084fc;
 }
+
+.author-skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.dark-theme .author-skill-badge {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.18);
+}

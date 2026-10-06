@@ -5,6 +5,7 @@ import { MdDarkMode, MdLightMode, MdOutlineRssFeed } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
 import { MdOutlinePeopleAlt } from "react-icons/md";
+import { FiTrendingUp } from "react-icons/fi";
 
 import "./Navbar.css";
 
@@ -118,9 +119,18 @@ const Navbar = (props) => {
 
       <button
         className={props.mode ? "dark-theme-people-button" : "people-button"}
+        title="Creator Network & Connect"
         onClick={() => navigate("/feed/connect")}
       >
         <MdOutlinePeopleAlt />
+      </button>
+
+      <button
+        className={props.mode ? "dark-theme-people-button" : "people-button"}
+        title="Creator Analytics & Diagnostics"
+        onClick={() => navigate("/feed/analytics")}
+      >
+        <FiTrendingUp />
       </button>
 
       <button

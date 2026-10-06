@@ -14,7 +14,8 @@ import {
   FiShield,
   FiAlertTriangle,
   FiCheckCircle,
-  FiZap
+  FiZap,
+  FiClock
 } from "react-icons/fi";
 import { BsPaletteFill, BsStars } from "react-icons/bs";
 
@@ -41,6 +42,10 @@ function CreatePost(props) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [safetyReport, setSafetyReport] = useState(null);
+
+  // Creator Tool: Post Scheduling (node-cron)
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
 
   // Creative Feature 1: Process / WIP thread builder
   const [enableProcessThread, setEnableProcessThread] = useState(false);
@@ -189,6 +194,15 @@ function CreatePost(props) {
       formData.append("file_url", file);
       formData.append("tags", JSON.stringify(tags));
 
+      // Append Scheduled Publish Time if active
+      if (isScheduled) {
+        if (!scheduledDate) {
+          setMessage("Please select a date and time for scheduled publishing.");
+          return;
+        }
+        formData.append("scheduled_for", new Date(scheduledDate).toISOString());
+      }
+
       // Append Remix info if active
       if (remixParent) {
         formData.append("remix_of", remixParent._id);
@@ -232,7 +246,11 @@ function CreatePost(props) {
 
       setIsUploading(false);
       setUploadComplete(true);
-      setMessage("Creative piece published successfully!");
+      setMessage(
+        isScheduled
+          ? `Piece scheduled! Node-Cron will publish it on ${new Date(scheduledDate).toLocaleString()}`
+          : "Creative piece published successfully!"
+      );
 
       if (props.setRefreshTrigger) {
         props.setRefreshTrigger((prev) => prev + 1);
@@ -379,6 +397,45 @@ function CreatePost(props) {
                       </button>
                     </span>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Creator Tool: Post Scheduling (node-cron) */}
+            <div className="form-section schedule-toggle-section">
+              <div
+                className={`schedule-feature-toggle ${isScheduled ? "enabled" : ""}`}
+                onClick={() => setIsScheduled(!isScheduled)}
+              >
+                <div className="schedule-toggle-left">
+                  <FiClock className="toggle-icon" />
+                  <div>
+                    <span className="toggle-title">Schedule Post (Node-Cron)</span>
+                    <p className="toggle-desc">
+                      Automate release for peak engagement hours
+                    </p>
+                  </div>
+                </div>
+                <div className={`switch-knob ${isScheduled ? "on" : "off"}`}>
+                  <span />
+                </div>
+              </div>
+
+              {isScheduled && (
+                <div className="schedule-picker-box">
+                  <label className="schedule-picker-label">Publish Date & Time:</label>
+                  <input
+                    type="datetime-local"
+                    className="form-input schedule-datetime-input"
+                    value={scheduledDate}
+                    min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                  />
+                  {scheduledDate && (
+                    <span className="schedule-hint">
+                      ⏰ Automated publish scheduled for {new Date(scheduledDate).toLocaleString()}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -703,12 +760,14 @@ function CreatePost(props) {
               {isUploading ? (
                 <>
                   <span className="btn-spinner"></span>
-                  Uploading Creation & Workflow...
+                  {isScheduled ? "Scheduling Creation..." : "Uploading Creation & Workflow..."}
                 </>
               ) : (
                 <>
-                  <span>✨</span>
-                  {remixParent ? "Publish Remix Piece" : "Publish Creation"}
+                  <span>{isScheduled ? "⏰" : "✨"}</span>
+                  {isScheduled
+                    ? "Schedule Publication"
+                    : (remixParent ? "Publish Remix Piece" : "Publish Creation")}
                 </>
               )}
             </button>
