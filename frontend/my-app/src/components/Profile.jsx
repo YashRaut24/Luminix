@@ -3,7 +3,7 @@ import { CgProfile } from "react-icons/cg";
 import { BsCameraFill, BsTrophy, BsFire } from "react-icons/bs";
 import { MdVerified, MdEdit, MdSettings } from "react-icons/md";
 import { AiOutlineHeart, AiOutlineStar } from "react-icons/ai";
-import { FiTrendingUp, FiMail, FiMapPin, FiCalendar } from "react-icons/fi";
+import { FiTrendingUp, FiMail, FiMapPin, FiCalendar, FiBookmark, FiLock, FiGlobe, FiX } from "react-icons/fi";
 import "./Profile.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"
@@ -14,6 +14,8 @@ function Profile({ mode, user }) {
     const [activeTab, setActiveTab] = useState("all");
     const [image,setImage] = useState(null);
     const [close,setClose] = useState(null);
+    const [collections, setCollections] = useState([]);
+    const [selectedCollection, setSelectedCollection] = useState(null);
     const navigate = useNavigate();
     useEffect(() => {
       const fetchUser = async () => {
@@ -36,6 +38,15 @@ function Profile({ mode, user }) {
           }));
 
           setImage(res.data.user.profileImage || null);
+
+          try {
+            const colRes = await axios.get("http://localhost:9000/collections", {
+              withCredentials: true,
+            });
+            setCollections(colRes.data.collections || []);
+          } catch (colErr) {
+            console.log("Collections load err:", colErr);
+          }
 
           } catch (err) {
             console.error("FETCH USER ERROR:", err);
@@ -352,33 +363,154 @@ function Profile({ mode, user }) {
 
                 <div className="recent-posts-section">
                   <div className="posts-tabs-row">
-                    {["all", "mood", "popular"].map(tab => (
+                    {["all", "moodboards", "mood", "popular"].map(tab => (
                       <button
                         key={tab}
                         className={`post-tab ${activeTab === tab ? "active" : ""}`}
                         onClick={() => setActiveTab(tab)}
                       >
-                        {tab.toUpperCase()}
+                        {tab === "moodboards" ? "🎨 MOODBOARDS" : tab.toUpperCase()}
                       </button>
                     ))}
                   </div>
 
-                  <div className="recent-posts-grid">
-                    {recentPosts.map(p => (
-                      <div key={p.id} className="recent-post-item">
-                        <img src={p.image} alt="" />
-                        <div className="recent-post-overlay">
-                          <span className="post-mood-badge">{p.mood}</span>
+                  {activeTab === "moodboards" ? (
+                    <div className="moodboards-profile-container">
+                      {collections.length === 0 ? (
+                        <div className="empty-moodboards-view">
+                          <FiBookmark className="empty-moodboard-icon" />
+                          <h4>No Moodboards Created Yet</h4>
+                          <p>Curate your creative inspiration by clicking "Board" on any post in your feed.</p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ) : (
+                        <div className="moodboards-cards-grid">
+                          {collections.map(board => (
+                            <div
+                              key={board._id}
+                              className="moodboard-card"
+                              onClick={() => setSelectedCollection(board)}
+                            >
+                              <div
+                                className="moodboard-card-color-bar"
+                                style={{ background: board.colorTheme || "#8b5cf6" }}
+                              />
+                              <div className="moodboard-card-header">
+                                <h4 className="moodboard-title">{board.name}</h4>
+                                {board.isPrivate ? (
+                                  <span className="privacy-pill private"><FiLock /> Private</span>
+                                ) : (
+                                  <span className="privacy-pill public"><FiGlobe /> Public</span>
+                                )}
+                              </div>
+                              {board.description && (
+                                <p className="moodboard-desc">{board.description}</p>
+                              )}
+
+                              {/* Mosaic Preview of Posts in this board */}
+                              <div className="moodboard-mosaic">
+                                {board.posts && board.posts.length > 0 ? (
+                                  board.posts.slice(0, 3).map((item, i) => (
+                                    <div key={i} className="mosaic-thumb-slot">
+                                      <img
+                                        src={`http://localhost:9000${item.file_url}`}
+                                        alt={item.caption || "Saved piece"}
+                                      />
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="mosaic-empty-slot">
+                                    <span>Empty Board</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="moodboard-card-footer">
+                                <span className="moodboard-items-count">
+                                  {board.posts?.length || 0} {(board.posts?.length || 0) === 1 ? "creation" : "creations"}
+                                </span>
+                                <span className="moodboard-view-btn">View Board →</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="recent-posts-grid">
+                      {recentPosts.map(p => (
+                        <div key={p.id} className="recent-post-item">
+                          <img src={p.image} alt="" />
+                          <div className="recent-post-overlay">
+                            <span className="post-mood-badge">{p.mood}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
               </div>
             </div>
         )
       } 
+
+      {/* Selected Moodboard View Lightbox Modal */}
+      {selectedCollection && (
+        <div className="board-viewer-modal-overlay" onClick={() => setSelectedCollection(null)}>
+          <div
+            className={`board-viewer-modal-content ${mode ? "dark-theme" : ""}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="board-viewer-header">
+              <div>
+                <div className="board-viewer-title-row">
+                  <span
+                    className="board-color-indicator"
+                    style={{ background: selectedCollection.colorTheme }}
+                  />
+                  <h2>{selectedCollection.name}</h2>
+                  {selectedCollection.isPrivate ? (
+                    <span className="privacy-pill private"><FiLock /> Private</span>
+                  ) : (
+                    <span className="privacy-pill public"><FiGlobe /> Public</span>
+                  )}
+                </div>
+                {selectedCollection.description && (
+                  <p className="board-viewer-desc">{selectedCollection.description}</p>
+                )}
+              </div>
+              <button
+                className="board-close-btn"
+                onClick={() => setSelectedCollection(null)}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="board-saved-items-grid">
+              {!selectedCollection.posts || selectedCollection.posts.length === 0 ? (
+                <div className="board-no-items">
+                  <p>No works saved in this board yet.</p>
+                </div>
+              ) : (
+                selectedCollection.posts.map((postItem, idx) => (
+                  <div key={idx} className="board-saved-item-card">
+                    <img
+                      src={`http://localhost:9000${postItem.file_url}`}
+                      alt={postItem.caption || "Saved post"}
+                      className="board-item-image"
+                    />
+                    <div className="board-item-info">
+                      <span className="board-item-creator">@{postItem.username}</span>
+                      <p className="board-item-caption">{postItem.caption}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )} 
       
     </div>
   );
