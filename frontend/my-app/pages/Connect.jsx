@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ConnectCard from "./ConnectCard";
+import MutualsGraph from "../src/components/MutualsGraph";
 import {
   FiAward,
   FiTrendingUp,
@@ -313,7 +314,12 @@ function Connect(props) {
         )}
       </section>
 
-      {/* 3. EMERGING CONTENT CREATORS */}
+      {/* 🌐 3. INTERACTIVE MUTUALS & CREATOR GRAPH */}
+      <section className="network-graph-section">
+        <MutualsGraph mode={props.darkMode} />
+      </section>
+
+      {/* 4. EMERGING CONTENT CREATORS */}
       {creators.length > 0 && (
         <div className="top-section-connect">
           <p className="card-connect-label">✨ Emerging Content Creators</p>

@@ -7,6 +7,7 @@ const authMiddleware = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const Post = require("../models/Post");
 const Collection = require("../models/Collection");
+const Flash = require("../models/Flash");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -211,6 +212,8 @@ router.get("/posts", async (req, res) => {
       tags: post.tags,
       upload_time: post.createdAt,
       likes: post.likes ? post.likes.length : 0,
+      likesList: post.likes || [],
+      comments: post.comments || [],
       reposts: post.reposts ? post.reposts.length : 0,
       shares: post.shares || 0,
       views: post.views || 0,
@@ -502,6 +505,441 @@ router.get("/contacts", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Failed to fetch contacts" });
+  }
+});
+
+// Real-time Live Like Toggle with Socket.io Broadcast
+router.post("/posts/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const userId = req.user.id;
+    const index = post.likes.indexOf(userId);
+    let isLiked = false;
+
+    if (index > -1) {
+      post.likes.splice(index, 1);
+      isLiked = false;
+    } else {
+      post.likes.push(userId);
+      isLiked = true;
+    }
+
+    await post.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      // Broadcast live like count to everyone viewing this post
+      io.emit("post_like_updated", {
+        postId: post._id,
+        likesCount: post.likes.length,
+        userId,
+        isLiked
+      });
+
+      // Send direct notification toast to post author if liked
+      if (isLiked && post.author.toString() !== userId.toString()) {
+        const liker = await User.findById(userId).select("name profileImage");
+        io.to(`user_${post.author}`).emit("user_notification", {
+          type: "like",
+          title: "New Like! ❤️",
+          message: `${liker ? liker.name : "Someone"} liked your creation`,
+          avatar: liker ? liker.profileImage : "",
+          postId: post._id,
+          timestamp: new Date()
+        });
+      }
+    }
+
+    res.status(200).json({
+      isLiked,
+      likesCount: post.likes.length
+    });
+  } catch (err) {
+    console.error("Like toggle error:", err);
+    res.status(500).json({ message: "Failed to toggle like" });
+  }
+});
+
+// Follow User with Live Toast Notification
+router.post("/users/:id/follow", authMiddleware, async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const currentUserId = req.user.id;
+
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ message: "You cannot follow yourself" });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = targetUser.followers.includes(currentUserId);
+
+    if (isFollowing) {
+      targetUser.followers.pull(currentUserId);
+      currentUser.following.pull(targetUserId);
+    } else {
+      targetUser.followers.push(currentUserId);
+      currentUser.following.push(targetUserId);
+    }
+
+    await targetUser.save();
+    await currentUser.save();
+
+    const io = req.app.get("io");
+    if (io && !isFollowing) {
+      // Live Toast notification
+      io.to(`user_${targetUserId}`).emit("user_notification", {
+        type: "follow",
+        title: "New Follower! 🎉",
+        message: `${currentUser.name} started following you`,
+        avatar: currentUser.profileImage || "",
+        userId: currentUser._id,
+        timestamp: new Date()
+      });
+    }
+
+    res.status(200).json({
+      isFollowing: !isFollowing,
+      followersCount: targetUser.followers.length
+    });
+  } catch (err) {
+    console.error("Follow error:", err);
+    res.status(500).json({ message: "Failed to follow user" });
+  }
+});
+
+// Threaded Comments
+router.post("/posts/:id/comments", authMiddleware, async (req, res) => {
+  try {
+    const { text, parentId } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Comment text is required" });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const user = await User.findById(req.user.id);
+    const newComment = {
+      user: user._id,
+      username: user.name,
+      userAvatar: user.profileImage || "",
+      text: text.trim(),
+      parentId: parentId || null,
+      reactions: { fire: [], idea: [], art: [], love: [], rocket: [] },
+      createdAt: new Date()
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    const createdComment = post.comments[post.comments.length - 1];
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("post_comment_added", {
+        postId: post._id,
+        comment: createdComment
+      });
+
+      if (post.author.toString() !== user._id.toString()) {
+        io.to(`user_${post.author}`).emit("user_notification", {
+          type: "comment",
+          title: "New Comment 💬",
+          message: `${user.name}: "${text.slice(0, 35)}..."`,
+          avatar: user.profileImage || "",
+          postId: post._id,
+          timestamp: new Date()
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: "Comment added successfully",
+      comment: createdComment,
+      comments: post.comments
+    });
+  } catch (err) {
+    console.error("Add comment error:", err);
+    res.status(500).json({ message: "Failed to add comment" });
+  }
+});
+
+// Comment Emoji Reactions
+router.post("/posts/:id/comments/:commentId/react", authMiddleware, async (req, res) => {
+  try {
+    const { reactionType } = req.body;
+    const validTypes = ["fire", "idea", "art", "love", "rocket"];
+    if (!validTypes.includes(reactionType)) {
+      return res.status(400).json({ message: "Invalid reaction type" });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    if (!comment.reactions) {
+      comment.reactions = { fire: [], idea: [], art: [], love: [], rocket: [] };
+    }
+
+    const userList = comment.reactions[reactionType] || [];
+    const userIndex = userList.indexOf(req.user.id);
+    let hasReacted = false;
+
+    if (userIndex > -1) {
+      userList.splice(userIndex, 1);
+      hasReacted = false;
+    } else {
+      userList.push(req.user.id);
+      hasReacted = true;
+    }
+
+    comment.reactions[reactionType] = userList;
+    await post.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("comment_reaction_updated", {
+        postId: post._id,
+        commentId: comment._id,
+        reactionType,
+        reactions: comment.reactions
+      });
+    }
+
+    res.status(200).json({
+      reactions: comment.reactions,
+      hasReacted
+    });
+  } catch (err) {
+    console.error("Comment react error:", err);
+    res.status(500).json({ message: "Failed to react to comment" });
+  }
+});
+
+// Ephemeral 24-hour Flash Stories
+router.post("/flash", authMiddleware, upload.single("file"), async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    let file_url = "";
+    if (req.file) {
+      file_url = `/uploads/${req.file.filename}`;
+    } else if (req.body.image_data) {
+      // Base64 from camera Click
+      const base64Data = req.body.image_data.replace(/^data:image\/\w+;base64,/, "");
+      const filename = `${Date.now()}-flash.png`;
+      const filepath = path.join(__dirname, "../uploads", filename);
+      require("fs").writeFileSync(filepath, base64Data, "base64");
+      file_url = `/uploads/${filename}`;
+    } else {
+      return res.status(400).json({ message: "Flash image is required" });
+    }
+
+    const flash = await Flash.create({
+      author: user._id,
+      username: user.name,
+      userAvatar: user.profileImage || "",
+      file_url,
+      caption: req.body.caption || "",
+      filter: req.body.filter || "normal"
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("new_flash_posted", {
+        flash,
+        username: user.name
+      });
+    }
+
+    res.status(201).json({ message: "Flash story published! (24h lifespan)", flash });
+  } catch (err) {
+    console.error("Flash creation error:", err);
+    res.status(500).json({ message: "Failed to publish flash" });
+  }
+});
+
+router.get("/flash", async (req, res) => {
+  try {
+    const flashes = await Flash.find({
+      expiresAt: { $gt: new Date() }
+    })
+      .sort({ createdAt: -1 })
+      .populate("author", "name lumiTag profileImage role");
+
+    const storiesByAuthor = {};
+    flashes.forEach(f => {
+      const authorId = f.author ? (f.author._id ? f.author._id.toString() : f.author.toString()) : f.username;
+      if (!storiesByAuthor[authorId]) {
+        storiesByAuthor[authorId] = {
+          authorId,
+          authorName: f.username,
+          authorAvatar: f.author?.profileImage || f.userAvatar || "",
+          lumiTag: f.author?.lumiTag || `@${f.username.toLowerCase().replace(/\s+/g, '')}`,
+          items: []
+        };
+      }
+      const msLeft = new Date(f.expiresAt).getTime() - Date.now();
+      const hoursLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60)));
+      const minutesLeft = Math.max(0, Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60)));
+
+      storiesByAuthor[authorId].items.push({
+        _id: f._id,
+        file_url: f.file_url,
+        caption: f.caption,
+        filter: f.filter,
+        createdAt: f.createdAt,
+        expiresAt: f.expiresAt,
+        timeLeftText: `${hoursLeft}h ${minutesLeft}m left`,
+        viewsCount: f.views ? f.views.length : 0
+      });
+    });
+
+    res.status(200).json({
+      flashes: Object.values(storiesByAuthor)
+    });
+  } catch (err) {
+    console.error("Fetch flashes error:", err);
+    res.status(500).json({ message: "Failed to fetch flashes" });
+  }
+});
+
+router.post("/flash/:id/view", authMiddleware, async (req, res) => {
+  try {
+    await Flash.findByIdAndUpdate(req.params.id, {
+      $addToSet: { views: req.user.id }
+    });
+    res.status(200).json({ message: "View recorded" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to record view" });
+  }
+});
+
+// Mutuals & Network Graph Data
+router.get("/network-graph", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    let currentUserId = null;
+    let currentUser = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUserId = decoded.id;
+        currentUser = await User.findById(currentUserId).populate("followers").populate("following");
+      } catch (e) {}
+    }
+
+    const allUsers = await User.find().select("name email lumiTag role creatorRole profileImage bio followers following");
+
+    if (!currentUser && allUsers.length > 0) {
+      currentUser = allUsers[0];
+      currentUserId = currentUser._id.toString();
+    }
+
+    const nodes = [];
+    const links = [];
+    const addedNodeIds = new Set();
+
+    if (currentUser) {
+      // Root Node (You)
+      nodes.push({
+        id: currentUser._id.toString(),
+        name: currentUser.name + " (You)",
+        lumiTag: currentUser.lumiTag || `@${currentUser.name.toLowerCase().replace(/\s+/g, '')}`,
+        profileImage: currentUser.profileImage || "",
+        role: currentUser.role,
+        creatorRole: currentUser.creatorRole || "Creative Explorer",
+        bio: currentUser.bio || "Center of your creative orbit",
+        type: "self",
+        radius: 26,
+        color: "#8b5cf6"
+      });
+      addedNodeIds.add(currentUser._id.toString());
+
+      const myFollowers = new Set((currentUser.followers || []).map(f => (f._id ? f._id.toString() : f.toString())));
+      const myFollowing = new Set((currentUser.following || []).map(f => (f._id ? f._id.toString() : f.toString())));
+
+      allUsers.forEach(u => {
+        const uId = u._id.toString();
+        if (uId === currentUser._id.toString()) return;
+
+        const isMutual = myFollowers.has(uId) && myFollowing.has(uId);
+        const isDirect = myFollowers.has(uId) || myFollowing.has(uId);
+
+        let nodeType = "suggested";
+        let color = "#3b82f6";
+        let radius = 18;
+
+        if (isMutual) {
+          nodeType = "mutual";
+          color = "#ec4899";
+          radius = 22;
+        } else if (u.role === "creators") {
+          nodeType = "creator";
+          color = "#f59e0b";
+          radius = 20;
+        }
+
+        if (!addedNodeIds.has(uId)) {
+          nodes.push({
+            id: uId,
+            name: u.name,
+            lumiTag: u.lumiTag || `@${u.name.toLowerCase().replace(/\s+/g, '')}`,
+            profileImage: u.profileImage || "",
+            role: u.role,
+            creatorRole: u.creatorRole || "Emerging Creator",
+            bio: u.bio || "Exploring visual arts",
+            type: nodeType,
+            radius,
+            color
+          });
+          addedNodeIds.add(uId);
+        }
+
+        if (isMutual) {
+          links.push({
+            source: currentUser._id.toString(),
+            target: uId,
+            relationship: "mutual",
+            strength: 1.0,
+            color: "#ec4899"
+          });
+        } else if (isDirect) {
+          links.push({
+            source: currentUser._id.toString(),
+            target: uId,
+            relationship: "connection",
+            strength: 0.6,
+            color: "#8b5cf6"
+          });
+        } else {
+          links.push({
+            source: currentUser._id.toString(),
+            target: uId,
+            relationship: "suggested",
+            strength: 0.3,
+            color: "rgba(100, 116, 139, 0.4)"
+          });
+        }
+      });
+    }
+
+    res.status(200).json({ nodes, links });
+  } catch (err) {
+    console.error("Network graph error:", err);
+    res.status(500).json({ message: "Failed to generate network graph" });
   }
 });
 
