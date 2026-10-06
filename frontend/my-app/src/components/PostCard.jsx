@@ -19,6 +19,7 @@ import {
   FiMessageCircle
 } from "react-icons/fi";
 import { BsPaletteFill, BsStars } from "react-icons/bs";
+import { extractDominantColor } from "../utils/colorExtractor";
 
 function PostCard({ post, mode }) {
   const navigate = useNavigate();
@@ -52,6 +53,20 @@ function PostCard({ post, mode }) {
 
   // Moodboard modal state
   const [showMoodboardModal, setShowMoodboardModal] = useState(false);
+
+  // Dynamic color theming and double-tap like animation
+  const [palette, setPalette] = useState(null);
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const lastTapRef = useRef(0);
+
+  useEffect(() => {
+    const fullImgUrl = post.file_url?.startsWith("/uploads")
+      ? `http://localhost:9000${post.file_url}`
+      : post.file_url;
+    extractDominantColor(fullImgUrl, (extracted) => {
+      setPalette(extracted);
+    });
+  }, [post.file_url]);
 
   // Real-time live likes & comments listener via Socket.io
   useEffect(() => {
@@ -122,12 +137,33 @@ function PostCard({ post, mode }) {
     });
   };
 
+  const handleImageDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 320) {
+      if (!liked) {
+        handleLikeClick();
+      }
+      setShowHeartBurst(true);
+      setTimeout(() => setShowHeartBurst(false), 800);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
   const hasProcessSteps = post.process_steps && post.process_steps.length > 0;
   const currentProcessStep = hasProcessSteps ? post.process_steps[activeStepIndex] : null;
 
   return (
     <div className={mode ? "dark-show-posts-container" : "show-posts-container"}>
-      <div className={`post-card ${mode ? "dark-theme" : ""}`}>
+      <div
+        className={`post-card ${mode ? "dark-theme" : ""}`}
+        style={{
+          "--lumi-glow": palette?.glow || "rgba(139, 92, 246, 0.15)",
+          "--lumi-border": palette?.border || "rgba(139, 92, 246, 0.2)",
+          "--lumi-tint": palette?.tint || "transparent",
+        }}
+      >
         {/* Remix Reference Header (if this post is a remix) */}
         {post.remix_of && (
           <div className="remix-reference-banner">
@@ -203,7 +239,12 @@ function PostCard({ post, mode }) {
         </div>
 
         {/* Post Image or Process / Making-Of Strip */}
-        <div className="post-image-container">
+        <div className="post-image-container" onClick={handleImageDoubleTap}>
+          {showHeartBurst && (
+            <div className="heart-burst-overlay">
+              <FiHeart className="burst-heart-icon" />
+            </div>
+          )}
           {!showProcessStrip ? (
             <img
               src={`http://localhost:9000${post.file_url}`}
