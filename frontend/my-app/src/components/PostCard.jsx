@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import socket from "../socket";
 import "./ShowPost.css";
 import "./PostCard.css";
 import MoodboardModal from "./MoodboardModal";
+import ThreadedComments from "./ThreadedComments";
 import {
   FiHeart,
   FiRepeat,
@@ -12,13 +15,26 @@ import {
   FiArrowRight,
   FiChevronLeft,
   FiChevronRight,
-  FiCheckCircle
+  FiCheckCircle,
+  FiMessageCircle
 } from "react-icons/fi";
 import { BsPaletteFill } from "react-icons/bs";
 
 function PostCard({ post, mode }) {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
+
+  const storedUser = localStorage.getItem("userData");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+
+  const currentUserId = currentUser ? currentUser.id || currentUser._id : null;
+  const initialLiked =
+    currentUserId &&
+    post.likesList &&
+    post.likesList.some(
+      (id) => (typeof id === "object" ? id._id : id) === currentUserId
+    );
+
+  const [liked, setLiked] = useState(Boolean(initialLiked));
   const [reposted, setReposted] = useState(false);
   const [likes, setLikes] = useState(post.likes || 0);
   const [reposts, setReposts] = useState(post.reposts || 0);
@@ -28,8 +44,60 @@ function PostCard({ post, mode }) {
   const [showProcessStrip, setShowProcessStrip] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
 
+  // Comments drawer state
+  const [showComments, setShowComments] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(
+    post.comments ? post.comments.length : 0
+  );
+
   // Moodboard modal state
   const [showMoodboardModal, setShowMoodboardModal] = useState(false);
+
+  // Real-time live likes & comments listener via Socket.io
+  useEffect(() => {
+    const handleLikeUpdate = (data) => {
+      if (data.postId === post._id) {
+        setLikes(data.likesCount);
+        if (currentUserId && data.userId === currentUserId) {
+          setLiked(data.isLiked);
+        }
+      }
+    };
+
+    const handleCommentAdded = (data) => {
+      if (data.postId === post._id) {
+        setCommentsCount((prev) => prev + 1);
+      }
+    };
+
+    socket.on("post_like_updated", handleLikeUpdate);
+    socket.on("post_comment_added", handleCommentAdded);
+
+    return () => {
+      socket.off("post_like_updated", handleLikeUpdate);
+      socket.off("post_comment_added", handleCommentAdded);
+    };
+  }, [post._id, currentUserId]);
+
+  const handleLikeClick = async () => {
+    try {
+      // Optimistic update
+      const nextLiked = !liked;
+      setLiked(nextLiked);
+      setLikes((prev) => prev + (nextLiked ? 1 : -1));
+
+      const res = await axios.post(
+        `http://localhost:9000/posts/${post._id}/like`,
+        {},
+        { withCredentials: true }
+      );
+
+      setLiked(res.data.isLiked);
+      setLikes(res.data.likesCount);
+    } catch (err) {
+      console.error("Like toggle error:", err);
+    }
+  };
 
   const formatTime = (time) => {
     return new Date(time).toLocaleDateString(undefined, {
@@ -212,17 +280,24 @@ function PostCard({ post, mode }) {
           )}
         </div>
 
-        {/* Interaction Bar */}
+        {/* Interaction Bar with Live Like, Live Comments, Remix & Moodboard */}
         <div className="post-interaction-bar">
           <button
             className={`interaction-btn ${liked ? "active-like" : ""}`}
-            onClick={() => {
-              setLiked(!liked);
-              setLikes((prev) => prev + (liked ? -1 : 1));
-            }}
+            onClick={handleLikeClick}
+            title="Real-time live like"
           >
             <FiHeart className="interaction-icon" />
             <span className="interaction-count">{likes}</span>
+          </button>
+
+          <button
+            className={`interaction-btn ${showComments ? "active-comments" : ""}`}
+            onClick={() => setShowComments(!showComments)}
+            title="Threaded discussion & reactions"
+          >
+            <FiMessageCircle className="interaction-icon" />
+            <span className="interaction-count">{commentsCount}</span>
           </button>
 
           <button
@@ -266,6 +341,16 @@ function PostCard({ post, mode }) {
             <span className="interaction-count">{shares}</span>
           </button>
         </div>
+
+        {/* Threaded Comments & Emoji Reactions Drawer */}
+        {showComments && (
+          <ThreadedComments
+            postId={post._id}
+            initialComments={post.comments || []}
+            currentUser={currentUser}
+            mode={mode}
+          />
+        )}
 
         <div className="post-footer">
           <p className="post-caption">{post.caption}</p>

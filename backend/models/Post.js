@@ -4,17 +4,37 @@ const commentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  userAvatar: {
+    type: String,
+    default: "",
   },
   text: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+  },
+  parentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null,
+  },
+  reactions: {
+    fire: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    idea: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    art: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    love: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    rocket: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 const postSchema = new mongoose.Schema(
