@@ -9,6 +9,7 @@ import SearchUser from "./components/SearchUser";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
 import CreatorAnalytics from "./components/CreatorAnalytics";
+import CommandPalette from "./components/CommandPalette";
 
 import "./App.css";
 import HomePage from "../pages/HomePage";
@@ -61,6 +62,19 @@ function App() {
     document.body.classList.toggle("dark-mode", darkMode);
     document.body.classList.toggle("light-mode", !darkMode);
   }, [darkMode]);
+
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const changeTheme = () => {
     localStorage.setItem("darkMode", !darkMode);
@@ -169,6 +183,17 @@ function App() {
 </Routes>
 
       <NotificationToast user={userData} />
+
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onSelectCategory={(cat) => {
+          setSelectedCategory(cat);
+          setFeedHeading(cat);
+        }}
+        onToggleTheme={changeTheme}
+        mode={darkMode}
+      />
     </main>
   );
 }
