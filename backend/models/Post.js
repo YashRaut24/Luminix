@@ -85,7 +85,32 @@ const postSchema = new mongoose.Schema(
       default: 0
     },
 
-    comments: [commentSchema]
+    comments: [commentSchema],
+
+    process_steps: [
+      {
+        step_number: { type: Number, default: 1 },
+        phase_label: { type: String, default: "Work in Progress" },
+        caption: { type: String, default: "" },
+        file_url: { type: String, required: true }
+      }
+    ],
+
+    remix_of: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null
+    },
+
+    remix_type: {
+      type: String,
+      default: "Remix"
+    },
+
+    remix_count: {
+      type: Number,
+      default: 0
+    }
   },
   {
     timestamps: true
