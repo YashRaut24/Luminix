@@ -1,0 +1,206 @@
+/* ==========================================================================
+   LUMINIX DARKROOM INSPECTOR (380px)
+   Tabs: Process | Remix Tree | Notes | Boards
+   Zero gradients, zero glow
+   ========================================================================== */
+
+.darkroom-inspector {
+  width: var(--inspector-width);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background-color: var(--surface);
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 90;
+  flex-shrink: 0;
+  animation: inspectorSlideIn 200ms var(--ease-standard) forwards;
+}
+
+.darkroom-inspector__header {
+  height: 48px;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.darkroom-inspector__close {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.darkroom-inspector__close:hover {
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+.darkroom-inspector__tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--rule);
+  background-color: var(--surface-2);
+  flex-shrink: 0;
+}
+
+.darkroom-inspector__tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-inspector__tab:hover {
+  color: var(--text);
+}
+
+.darkroom-inspector__tab.is-active {
+  color: var(--accent);
+  background-color: var(--surface);
+  border-bottom-color: var(--accent);
+}
+
+.darkroom-inspector__body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+/* Frame Preview in Inspector */
+.darkroom-inspector__preview {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.darkroom-inspector__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.darkroom-inspector__caption {
+  font-size: var(--font-sm);
+  line-height: var(--leading-normal);
+  color: var(--text);
+}
+
+.darkroom-inspector__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* Notes List */
+.darkroom-inspector__notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.darkroom-inspector__note-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-xs);
+}
+
+.darkroom-inspector__pin-number {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background-color: var(--pin-bg);
+  color: var(--pin-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.darkroom-inspector__note-text {
+  flex: 1;
+  color: var(--text);
+}
+
+.darkroom-inspector__note-coords {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* Process Making-Of Stage Cards */
+.darkroom-inspector__process-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  background-color: var(--surface-2);
+}
+
+.darkroom-inspector__process-img {
+  height: 160px;
+  width: 100%;
+  background-color: var(--frame-bg);
+}
+
+.darkroom-inspector__process-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.darkroom-inspector__process-info {
+  padding: 8px 10px;
+}
+
+/* Remix Derivatives */
+.darkroom-inspector__remix-box {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  padding: 10px;
+  background-color: var(--surface-2);
+}

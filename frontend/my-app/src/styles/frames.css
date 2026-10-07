@@ -1,0 +1,243 @@
+/* ==========================================================================
+   LUMINIX CONTACT SHEET & FRAMES
+   - Tight contact sheet grid, zero card chrome
+   - Mono frame numbers (01, 02...), creator tag
+   - Hover-revealed action strip (Stamp, Remix, Save)
+   - Selected frame: 2px solid accent outline
+   - Numbered pin notes with overshoot drop animation
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Contact Sheet Grid
+   -------------------------------------------------------------------------- */
+.contact-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+}
+
+/* Dense view toggle */
+.contact-sheet--dense {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Darkroom Frame (.darkroom-frame)
+   -------------------------------------------------------------------------- */
+.darkroom-frame {
+  position: relative;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  user-select: none;
+  animation: developFadeIn var(--duration-slow) var(--ease-standard) forwards;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-frame:hover {
+  border-color: var(--text-2);
+}
+
+/* Selected Frame State: 2px solid accent outline */
+.darkroom-frame.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+
+/* Top metadata strip on frame */
+.darkroom-frame__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--overlay-bg);
+  border-bottom: 1px solid var(--rule-subtle);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  z-index: 10;
+  line-height: 1;
+}
+
+.darkroom-frame__index {
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+}
+
+.darkroom-frame__creator {
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+/* Media Holder */
+.darkroom-frame__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--frame-bg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.darkroom-frame__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Hover-Revealed Action Bar (STAMP, REMIX, SAVE)
+   -------------------------------------------------------------------------- */
+.darkroom-frame__actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background-color: var(--overlay-bg);
+  border-top: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  z-index: 15;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-frame:hover .darkroom-frame__actions,
+.darkroom-frame.is-selected .darkroom-frame__actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Action button items */
+.darkroom-frame__btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-xs);
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-frame__btn:hover {
+  color: var(--text);
+  background-color: var(--surface-2);
+}
+
+.darkroom-frame__btn.is-stamped {
+  color: var(--stamp-active);
+}
+
+/* Stamp Count Monospace text */
+.darkroom-frame__stamp-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Numbered Pin Notes Overlay
+   - Click image to place a numbered pin
+   - Stored as percent coordinates
+   - Overshoot pin drop animation
+   -------------------------------------------------------------------------- */
+.darkroom-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--pin-bg);
+  color: var(--pin-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ffffff;
+  cursor: pointer;
+  z-index: 20;
+  animation: pinDropOvershoot var(--duration-slow) var(--ease-overshoot) forwards;
+}
+
+.darkroom-pin__tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  padding: 4px 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 400;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+  z-index: 25;
+}
+
+.darkroom-pin:hover .darkroom-pin__tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --------------------------------------------------------------------------
+   Remix & WIP Status Badges
+   -------------------------------------------------------------------------- */
+.darkroom-frame__badge {
+  position: absolute;
+  bottom: 36px;
+  left: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: var(--overlay-bg);
+  color: var(--accent);
+  border: 1px solid var(--rule);
+  padding: 2px 5px;
+  border-radius: var(--radius-xs);
+  z-index: 10;
+  pointer-events: none;
+}

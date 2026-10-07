@@ -4,19 +4,31 @@ import axios from "axios";
 import PostCard from "./PostCard";
 import FlashStoriesBar from "./FlashStoriesBar";
 import OnboardingModal from "./OnboardingModal";
-import { BsStars, BsColumnsGap } from "react-icons/bs";
-import { FiClock, FiGrid, FiArrowUp, FiPlus, FiUsers, FiCompass } from "react-icons/fi";
+import ThreadedComments from "./ThreadedComments";
+import {
+  FiClock,
+  FiPlus,
+  FiX,
+  FiLayers,
+  FiRepeat,
+  FiBookmark,
+  FiFileText,
+  FiGrid
+} from "react-icons/fi";
+import { BsStars } from "react-icons/bs";
 
 function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user }) {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedMode, setFeedMode] = useState("for-you"); // "for-you" | "recent"
-  const [layoutMode, setLayoutMode] = useState("feed"); // "feed" | "masonry"
-  const [suggestedCreators, setSuggestedCreators] = useState([]);
-  const [followedMap, setFollowedMap] = useState({});
+  const [isDense, setIsDense] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPostPins, setSelectedPostPins] = useState([]);
+  const [inspectorTab, setInspectorTab] = useState("notes"); // "process" | "remix" | "notes" | "boards"
+  const [trayCollapsed, setTrayCollapsed] = useState(false);
+  const [traySlots, setTraySlots] = useState([null, null, null, null, null, null]);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const fetchPosts = async () => {
     try {
@@ -30,7 +42,12 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
         withCredentials: true,
       });
 
-      setPosts(res.data.posts || []);
+      const fetched = res.data.posts || [];
+      setPosts(fetched);
+      if (fetched.length > 0 && !selectedPost) {
+        setSelectedPost(fetched[0]);
+        setSelectedPostPins(fetched[0].pins || []);
+      }
     } catch (err) {
       console.error("Fetch posts error:", err);
     } finally {
@@ -38,45 +55,9 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
     }
   };
 
-  const fetchSuggestedCreators = async () => {
-    try {
-      const res = await axios.get("http://localhost:9000/spotlight", {
-        withCredentials: true,
-      });
-      if (res.data?.weeklyTopCreators) {
-        setSuggestedCreators(res.data.weeklyTopCreators.slice(0, 3));
-      }
-    } catch (err) {
-      // Non-blocking fallback
-    }
-  };
-
   useEffect(() => {
     fetchPosts();
-    fetchSuggestedCreators();
   }, [refreshTrigger, feedMode]);
-
-  // Back-to-top scroll detection
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 380);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleFollowToggle = async (creatorId) => {
-    try {
-      setFollowedMap((prev) => ({ ...prev, [creatorId]: !prev[creatorId] }));
-      await axios.post(
-        `http://localhost:9000/users/${creatorId}/follow`,
-        {},
-        { withCredentials: true }
-      );
-    } catch (err) {
-      console.error("Follow error:", err);
-    }
-  };
 
   // Category filter
   const filteredPosts = posts.filter((post) => {
@@ -89,211 +70,472 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
     return matchesTag || matchesCaption;
   });
 
+  const handleFrameSelect = (post, pins = []) => {
+    setSelectedPost(post);
+    setSelectedPostPins(pins || post.pins || []);
+  };
+
+  const handleSlotDrop = (e, slotIndex) => {
+    e.preventDefault();
+    try {
+      const dataStr = e.dataTransfer.getData("application/json");
+      if (!dataStr) return;
+      const frameData = JSON.parse(dataStr);
+      setTraySlots((prev) => {
+        const next = [...prev];
+        next[slotIndex] = frameData;
+        return next;
+      });
+    } catch (err) {
+      console.error("Drop frame error:", err);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className="lumi-page-container">
-      <div className="lumi-main-content">
-        {/* Story-Style Top Bar (Slim 96px strip) */}
+    <div className="darkroom-feed-layout">
+      {/* Center Contact Sheet Column */}
+      <main className="darkroom-sheet-column">
+        {/* Flash Stories Bar */}
         <FlashStoriesBar user={user} mode={mode} />
 
-        {/* Single Sticky Toolbar (48px) */}
-        <div className="lumi-toolbar">
-          <div className="lumi-toolbar__left">
-            {/* Segmented Control [For You | Recent] */}
-            <div className="lumi-segmented-control">
+        {/* Workspace Bar */}
+        <div className="darkroom-bar">
+          <div className="darkroom-bar__left">
+            <span className="darkroom-bar__meta font-mono">
+              SHEET: {filteredPosts.length} FRAMES
+            </span>
+
+            {/* Segmented Control */}
+            <div className="darkroom-segmented">
               <button
                 type="button"
-                className={`lumi-segmented-control__item ${feedMode === "for-you" ? "is-active" : ""}`}
+                className={`darkroom-segmented__btn ${feedMode === "for-you" ? "is-active" : ""}`}
                 onClick={() => setFeedMode("for-you")}
               >
-                <BsStars />
-                <span>For You</span>
+                FOR YOU
               </button>
               <button
                 type="button"
-                className={`lumi-segmented-control__item ${feedMode === "recent" ? "is-active" : ""}`}
+                className={`darkroom-segmented__btn ${feedMode === "recent" ? "is-active" : ""}`}
                 onClick={() => setFeedMode("recent")}
               >
-                <FiClock />
-                <span>Recent</span>
+                RECENT
               </button>
             </div>
-          </div>
 
-          <div className="lumi-toolbar__right">
             {feedMode === "for-you" && (
               <button
                 type="button"
-                className="btn btn--ghost"
+                className="darkroom-bar__action"
                 onClick={() => setShowOnboarding(true)}
               >
-                <BsStars /> Tune Interests
+                <BsStars /> TUNE
               </button>
             )}
+          </div>
 
-            {/* Layout Toggle: Icon-only buttons */}
+          <div className="darkroom-bar__right">
             <button
               type="button"
-              className={`btn--icon ${layoutMode === "feed" ? "is-active" : ""}`}
-              onClick={() => setLayoutMode("feed")}
-              title="Feed View (Fixed 4:3)"
+              className={`darkroom-bar__action ${isDense ? "is-active" : ""}`}
+              onClick={() => setIsDense(!isDense)}
+              title="Toggle Grid Density"
             >
-              <FiGrid />
-            </button>
-            <button
-              type="button"
-              className={`btn--icon ${layoutMode === "masonry" ? "is-active" : ""}`}
-              onClick={() => setLayoutMode("masonry")}
-              title="Masonry Grid View (Natural Ratio)"
-            >
-              <BsColumnsGap />
+              <FiGrid /> {isDense ? "COMFORT" : "DENSE"}
             </button>
 
-            {/* Single Primary CTA per View */}
             <button
               type="button"
-              className="btn btn--primary"
+              className="darkroom-bar__action darkroom-bar__action--primary"
               onClick={() => navigate("/feed/create")}
             >
-              <FiPlus /> Create Post
+              <FiPlus /> NEW FRAME
             </button>
           </div>
         </div>
 
-        {feedHeading && feedHeading !== "Your feed" && (
-          <div style={{ marginTop: "16px", marginBottom: "8px" }}>
-            <span className="chip chip--curated" style={{ fontSize: "14px", padding: "6px 14px" }}>
-              #{feedHeading}
-            </span>
-          </div>
-        )}
-
-        {/* Skeleton Loaders (Solid --surface-2 opacity pulse) */}
+        {/* Contact Sheet Grid */}
         {loading ? (
-          <div className={layoutMode === "masonry" ? "lumi-masonry-grid" : "lumi-feed-grid"}>
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="skeleton-post-card">
-                <div className="skeleton-header">
-                  <div className="skeleton skeleton-avatar" />
-                  <div className="skeleton-user-lines">
-                    <div className="skeleton skeleton-line skeleton-line--short" />
-                    <div className="skeleton skeleton-line skeleton-line--medium" />
-                  </div>
-                </div>
-                <div
-                  className="skeleton skeleton-media"
-                  style={{ height: layoutMode === "masonry" && n % 2 === 0 ? "340px" : "240px" }}
-                />
-                <div className="skeleton-user-lines" style={{ marginTop: "8px" }}>
-                  <div className="skeleton skeleton-line" />
-                  <div className="skeleton skeleton-line skeleton-line--medium" />
+          <div className={`contact-sheet ${isDense ? "contact-sheet--dense" : ""}`}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div
+                key={n}
+                className="darkroom-frame"
+                style={{ height: "220px", opacity: 0.5 }}
+              >
+                <div className="darkroom-frame__header">
+                  <span className="darkroom-frame__index font-mono">LOADING</span>
                 </div>
               </div>
             ))}
           </div>
         ) : filteredPosts.length === 0 ? (
-          /* Empty State with single CTA */
-          <div className="empty-state">
-            <FiCompass className="empty-state__icon" />
-            <h3 className="empty-state__headline">No creations found in this view</h3>
-            <p className="empty-state__subtext">
-              Be the first creator to publish inspiration or try tuning your interest preferences.
+          <div style={{ padding: "48px 24px", textAlign: "center" }}>
+            <p className="font-mono" style={{ color: "var(--text-3)", marginBottom: "16px" }}>
+              NO FRAMES RECORDED IN THIS SELECTION
             </p>
             <button
               type="button"
-              className="btn btn--primary"
+              className="darkroom-bar__action darkroom-bar__action--primary"
               onClick={() => navigate("/feed/create")}
             >
-              <FiPlus /> Create First Post
+              <FiPlus /> DEVELOP FIRST FRAME
             </button>
           </div>
         ) : (
-          <div className={layoutMode === "masonry" ? "lumi-masonry-grid" : "lumi-feed-grid"}>
+          <div className={`contact-sheet ${isDense ? "contact-sheet--dense" : ""}`}>
             {filteredPosts.map((post, index) => (
-              <React.Fragment key={post._id}>
-                <PostCard post={post} mode={mode} />
-
-                {/* Social Proof: Suggested Creators strip after every 6th post */}
-                {(index + 1) % 6 === 0 && suggestedCreators.length > 0 && (
-                  <div className="lumi-suggested-strip">
-                    <div className="lumi-suggested-strip__header">
-                      <span className="lumi-suggested-strip__title">
-                        <FiUsers style={{ marginRight: "6px" }} /> Suggested Creators for You
-                      </span>
-                      <button
-                        type="button"
-                        className="btn btn--ghost"
-                        onClick={() => navigate("/feed/connect")}
-                      >
-                        Explore all &rarr;
-                      </button>
-                    </div>
-                    <div className="lumi-suggested-strip__grid">
-                      {suggestedCreators.map((creator) => {
-                        const isFollowed = followedMap[creator._id];
-                        return (
-                          <div key={creator._id} className="lumi-suggested-card">
-                            <div className="lumi-suggested-card__user">
-                              <img
-                                src={
-                                  creator.profileImage
-                                    ? `http://localhost:9000${creator.profileImage}`
-                                    : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
-                                }
-                                alt={creator.name}
-                                className="lumi-suggested-card__avatar"
-                              />
-                              <div>
-                                <p className="lumi-suggested-card__name">{creator.name}</p>
-                                <span style={{ fontSize: "11px", color: "var(--text-3)" }}>
-                                  {creator.creationsCount || 1} creations
-                                </span>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              className={`btn ${isFollowed ? "btn--secondary" : "chip--success"}`}
-                              style={{
-                                padding: "4px 10px",
-                                minHeight: "28px",
-                                fontSize: "12px",
-                                cursor: "pointer",
-                                border: "1px solid var(--border)",
-                              }}
-                              onClick={() => handleFollowToggle(creator._id)}
-                            >
-                              {isFollowed ? "Following" : "Follow"}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </React.Fragment>
+              <PostCard
+                key={post._id}
+                post={post}
+                index={index}
+                isSelected={selectedPost?._id === post._id}
+                onSelect={(p, pins) => handleFrameSelect(p, pins)}
+                onAddPin={(postId, newPin) => {
+                  if (selectedPost?._id === postId) {
+                    setSelectedPostPins((prev) => [...prev, newPin]);
+                  }
+                }}
+              />
             ))}
           </div>
         )}
 
-        {/* Floating Back to Top Pill */}
-        {showBackToTop && (
+        {/* 4. Collapsible Bottom Tray */}
+        <div className={`darkroom-tray ${trayCollapsed ? "is-collapsed" : ""}`}>
           <button
             type="button"
-            className="back-to-top-pill"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            title="Scroll back to top"
+            className="darkroom-tray__handle"
+            onClick={() => setTrayCollapsed(!trayCollapsed)}
           >
-            <FiArrowUp /> Back to top
+            {trayCollapsed ? "▲ EXPAND TRAY" : "▼ COLLAPSE TRAY"}
           </button>
-        )}
+          <span className="darkroom-tray__label">FILMSTRIP TRAY</span>
+          <div className="darkroom-tray__slots">
+            {traySlots.map((item, idx) => (
+              <div
+                key={idx}
+                className={`darkroom-tray__slot ${item ? "has-item" : ""}`}
+                onDrop={(e) => handleSlotDrop(e, idx)}
+                onDragOver={handleDragOver}
+                title={item ? `${item.caption || "Frame"} (Click to Inspect)` : `Drop frame here into Slot #${idx + 1}`}
+                onClick={() => {
+                  if (item) {
+                    const match = posts.find((p) => p._id === item.postId);
+                    if (match) setSelectedPost(match);
+                  }
+                }}
+              >
+                {item ? (
+                  <img
+                    src={`http://localhost:9000${item.file_url}`}
+                    alt="Slot"
+                  />
+                ) : (
+                  <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>
+                    #{idx + 1}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
 
-        {/* Onboarding Interest Setup Modal */}
-        <OnboardingModal
-          isOpen={showOnboarding}
-          onClose={() => setShowOnboarding(false)}
-          onComplete={() => fetchPosts()}
-          mode={mode}
-        />
-      </div>
+      {/* 3. Right Inspector (380px fixed width, slide-in) */}
+      {selectedPost && (
+        <aside className="darkroom-inspector">
+          <div className="darkroom-inspector__header">
+            <span>INSPECTOR: @{selectedPost.username}</span>
+            <button
+              type="button"
+              className="darkroom-inspector__close"
+              onClick={() => setSelectedPost(null)}
+              title="Close Inspector"
+            >
+              <FiX />
+            </button>
+          </div>
+
+          <div className="darkroom-inspector__tabs">
+            <button
+              type="button"
+              className={`darkroom-inspector__tab ${inspectorTab === "notes" ? "is-active" : ""}`}
+              onClick={() => setInspectorTab("notes")}
+            >
+              <FiFileText style={{ marginRight: "4px" }} /> NOTES
+            </button>
+            <button
+              type="button"
+              className={`darkroom-inspector__tab ${inspectorTab === "process" ? "is-active" : ""}`}
+              onClick={() => setInspectorTab("process")}
+            >
+              <FiLayers style={{ marginRight: "4px" }} /> PROCESS
+            </button>
+            <button
+              type="button"
+              className={`darkroom-inspector__tab ${inspectorTab === "remix" ? "is-active" : ""}`}
+              onClick={() => setInspectorTab("remix")}
+            >
+              <FiRepeat style={{ marginRight: "4px" }} /> REMIX
+            </button>
+            <button
+              type="button"
+              className={`darkroom-inspector__tab ${inspectorTab === "boards" ? "is-active" : ""}`}
+              onClick={() => setInspectorTab("boards")}
+            >
+              <FiBookmark style={{ marginRight: "4px" }} /> BOARDS
+            </button>
+          </div>
+
+          <div className="darkroom-inspector__body">
+            {/* Frame Overview */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div
+                style={{
+                  width: "100%",
+                  aspectRatio: "4 / 3",
+                  backgroundColor: "var(--frame-bg)",
+                  border: "1px solid var(--rule)",
+                  borderRadius: "var(--radius-xs)",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src={`http://localhost:9000${selectedPost.file_url}`}
+                  alt={selectedPost.caption}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              </div>
+              <p style={{ fontSize: "13px", lineHeight: "1.4", color: "var(--text)" }}>
+                {selectedPost.caption}
+              </p>
+              <div className="font-mono" style={{ fontSize: "11px", color: "var(--text-3)" }}>
+                TIMESTAMP: {new Date(selectedPost.upload_time).toLocaleString()}
+              </div>
+            </div>
+
+            {/* TAB: NOTES (Numbered Pins) */}
+            {inspectorTab === "notes" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)", fontWeight: "600" }}>
+                  PIN NOTES ({selectedPostPins.length})
+                </span>
+                <p style={{ fontSize: "12px", color: "var(--text-3)", lineHeight: "1.4" }}>
+                  Tip: Hold <strong>Alt</strong> (or <strong>Shift</strong>) and click anywhere on the frame image to place a numbered pin.
+                </p>
+                {selectedPostPins.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "16px",
+                      border: "1px dashed var(--rule)",
+                      borderRadius: "var(--radius-xs)",
+                      textAlign: "center",
+                      fontSize: "12px",
+                      color: "var(--text-3)",
+                    }}
+                  >
+                    No pins placed on this frame yet.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {selectedPostPins.map((pin, i) => (
+                      <div
+                        key={pin.id || i}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "6px 10px",
+                          backgroundColor: "var(--surface-2)",
+                          border: "1px solid var(--rule)",
+                          borderRadius: "var(--radius-xs)",
+                          fontSize: "12px",
+                        }}
+                      >
+                        <span
+                          className="font-mono"
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            backgroundColor: "var(--pin-bg)",
+                            color: "var(--pin-text)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "10px",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {i + 1}
+                        </span>
+                        <span style={{ flex: 1, color: "var(--text)" }}>
+                          {pin.note || `Note #${i + 1}`}
+                        </span>
+                        <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>
+                          ({pin.x}%, {pin.y}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Threaded comments inside inspector notes */}
+                <div style={{ marginTop: "12px" }}>
+                  <ThreadedComments
+                    postId={selectedPost._id}
+                    initialComments={selectedPost.comments || []}
+                    currentUser={user}
+                    mode={mode}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* TAB: PROCESS */}
+            {inspectorTab === "process" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)", fontWeight: "600" }}>
+                  MAKING-OF PHASES
+                </span>
+                {selectedPost.process_steps && selectedPost.process_steps.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {selectedPost.process_steps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          border: "1px solid var(--rule)",
+                          borderRadius: "var(--radius-xs)",
+                          overflow: "hidden",
+                          backgroundColor: "var(--surface-2)",
+                        }}
+                      >
+                        <div style={{ height: "160px", backgroundColor: "var(--frame-bg)" }}>
+                          <img
+                            src={`http://localhost:9000${step.file_url}`}
+                            alt={step.phase_label}
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                          />
+                        </div>
+                        <div style={{ padding: "8px 10px" }}>
+                          <span className="font-mono" style={{ fontSize: "10px", color: "var(--accent)" }}>
+                            STAGE {idx + 1}
+                          </span>
+                          <h5 style={{ fontSize: "12px", color: "var(--text)", margin: "2px 0" }}>
+                            {step.phase_label}
+                          </h5>
+                          {step.caption && (
+                            <p style={{ fontSize: "11px", color: "var(--text-2)" }}>
+                              {step.caption}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "12px", color: "var(--text-3)" }}>
+                    No intermediate WIP phases uploaded for this frame.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* TAB: REMIX TREE */}
+            {inspectorTab === "remix" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)", fontWeight: "600" }}>
+                  LINEAGE & DERIVATIVES
+                </span>
+                {selectedPost.remix_of ? (
+                  <div
+                    style={{
+                      border: "1px solid var(--rule)",
+                      borderRadius: "var(--radius-xs)",
+                      padding: "10px",
+                      backgroundColor: "var(--surface-2)",
+                    }}
+                  >
+                    <span className="font-mono" style={{ fontSize: "10px", color: "var(--accent)" }}>
+                      ORIGINAL INSPIRATION
+                    </span>
+                    <p style={{ fontSize: "12px", color: "var(--text)", marginTop: "4px" }}>
+                      Remixed from @{selectedPost.remix_of.username || "creator"}
+                    </p>
+                    {selectedPost.remix_of.caption && (
+                      <p style={{ fontSize: "11px", color: "var(--text-3)", marginTop: "2px" }}>
+                        "{selectedPost.remix_of.caption}"
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "12px", color: "var(--text-3)" }}>
+                    This piece is a root original creation.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  className="darkroom-bar__action darkroom-bar__action--primary"
+                  style={{ alignSelf: "flex-start", marginTop: "8px" }}
+                  onClick={() =>
+                    navigate("/feed/create", {
+                      state: {
+                        remixPost: {
+                          _id: selectedPost._id,
+                          username: selectedPost.username,
+                          caption: selectedPost.caption,
+                          file_url: selectedPost.file_url,
+                          tags: selectedPost.tags,
+                        },
+                      },
+                    })
+                  }
+                >
+                  <FiRepeat /> REMIX THIS FRAME
+                </button>
+              </div>
+            )}
+
+            {/* TAB: BOARDS */}
+            {inspectorTab === "boards" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)", fontWeight: "600" }}>
+                  SAVE TO MOODBOARD
+                </span>
+                <p style={{ fontSize: "12px", color: "var(--text-3)" }}>
+                  Drag this frame onto the filmstrip tray below or add directly into your collection boards.
+                </p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {["Inspirations", "Color Palettes", "Typography", "Archived"].map((board, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className="darkroom-bar__action"
+                      onClick={() => alert(`Saved frame to board: ${board}`)}
+                    >
+                      <FiBookmark /> {board}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {/* Onboarding Interest Setup Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={() => fetchPosts()}
+        mode={mode}
+      />
     </div>
   );
 }
