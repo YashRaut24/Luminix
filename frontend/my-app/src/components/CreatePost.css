@@ -1,26 +1,20 @@
 .create-post-container,
 .dark-create-post-container {
   width: 100%;
-  max-width: 1100px !important;
-  margin-top: 40px !important;
-  background: #ffffff !important;
-  padding: 40px !important;
-  border-radius: 20px !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
-  animation: slideIn 0.4s ease-out;
-  box-sizing: border-box !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  scrollbar-width: thin;
-  scrollbar-color: #8b5cf6 #e2e8f0;
+  max-width: 1000px;
+  margin: 32px auto;
+  background-color: var(--surface);
+  color: var(--text);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--rule);
+  animation: slideIn 0.3s ease-out;
+  box-sizing: border-box;
 }
 
 .dark-create-post-container {
-  background: linear-gradient(145deg, #1e293b, #0f172a) !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-  border: 1px solid rgba(139, 92, 246, 0.3) !important;
-    scrollbar-color: #a78bfa #1e293b;
-
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
 }
 @keyframes slideIn {
   from {
@@ -430,40 +424,38 @@
 
 .submit-btn {
   width: 100%;
-  padding: 16px 28px;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 700;
+  padding: 14px 28px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   margin-top: 12px;
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
   font-family: inherit;
   letter-spacing: 0.3px;
 }
 
 .submit-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .submit-btn:active:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  transform: scale(0.99);
 }
 
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
 }
 
 .submit-btn span:first-child {
