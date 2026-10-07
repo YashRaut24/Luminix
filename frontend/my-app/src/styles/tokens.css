@@ -1,26 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* ==========================================================================
-   LUMINIX DESIGN SYSTEM TOKENS
+   LUMINIX DARKROOM / LIGHTBOX DESIGN SYSTEM TOKENS
    Strict Constraints:
-   - Solid colors only (NO gradients)
-   - Zero glow / colored shadows (neutral 1px borders & surface steps only)
-   - Single accent hue (#6366f1) reserved for primary action / active state
+   - Zero gradients of ANY kind (linear, radial, repeating-linear, etc.)
+   - Zero glow, zero blurred or colored shadows
+   - Solid colors and surface steps only
+   - One accent hue: #6366f1
    ========================================================================== */
 
 :root {
-  /* Common typography */
-  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
-  --font-xs: 12px;
-  --font-sm: 14px;
-  --font-md: 16px;
-  --font-lg: 20px;
-  --font-xl: 28px;
+  /* Typography */
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Consolas, monospace;
 
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.75;
+  --font-xs: 11px;
+  --font-sm: 13px;
+  --font-md: 15px;
+  --font-lg: 18px;
+  --font-xl: 24px;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.6;
 
   /* Spacing Scale (4, 8, 12, 16, 24, 32, 48) */
   --space-1: 4px;
@@ -32,58 +34,73 @@
   --space-7: 48px;
 
   /* Radius Scale */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
   --radius-full: 9999px;
 
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
+  /* Motion Timing */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
+  --ease-standard: ease;
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Shared Brand & Functional Tokens (Solid Only) */
   --accent: #6366f1;
   --accent-hover: #4f46e5;
+  --stamp-active: #ef4444;
   --success: #10b981;
-  --danger: #ef4444;
   --warning: #f59e0b;
 
-  /* Floating Elevation (Neutral low-opacity only for modals/dropdowns) */
-  --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.28);
+  /* Layout Constants */
+  --spine-width: 64px;
+  --inspector-width: 380px;
+  --tray-height: 72px;
 }
 
-/* Light Theme Variables */
-body.light-mode,
-:root:not(.dark-mode) {
-  --bg: #f8fafc;
+/* ==========================================================================
+   THEMES: body.darkroom and body.lightbox
+   ========================================================================== */
+
+/* Darkroom Theme (Default Dark Workspace) */
+body.darkroom,
+:root:not(.lightbox) {
+  --bg: #090c10;
+  --surface: #0e131b;
+  --surface-2: #161d27;
+  --frame-bg: #05070a;
+  --rule: #1e2633;
+  --rule-subtle: #141b25;
+  --text: #f0f4f8;
+  --text-2: #929ea8;
+  --text-3: #586674;
+  --pin-bg: #ef4444;
+  --pin-text: #ffffff;
+  --slot-bg: #10151d;
+  --slot-border: #232c3b;
+  --overlay-bg: rgba(9, 12, 16, 0.92);
+}
+
+/* Lightbox Theme (Precision White Inspection Table) */
+body.lightbox {
+  --bg: #f4f6f9;
   --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --border: #e2e8f0;
-  
-  --text: #0f172a;
-  --text-2: #475569;
-  --text-3: #64748b;
-
-  --accent-soft: #e0e7ff;
-  --shadow-floating: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --surface-2: #e8ecf2;
+  --frame-bg: #dfe4ec;
+  --rule: #d0d6e2;
+  --rule-subtle: #e2e6ef;
+  --text: #0b0f17;
+  --text-2: #495568;
+  --text-3: #758398;
+  --pin-bg: #dc2626;
+  --pin-text: #ffffff;
+  --slot-bg: #edf1f7;
+  --slot-border: #c8d0de;
+  --overlay-bg: rgba(244, 246, 249, 0.92);
 }
 
-/* Dark Theme Variables */
-body.dark-mode {
-  --bg: #0b0f19;
-  --surface: #111827;
-  --surface-2: #1a2233;
-  --border: #263043;
-  
-  --text: #f1f5f9;
-  --text-2: #94a3b8;
-  --text-3: #64748b;
-
-  --accent-soft: #1e1b4b;
-  --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-
-/* Base Document Resets */
+/* Document Resets */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -91,27 +108,35 @@ body.dark-mode {
 }
 
 html, body {
-  min-height: 100%;
   width: 100%;
-  font-family: var(--font-family);
+  height: 100%;
+  font-family: var(--font-sans);
   background-color: var(--bg);
   color: var(--text);
   line-height: var(--leading-normal);
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-/* Accessible focus outlines */
+/* Monospace Utility */
+.font-mono,
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+}
+
+/* Accessibility: Focus outlines */
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
-/* Scrollbar tokens */
+/* Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -119,10 +144,90 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--rule);
+  border-radius: var(--radius-xs);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-3);
+}
+
+/* ==========================================================================
+   CSS MOTION ANIMATIONS (Respects prefers-reduced-motion)
+   ========================================================================== */
+
+/* 1. Frame develop fade-in */
+@keyframes developFadeIn {
+  0% {
+    opacity: 0;
+    filter: brightness(0.7);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* 2. Inspector slide-in (200ms) */
+@keyframes inspectorSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 3. Countdown scaleX */
+@keyframes countdownScale {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* 4. Tray slot bounce */
+@keyframes slotBounce {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  80% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 5. Pin drop overshoot */
+@keyframes pinDropOvershoot {
+  0% {
+    transform: translate(-50%, -100%) scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Prefers-reduced-motion override */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,4 +1,10 @@
 @import "./styles/tokens.css";
+@import "./styles/shell.css";
+@import "./styles/frames.css";
+@import "./styles/inspector.css";
+@import "./styles/flash.css";
+@import "./styles/circles.css";
+@import "./styles/studio.css";
 @import "./styles/layout.css";
 @import "./styles/components.css";
 @import "./styles/feed.css";
