@@ -1,33 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import socket from "../socket";
-import "./ShowPost.css";
-import "./PostCard.css";
 import MoodboardModal from "./MoodboardModal";
 import ThreadedComments from "./ThreadedComments";
 import {
   FiHeart,
   FiRepeat,
-  FiShare2,
   FiBookmark,
   FiLayers,
-  FiArrowRight,
   FiChevronLeft,
   FiChevronRight,
-  FiCheckCircle,
-  FiMessageCircle
+  FiMessageCircle,
+  FiLock,
+  FiGlobe
 } from "react-icons/fi";
 import { BsPaletteFill, BsStars } from "react-icons/bs";
-import { extractDominantColor } from "../utils/colorExtractor";
 
 function PostCard({ post, mode }) {
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem("userData");
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
-
   const currentUserId = currentUser ? currentUser.id || currentUser._id : null;
+
   const initialLiked =
     currentUserId &&
     post.likesList &&
@@ -39,7 +35,7 @@ function PostCard({ post, mode }) {
   const [reposted, setReposted] = useState(false);
   const [likes, setLikes] = useState(post.likes || 0);
   const [reposts, setReposts] = useState(post.reposts || 0);
-  const [shares, setShares] = useState(post.shares || 0);
+  const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
 
   // Process / Making-Of strip states
   const [showProcessStrip, setShowProcessStrip] = useState(false);
@@ -54,19 +50,9 @@ function PostCard({ post, mode }) {
   // Moodboard modal state
   const [showMoodboardModal, setShowMoodboardModal] = useState(false);
 
-  // Dynamic color theming and double-tap like animation
-  const [palette, setPalette] = useState(null);
+  // Double-tap like animation
   const [showHeartBurst, setShowHeartBurst] = useState(false);
   const lastTapRef = useRef(0);
-
-  useEffect(() => {
-    const fullImgUrl = post.file_url?.startsWith("/uploads")
-      ? `http://localhost:9000${post.file_url}`
-      : post.file_url;
-    extractDominantColor(fullImgUrl, (extracted) => {
-      setPalette(extracted);
-    });
-  }, [post.file_url]);
 
   // Real-time live likes & comments listener via Socket.io
   useEffect(() => {
@@ -96,7 +82,6 @@ function PostCard({ post, mode }) {
 
   const handleLikeClick = async () => {
     try {
-      // Optimistic update
       const nextLiked = !liked;
       setLiked(nextLiked);
       setLikes((prev) => prev + (nextLiked ? 1 : -1));
@@ -118,8 +103,6 @@ function PostCard({ post, mode }) {
     return new Date(time).toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -144,7 +127,7 @@ function PostCard({ post, mode }) {
         handleLikeClick();
       }
       setShowHeartBurst(true);
-      setTimeout(() => setShowHeartBurst(false), 800);
+      setTimeout(() => setShowHeartBurst(false), 500);
       lastTapRef.current = 0;
     } else {
       lastTapRef.current = now;
@@ -155,124 +138,127 @@ function PostCard({ post, mode }) {
   const currentProcessStep = hasProcessSteps ? post.process_steps[activeStepIndex] : null;
 
   return (
-    <div className={mode ? "dark-show-posts-container" : "show-posts-container"}>
-      <div
-        className={`post-card ${mode ? "dark-theme" : ""}`}
-        style={{
-          "--lumi-glow": palette?.glow || "rgba(139, 92, 246, 0.15)",
-          "--lumi-border": palette?.border || "rgba(139, 92, 246, 0.2)",
-          "--lumi-tint": palette?.tint || "transparent",
-        }}
-      >
+    <>
+      <div className="post-card">
         {/* Remix Reference Header (if this post is a remix) */}
         {post.remix_of && (
-          <div className="remix-reference-banner">
-            <div className="remix-badge">
-              <BsPaletteFill /> {post.remix_type || "Creative Remix"}
+          <div className="post-card__remix-banner">
+            <div className="post-card__remix-badge">
+              <BsPaletteFill /> {post.remix_type || "Remix"}
             </div>
-            <div className="remix-parent-summary">
-              <img
-                src={`http://localhost:9000${post.remix_of.file_url}`}
-                alt="Original inspiration"
-                className="remix-parent-thumb"
-              />
-              <div className="remix-parent-details">
-                <span className="remix-parent-author">
-                  Inspired by @{post.remix_of.username || "creator"}
-                </span>
-                <span className="remix-parent-caption">
-                  "{post.remix_of.caption || "Original piece"}"
-                </span>
-              </div>
+            <div className="post-card__remix-parent-info">
+              {post.remix_of.file_url && (
+                <img
+                  src={`http://localhost:9000${post.remix_of.file_url}`}
+                  alt="Original"
+                  className="post-card__remix-parent-thumb"
+                />
+              )}
+              <span>@{post.remix_of.username || "creator"}</span>
             </div>
           </div>
         )}
 
-        <div className="post-header">
-          <div className="post-author-box">
-            <div className="post-avatar-placeholder">
+        {/* Header */}
+        <div className="post-card__header">
+          <div className="post-card__author">
+            <div className="post-card__avatar">
               {post.author?.profileImage ? (
                 <img
                   src={`http://localhost:9000${post.author.profileImage}`}
                   alt={post.username}
-                  className="post-avatar-img"
                 />
               ) : (
                 <span>{post.username?.charAt(0)?.toUpperCase() || "U"}</span>
               )}
             </div>
-            <div className="post-user-info">
-              <h4 className="post-author-name">
-                {post.username}
-                {post.author?.skillBadges && post.author.skillBadges.length > 0 && (
-                  <span className="author-skill-badge" title={post.author.skillBadges[0].description}>
-                    {post.author.skillBadges[0].icon} {post.author.skillBadges[0].title}
+            <div className="post-card__author-meta">
+              <div className="post-card__author-row">
+                <span className="post-card__author-name">{post.username}</span>
+                <span className="post-card__author-handle">
+                  {post.author?.lumiTag || `@${post.username?.toLowerCase()}`}
+                </span>
+                {likes >= 10 && (
+                  <span className="chip chip--trending" title="Trending creative work">
+                    Trending
                   </span>
                 )}
-              </h4>
-              <span className="post-author-tag">
-                {post.author?.lumiTag || `@${post.username?.toLowerCase()}`}
-              </span>
+              </div>
             </div>
           </div>
 
-          <div className="post-header-badges">
+          <div className="post-card__header-right">
+            {/* Show Curated chip only when affinity score is high or reason exists */}
             {post.recommendationReason && (
-              <span className="for-you-affinity-badge" title={`Affinity: ${post.recommendationScore || 0}%`}>
-                <BsStars /> {post.recommendationReason}
+              <span
+                className="chip chip--curated"
+                title={`${post.recommendationReason} (${post.recommendationScore || 0}% match)`}
+              >
+                <BsStars /> Curated
               </span>
             )}
-            {hasProcessSteps && (
-              <button
-                type="button"
-                className={`process-pill-badge ${showProcessStrip ? "active" : ""}`}
-                onClick={() => setShowProcessStrip(!showProcessStrip)}
-                title="Toggle WIP / Making-Of Strip"
-              >
-                <FiLayers /> {hasProcessSteps ? `${post.process_steps.length} WIP Shots` : "Process"}
-              </button>
-            )}
-            <span className="post-audience">
-              {post.target === "public" ? "🌍 Public" : "🔒 Private"}
+
+            {/* Public/Private lock icon with hover tooltip */}
+            <span
+              className="post-card__privacy-icon"
+              title={post.target === "public" ? "Public creation" : "Private"}
+            >
+              {post.target === "public" ? <FiGlobe /> : <FiLock />}
             </span>
+
+            {/* Timestamp on right of header */}
+            <span className="post-card__time">{formatTime(post.upload_time)}</span>
           </div>
         </div>
 
-        {/* Post Image or Process / Making-Of Strip */}
-        <div className="post-image-container" onClick={handleImageDoubleTap}>
+        {/* Post Image: sits directly under header, aspect-ratio 4:3 in feed, natural in masonry */}
+        <div className="post-card__media" onClick={handleImageDoubleTap}>
           {showHeartBurst && (
-            <div className="heart-burst-overlay">
-              <FiHeart className="burst-heart-icon" />
+            <div className="post-card__heart-burst">
+              <FiHeart />
             </div>
           )}
+
+          {hasProcessSteps && (
+            <button
+              type="button"
+              className="post-card__wip-badge"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProcessStrip(!showProcessStrip);
+              }}
+              title="Toggle WIP / Making-Of steps"
+            >
+              <FiLayers /> WIP
+            </button>
+          )}
+
           {!showProcessStrip ? (
             <img
               src={`http://localhost:9000${post.file_url}`}
               alt={post.file_name || "Luminix Post"}
-              className="post-image"
+              loading="lazy"
             />
           ) : (
-            <div className="process-strip-viewer">
-              <div className="process-image-stage">
+            <div className="post-card__process-viewer" onClick={(e) => e.stopPropagation()}>
+              <div className="post-card__process-stage">
                 <img
                   src={`http://localhost:9000${currentProcessStep.file_url}`}
                   alt={currentProcessStep.phase_label}
-                  className="process-stage-image"
                 />
-
-                <div className="process-floating-controls">
+                <div className="post-card__process-nav">
                   <button
-                    className="nav-step-btn prev"
+                    className="btn btn--icon"
                     disabled={activeStepIndex === 0}
                     onClick={() => setActiveStepIndex((prev) => Math.max(0, prev - 1))}
                   >
                     <FiChevronLeft />
                   </button>
-                  <span className="step-counter-pill">
-                    {activeStepIndex + 1} / {post.process_steps.length}
+                  <span style={{ fontSize: "11px", fontWeight: "600", padding: "0 4px" }}>
+                    {activeStepIndex + 1}/{post.process_steps.length}
                   </span>
                   <button
-                    className="nav-step-btn next"
+                    className="btn btn--icon"
                     disabled={activeStepIndex === post.process_steps.length - 1}
                     onClick={() =>
                       setActiveStepIndex((prev) =>
@@ -285,117 +271,87 @@ function PostCard({ post, mode }) {
                 </div>
               </div>
 
-              {/* Step info overlay */}
-              <div className="process-step-info-bar">
-                <div className="step-phase-title">
-                  <span className="phase-marker">STAGE {activeStepIndex + 1}</span>
-                  <strong>{currentProcessStep.phase_label}</strong>
-                </div>
-                {currentProcessStep.caption && (
-                  <p className="step-caption-note">{currentProcessStep.caption}</p>
-                )}
-              </div>
-
-              {/* Step thumbnails strip */}
-              <div className="process-thumbnail-strip">
+              <div className="post-card__process-thumbs">
                 {post.process_steps.map((step, idx) => (
-                  <div
+                  <img
                     key={idx}
-                    className={`thumb-scrub-item ${idx === activeStepIndex ? "active" : ""}`}
+                    src={`http://localhost:9000${step.file_url}`}
+                    alt={step.phase_label}
+                    className={`post-card__process-thumb ${idx === activeStepIndex ? "is-active" : ""}`}
                     onClick={() => setActiveStepIndex(idx)}
-                  >
-                    <img
-                      src={`http://localhost:9000${step.file_url}`}
-                      alt={step.phase_label}
-                    />
-                    <span className="thumb-label">{idx + 1}</span>
-                  </div>
+                  />
                 ))}
-                <div
-                  className="thumb-scrub-item final-toggle"
+                <span
+                  className="chip chip--curated"
+                  style={{ cursor: "pointer" }}
                   onClick={() => setShowProcessStrip(false)}
                 >
-                  <img src={`http://localhost:9000${post.file_url}`} alt="Final" />
-                  <span className="thumb-label final">Final</span>
-                </div>
+                  Final
+                </span>
               </div>
             </div>
           )}
+        </div>
 
-          {/* Quick toggle button if process thread is available */}
-          {hasProcessSteps && !showProcessStrip && (
+        {/* Action Bar */}
+        <div className="post-card__actions">
+          <div className="post-card__actions-left">
             <button
-              className="quick-process-toggle-btn"
-              onClick={() => setShowProcessStrip(true)}
+              className={`post-card__action-btn ${liked ? "is-liked" : ""}`}
+              onClick={handleLikeClick}
+              title={liked ? "Unlike" : "Like"}
             >
-              <FiLayers /> View Making-Of Strip
+              <FiHeart style={{ fill: liked ? "currentColor" : "none" }} />
+              {likes === 0 ? (
+                <span className="post-card__like-nudge">Be the first to like</span>
+              ) : (
+                <span>{likes}</span>
+              )}
             </button>
-          )}
+
+            <button
+              className="post-card__action-btn"
+              onClick={() => setShowComments(!showComments)}
+              title="Comments"
+            >
+              <FiMessageCircle />
+              <span>{commentsCount}</span>
+            </button>
+
+            <button
+              className={`post-card__action-btn ${reposted ? "is-reposted" : ""}`}
+              onClick={() => {
+                setReposted(!reposted);
+                setReposts((prev) => prev + (reposted ? -1 : 1));
+              }}
+              title="Repost"
+            >
+              <FiRepeat />
+              <span>{reposts}</span>
+            </button>
+          </div>
+
+          <div className="post-card__actions-right">
+            <button
+              className="btn--remix"
+              onClick={handleRemixClick}
+              title="Remix this piece"
+            >
+              <BsPaletteFill />
+              <span>{post.remix_count > 0 ? `Remixed ${post.remix_count}x` : "Remix"}</span>
+            </button>
+
+            <button
+              className="btn btn--icon"
+              onClick={() => setShowMoodboardModal(true)}
+              title="Save to Moodboard"
+            >
+              <FiBookmark />
+            </button>
+          </div>
         </div>
 
-        {/* Interaction Bar with Live Like, Live Comments, Remix & Moodboard */}
-        <div className="post-interaction-bar">
-          <button
-            className={`interaction-btn ${liked ? "active-like" : ""}`}
-            onClick={handleLikeClick}
-            title="Real-time live like"
-          >
-            <FiHeart className="interaction-icon" />
-            <span className="interaction-count">{likes}</span>
-          </button>
-
-          <button
-            className={`interaction-btn ${showComments ? "active-comments" : ""}`}
-            onClick={() => setShowComments(!showComments)}
-            title="Threaded discussion & reactions"
-          >
-            <FiMessageCircle className="interaction-icon" />
-            <span className="interaction-count">{commentsCount}</span>
-          </button>
-
-          <button
-            className={`interaction-btn ${reposted ? "active-repost" : ""}`}
-            onClick={() => {
-              setReposted(!reposted);
-              setReposts((prev) => prev + (reposted ? -1 : 1));
-            }}
-          >
-            <FiRepeat className="interaction-icon" />
-            <span className="interaction-count">{reposts}</span>
-          </button>
-
-          {/* Creative Feature: Remix This */}
-          <button
-            className="interaction-btn remix-btn"
-            onClick={handleRemixClick}
-            title="Remix or respond with your own creative version"
-          >
-            <BsPaletteFill className="interaction-icon remix-icon" />
-            <span className="interaction-count">
-              {post.remix_count > 0 ? `${post.remix_count} Remixes` : "Remix"}
-            </span>
-          </button>
-
-          {/* Creative Feature: Save to Moodboard */}
-          <button
-            className="interaction-btn moodboard-btn"
-            onClick={() => setShowMoodboardModal(true)}
-            title="Save to a curated Moodboard / Collection"
-          >
-            <FiBookmark className="interaction-icon" />
-            <span className="interaction-count">Board</span>
-          </button>
-
-          <button
-            className="interaction-btn"
-            onClick={() => setShares((prev) => prev + 1)}
-          >
-            <FiShare2 className="interaction-icon" />
-            <span className="interaction-count">{shares}</span>
-          </button>
-        </div>
-
-        {/* Threaded Comments & Emoji Reactions Drawer */}
+        {/* Threaded Comments Drawer */}
         {showComments && (
           <ThreadedComments
             postId={post._id}
@@ -405,27 +361,34 @@ function PostCard({ post, mode }) {
           />
         )}
 
-        <div className="post-footer">
-          <p className="post-caption">{post.caption}</p>
+        {/* Caption and Tags (Below Actions) */}
+        <div className="post-card__body">
+          {post.caption && (
+            <div>
+              <p className={`post-card__caption ${!isCaptionExpanded && post.caption.length > 90 ? "is-clamped" : ""}`}>
+                {post.caption}
+              </p>
+              {post.caption.length > 90 && (
+                <button
+                  type="button"
+                  className="post-card__more-btn"
+                  onClick={() => setIsCaptionExpanded(!isCaptionExpanded)}
+                >
+                  {isCaptionExpanded ? "less" : "more"}
+                </button>
+              )}
+            </div>
+          )}
 
           {post.tags && post.tags.length > 0 && (
-            <div className="post-tags">
+            <div className="post-card__tags">
               {post.tags.map((tag, i) => (
-                <span key={i} className="tag-chip">
+                <span key={i} className="post-card__tag-link">
                   #{tag}
                 </span>
               ))}
             </div>
           )}
-
-          <div className="post-footer-meta">
-            <p className="post-time">{formatTime(post.upload_time)}</p>
-            {post.remix_count > 0 && (
-              <span className="remix-chain-indicator">
-                <FiRepeat /> Part of a {post.remix_count + 1}-piece creative tree
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
@@ -436,7 +399,7 @@ function PostCard({ post, mode }) {
         onClose={() => setShowMoodboardModal(false)}
         mode={mode}
       />
-    </div>
+    </>
   );
 }
 
