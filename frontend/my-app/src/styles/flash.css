@@ -1,0 +1,149 @@
+/* ==========================================================================
+   LUMINIX DARKROOM FLASH STRIP
+   Slim row with solid countdown bar for 24h lifetime
+   Zero gradients, zero glow
+   ========================================================================== */
+
+.darkroom-flash-strip {
+  width: 100%;
+  height: 80px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.darkroom-flash-strip__scroll {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none;
+}
+
+.darkroom-flash-strip__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.darkroom-flash-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  user-select: none;
+}
+
+.darkroom-flash-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-xs);
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-flash-ring.is-unviewed {
+  border-color: var(--accent);
+}
+
+.darkroom-flash-ring--add {
+  border: 1px dashed var(--accent);
+}
+
+.darkroom-flash-item:hover .darkroom-flash-ring {
+  border-color: var(--text);
+}
+
+.darkroom-flash-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.darkroom-flash-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.darkroom-flash-add-icon {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  border: 1px solid var(--surface);
+}
+
+/* Solid countdown bar for the 24h lifetime */
+.darkroom-flash-countdown {
+  width: 44px;
+  height: 3px;
+  background-color: var(--surface-2);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.darkroom-flash-countdown__fill {
+  height: 100%;
+  background-color: var(--warning);
+  transform-origin: left;
+}
+
+.darkroom-flash-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 44px;
+  line-height: 1;
+}
+
+.darkroom-flash-author {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 44px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.darkroom-flash-timer {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--warning);
+}

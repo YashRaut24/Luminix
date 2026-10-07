@@ -41,17 +41,17 @@ const FlashStoriesBar = ({ user }) => {
   };
 
   return (
-    <div className="lumi-flash-bar">
-      <div className="lumi-flash-bar__scroll">
+    <div className="darkroom-flash-strip">
+      <div className="darkroom-flash-strip__scroll">
         {/* Add Flash Story Button */}
         <button
           type="button"
-          className="lumi-flash-item"
+          className="darkroom-flash-item"
           onClick={() => navigate("/feed/camera")}
-          title="Shoot a 24h Ephemeral Flash via Webcam"
+          title="Shoot a 24h Ephemeral Flash"
         >
-          <div className="lumi-flash-ring lumi-flash-ring--add">
-            <div className="lumi-flash-avatar">
+          <div className="darkroom-flash-ring darkroom-flash-ring--add">
+            <div className="darkroom-flash-avatar">
               {user?.profileImage ? (
                 <img
                   src={
@@ -65,28 +65,33 @@ const FlashStoriesBar = ({ user }) => {
                 <span>{user?.name?.charAt(0) || "U"}</span>
               )}
             </div>
-            <span className="lumi-flash-add-badge">
+            <span className="darkroom-flash-add-icon">
               <FiPlus />
             </span>
           </div>
-          <span className="lumi-flash-author">Add Flash</span>
-          <span className="lumi-flash-urgency">24h story</span>
+          <div className="darkroom-flash-countdown">
+            <div className="darkroom-flash-countdown__fill" style={{ width: "100%" }} />
+          </div>
+          <span className="darkroom-flash-author">Add Flash</span>
         </button>
 
         {/* Existing Flash Stories */}
         {stories.map((group) => {
           const latestItem = group.items[group.items.length - 1];
-          const timeLeft = latestItem?.timeLeftText?.split(" ")[0] || "3h";
+          const timeLeftText = latestItem?.timeLeftText?.split(" ")[0] || "18h";
+          const hoursLeft = parseInt(timeLeftText, 10) || 12;
+          const ratioPercent = Math.min(100, Math.max(8, (hoursLeft / 24) * 100));
 
           return (
             <button
               type="button"
               key={group.authorId}
-              className="lumi-flash-item"
+              className="darkroom-flash-item"
               onClick={() => openStory(group)}
+              title={`${group.authorName} (${timeLeftText} left)`}
             >
-              <div className="lumi-flash-ring">
-                <div className="lumi-flash-avatar">
+              <div className="darkroom-flash-ring is-unviewed">
+                <div className="darkroom-flash-avatar">
                   <img
                     src={
                       group.authorAvatar
@@ -99,8 +104,19 @@ const FlashStoriesBar = ({ user }) => {
                   />
                 </div>
               </div>
-              <span className="lumi-flash-author">{group.authorName}</span>
-              <span className="lumi-flash-urgency">ends in {timeLeft}</span>
+
+              {/* Solid Countdown bar for 24h lifetime */}
+              <div className="darkroom-flash-countdown">
+                <div
+                  className="darkroom-flash-countdown__fill"
+                  style={{ width: `${ratioPercent}%` }}
+                />
+              </div>
+
+              <div className="darkroom-flash-meta">
+                <span className="darkroom-flash-author">{group.authorName}</span>
+                <span className="darkroom-flash-timer">{timeLeftText}</span>
+              </div>
             </button>
           );
         })}
