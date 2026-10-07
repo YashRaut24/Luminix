@@ -48,18 +48,12 @@
   font-size: 32px;
   font-weight: 700;
   margin: 0 0 12px 0;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #0f172a;
   letter-spacing: -0.5px;
 }
 
 .dark-create-post-container .post-header h2 {
-  background: linear-gradient(135deg, #a78bfa, #f472b6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #f8fafc;
 }
 
 .post-subtitle {
@@ -203,13 +197,12 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: #6366f1;
   color: white;
   border-radius: 24px;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
 }
 
 .tag-chip:hover {
@@ -354,13 +347,13 @@
 .remove-image-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: #ef4444;
   color: white;
   border: none;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,8 +362,7 @@
 }
 
 .remove-image-btn:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  background: #dc2626;
 }
 
 .remove-image-btn span:first-child {

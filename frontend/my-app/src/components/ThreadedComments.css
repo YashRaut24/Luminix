@@ -57,7 +57,7 @@
 }
 
 .send-comment-btn {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: #6366f1;
   border: none;
   color: white;
   width: 36px;
@@ -120,7 +120,7 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: #6366f1;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -179,7 +179,7 @@
 }
 
 .spotlight-badge-pill {
-    background: linear-gradient(135deg, #f59e0b, #ec4899);
+    background: #6366f1;
     color: white;
     font-size: 13px;
     font-weight: 800;
@@ -189,11 +189,10 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
 }
 
 .growth-metric-badge {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+    background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.3);
     color: #10b981;
     font-size: 13px;
@@ -215,11 +214,8 @@
     background: #ffffff;
     border-radius: 24px;
     padding: 28px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
-    border: 2px solid transparent;
-    background-image: linear-gradient(white, white), linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
     display: flex;
     gap: 32px;
     align-items: center;
@@ -227,8 +223,9 @@
 }
 
 .dark-connect-container .spotlight-card {
-    background-image: linear-gradient(#1e293b, #0f172a), linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    background: #111827;
+    border: 1px solid #1f2937;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .spotlight-card:hover {
@@ -254,8 +251,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #ec4899;
-    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
+    border: 3px solid #6366f1;
 }
 
 .spotlight-star-marker {
@@ -336,7 +332,7 @@
 }
 
 .spotlight-follow-btn {
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    background: #6366f1;
     border: none;
     color: white;
     padding: 8px 18px;
@@ -347,8 +343,11 @@
     align-items: center;
     gap: 6px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
     transition: all 0.2s;
+}
+
+.spotlight-follow-btn:hover {
+    background: #4f46e5;
 }
 
 .spotlight-follow-btn.followed {
@@ -357,8 +356,8 @@
 
 .spotlight-remix-btn {
     background: transparent;
-    border: 1px solid #8b5cf6;
-    color: #8b5cf6;
+    border: 1px solid #6366f1;
+    color: #6366f1;
     padding: 8px 16px;
     border-radius: 20px;
     font-weight: 700;
@@ -371,7 +370,7 @@
 }
 
 .spotlight-remix-btn:hover {
-    background: rgba(139, 92, 246, 0.1);
+    background: rgba(99, 102, 241, 0.1);
 }
 
 .spotlight-featured-piece {
@@ -416,7 +415,8 @@
     text-transform: uppercase;
     font-size: 10px;
     letter-spacing: 0.5px;
-    background: #ec4899;
+    background: #6366f1;
+    color: white;
     padding: 2px 6px;
     border-radius: 4px;
 }
@@ -468,9 +468,9 @@
 }
 
 .explore-create-btn {
-    background: transparent;
-    border: 1px solid #8b5cf6;
-    color: #8b5cf6;
+    background: #6366f1;
+    border: 1px solid #6366f1;
+    color: white;
     padding: 8px 16px;
     border-radius: 20px;
     font-weight: 700;
@@ -483,14 +483,14 @@
 }
 
 .explore-create-btn:hover {
-    background: rgba(139, 92, 246, 0.1);
+    background: #4f46e5;
 }
 
 .remix-chain-card {
     background: #ffffff;
     border-radius: 20px;
     padding: 20px 24px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
@@ -500,9 +500,9 @@
 }
 
 .dark-connect-container .remix-chain-card {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: #111827;
+    border-color: #1f2937;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .chain-node {
@@ -525,7 +525,7 @@
 }
 
 .chain-node-tag.remix-tag {
-    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    background: #6366f1;
     color: white;
 }
 
@@ -579,7 +579,7 @@
 
 .chain-remix-action-btn {
     margin-left: auto;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    background: #6366f1;
     border: none;
     color: white;
     padding: 8px 16px;
@@ -591,7 +591,11 @@
     gap: 6px;
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    transition: all 0.2s;
+}
+
+.chain-remix-action-btn:hover {
+    background: #4f46e5;
 }
 
 @media (max-width: 900px) {

@@ -15,6 +15,7 @@ import {
 import { BsPaletteFill } from "react-icons/bs";
 
 function Connect(props) {
+  const isDark = Boolean(props.mode ?? props.darkMode);
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [spotlight, setSpotlight] = useState(null);
@@ -82,7 +83,7 @@ function Connect(props) {
 
   if (loading) {
     return (
-      <div className={props.darkMode ? "dark-connect-container" : "connect-container"}>
+      <div className={isDark ? "dark-connect-container" : "connect-container"}>
         <div className="connect-loading-state">
           <p>Discovering creators & creative remix trees...</p>
         </div>
@@ -91,7 +92,7 @@ function Connect(props) {
   }
 
   return (
-    <div className={props.darkMode ? "dark-connect-container" : "connect-container"}>
+    <div className={isDark ? "dark-connect-container" : "connect-container"}>
       {/* 🌟 1. CREATOR SPOTLIGHT OF THE WEEK */}
       {spotlight && spotlight.creator && (
         <section className="spotlight-section">
@@ -316,7 +317,7 @@ function Connect(props) {
 
       {/* 🌐 3. INTERACTIVE MUTUALS & CREATOR GRAPH */}
       <section className="network-graph-section">
-        <MutualsGraph mode={props.darkMode} />
+        <MutualsGraph mode={isDark} />
       </section>
 
       {/* 4. EMERGING CONTENT CREATORS */}
@@ -328,7 +329,7 @@ function Connect(props) {
               <ConnectCard
                 key={contact._id}
                 contact={contact}
-                darkMode={props.darkMode}
+                darkMode={isDark}
               />
             ))}
           </div>
@@ -344,7 +345,7 @@ function Connect(props) {
               <ConnectCard
                 key={contact._id}
                 contact={contact}
-                darkMode={props.darkMode}
+                darkMode={isDark}
               />
             ))}
           </div>
@@ -360,7 +361,7 @@ function Connect(props) {
               <ConnectCard
                 key={contact._id}
                 contact={contact}
-                darkMode={props.darkMode}
+                darkMode={isDark}
               />
             ))}
           </div>

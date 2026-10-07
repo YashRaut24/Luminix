@@ -14,8 +14,7 @@ function HomePage({
   if (!isAuthenticated) return <Navigate to="/" />;
 
   return (
-    // <div className={darkMode ? "dark-app-container" : "app-container"}>
-    <div>
+    <div className={darkMode ? "dark-app-container" : "app-container"}>
       <Navbar
         mode={darkMode}
         changeTheme={changeTheme}

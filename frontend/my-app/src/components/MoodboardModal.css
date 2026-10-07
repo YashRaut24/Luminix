@@ -395,12 +395,11 @@
   padding: 8px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: #6366f1;
   color: white;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   transition: opacity 0.2s;
 }
 
@@ -414,7 +413,7 @@
 }
 
 .primary-accent-btn {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: #6366f1;
   border: none;
   color: white;
   padding: 8px 16px;

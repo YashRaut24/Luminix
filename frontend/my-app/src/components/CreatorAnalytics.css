@@ -59,8 +59,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.2));
-  color: #7c3aed;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -68,7 +68,7 @@
   padding: 5px 12px;
   border-radius: 20px;
   margin-bottom: 10px;
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .dark-analytics-container .analytics-pill {
@@ -255,8 +255,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.1));
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 24px 28px;
   margin-bottom: 28px;
@@ -265,8 +265,8 @@
 }
 
 .dark-analytics-container .best-timing-card {
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.6), rgba(46, 16, 101, 0.5));
-  border-color: rgba(168, 85, 247, 0.35);
+  background: #111827;
+  border-color: #1f2937;
 }
 
 .best-timing-left {

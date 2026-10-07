@@ -153,6 +153,7 @@ function App() {
       element={
         <Connect
           mode={darkMode}
+          darkMode={darkMode}
           user={userData}
         />
       }

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./FlashStoriesBar.css";
 import socket from "../socket";
 import FlashViewerModal from "./FlashViewerModal";
-import { FiPlus, FiZap, FiCamera } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-const FlashStoriesBar = ({ user, mode }) => {
+const FlashStoriesBar = ({ user }) => {
   const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [activeStoryGroup, setActiveStoryGroup] = useState(null);
@@ -42,16 +41,17 @@ const FlashStoriesBar = ({ user, mode }) => {
   };
 
   return (
-    <div className={`flash-bar-container ${mode ? "dark-theme" : ""}`}>
-      <div className="flash-stories-scroll">
-        {/* Quick Add Flash Button */}
-        <div
-          className="flash-story-item add-flash-item"
+    <div className="lumi-flash-bar">
+      <div className="lumi-flash-bar__scroll">
+        {/* Add Flash Story Button */}
+        <button
+          type="button"
+          className="lumi-flash-item"
           onClick={() => navigate("/feed/camera")}
           title="Shoot a 24h Ephemeral Flash via Webcam"
         >
-          <div className="story-ring-wrapper add-ring">
-            <div className="story-avatar-holder add-avatar">
+          <div className="lumi-flash-ring lumi-flash-ring--add">
+            <div className="lumi-flash-avatar">
               {user?.profileImage ? (
                 <img
                   src={
@@ -62,28 +62,31 @@ const FlashStoriesBar = ({ user, mode }) => {
                   alt="You"
                 />
               ) : (
-                <span className="user-initial">{user?.name?.charAt(0) || "U"}</span>
+                <span>{user?.name?.charAt(0) || "U"}</span>
               )}
-              <div className="add-badge-plus">
-                <FiPlus />
-              </div>
             </div>
+            <span className="lumi-flash-add-badge">
+              <FiPlus />
+            </span>
           </div>
-          <span className="story-author-name">Add Flash</span>
-          <span className="story-time-badge">24h Story</span>
-        </div>
+          <span className="lumi-flash-author">Add Flash</span>
+          <span className="lumi-flash-urgency">24h story</span>
+        </button>
 
         {/* Existing Flash Stories */}
         {stories.map((group) => {
           const latestItem = group.items[group.items.length - 1];
+          const timeLeft = latestItem?.timeLeftText?.split(" ")[0] || "3h";
+
           return (
-            <div
+            <button
+              type="button"
               key={group.authorId}
-              className="flash-story-item"
+              className="lumi-flash-item"
               onClick={() => openStory(group)}
             >
-              <div className="story-ring-wrapper active-ring">
-                <div className="story-avatar-holder">
+              <div className="lumi-flash-ring">
+                <div className="lumi-flash-avatar">
                   <img
                     src={
                       group.authorAvatar
@@ -94,16 +97,11 @@ const FlashStoriesBar = ({ user, mode }) => {
                     }
                     alt={group.authorName}
                   />
-                  <span className="flash-zap-badge">
-                    <FiZap />
-                  </span>
                 </div>
               </div>
-              <span className="story-author-name">{group.authorName}</span>
-              <span className="story-time-badge">
-                {latestItem?.timeLeftText?.split(" ")[0] || "24h"} left
-              </span>
-            </div>
+              <span className="lumi-flash-author">{group.authorName}</span>
+              <span className="lumi-flash-urgency">ends in {timeLeft}</span>
+            </button>
           );
         })}
       </div>

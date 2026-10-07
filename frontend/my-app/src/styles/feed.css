@@ -1,0 +1,601 @@
+/* ==========================================================================
+   LUMINIX FEED & POST CARD STYLES
+   Strict Constraints:
+   - Plain CSS only (BEM methodology)
+   - Zero gradients, zero glow / neon outlines
+   - Solid colors only
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Flash Stories Top Strip (Slim horizontal ~96px strip, 64px story rings)
+   -------------------------------------------------------------------------- */
+.lumi-flash-bar {
+  width: 100%;
+  height: 96px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.lumi-flash-bar__scroll {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none;
+}
+
+.lumi-flash-bar__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.lumi-flash-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.lumi-flash-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-full);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface);
+  border: 2px solid var(--accent); /* Unviewed active ring: solid 2px accent */
+  position: relative;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.lumi-flash-ring--viewed {
+  border-color: var(--border);
+}
+
+.lumi-flash-ring--add {
+  border: 2px dashed var(--accent);
+}
+
+.lumi-flash-item:hover .lumi-flash-ring {
+  transform: scale(1.05);
+}
+
+.lumi-flash-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  background-color: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+}
+
+.lumi-flash-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lumi-flash-add-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background-color: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  border: 2px solid var(--surface);
+}
+
+.lumi-flash-author {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  line-height: 1;
+}
+
+.lumi-flash-urgency {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--warning);
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Post Card (.post-card)
+   - Zero empty bands
+   - Image sits directly under the header
+   - Fixed 4:3 in Feed mode, natural in Masonry mode
+   - Header with avatar 40px, name + @handle in --text-3, timestamp on right
+   - Card hover: border-color -> --text-3, image scales 1.02, zero shadows/glow
+   -------------------------------------------------------------------------- */
+.post-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition-fast);
+  position: relative;
+}
+
+.post-card:hover {
+  border-color: var(--text-3);
+}
+
+/* Remix parent reference banner */
+.post-card__remix-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px var(--space-4);
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+.post-card__remix-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.post-card__remix-parent-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-card__remix-parent-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* Header */
+.post-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-2);
+}
+
+.post-card__author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.post-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.post-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-card__author-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.post-card__author-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-card__author-name {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-card__author-handle {
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.post-card__header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.post-card__time {
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.post-card__privacy-icon {
+  font-size: 14px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+}
+
+/* Media Container */
+.post-card__media {
+  position: relative;
+  width: 100%;
+  background-color: var(--surface-2);
+  overflow: hidden;
+  cursor: pointer;
+  display: block;
+}
+
+/* Fixed 4:3 aspect ratio in Feed mode */
+.lumi-feed-grid .post-card__media {
+  aspect-ratio: 4 / 3;
+}
+
+/* Natural aspect ratio in Masonry mode */
+.lumi-masonry-grid .post-card__media {
+  aspect-ratio: auto;
+  max-height: 520px;
+}
+
+.post-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-fast);
+}
+
+.post-card:hover .post-card__media img {
+  transform: scale(1.02);
+}
+
+/* Double-tap heart burst */
+.post-card__heart-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.3);
+  color: var(--danger);
+  font-size: 56px;
+  pointer-events: none;
+  animation: heartBurst 500ms ease forwards;
+  z-index: 10;
+}
+
+@keyframes heartBurst {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+/* Process Making-Of Toggle Pill */
+.post-card__wip-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  z-index: 5;
+  transition: border-color var(--transition-fast);
+}
+
+.post-card__wip-badge:hover {
+  border-color: var(--accent);
+}
+
+/* Action Bar */
+.post-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.post-card__actions-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.post-card__actions-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Action button with micro-feedback */
+.post-card__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.post-card__action-btn:hover {
+  color: var(--text);
+  background-color: var(--surface-2);
+}
+
+.post-card__action-btn:active {
+  transform: scale(0.92);
+}
+
+.post-card__action-btn.is-liked {
+  color: var(--danger);
+}
+
+.post-card__action-btn.is-reposted {
+  color: var(--success);
+}
+
+.post-card__like-nudge {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+/* Caption and Tags section (Below actions) */
+.post-card__body {
+  padding: var(--space-3) var(--space-4) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.post-card__caption {
+  font-size: var(--font-sm);
+  color: var(--text);
+  line-height: var(--leading-normal);
+  word-break: break-word;
+}
+
+.post-card__caption.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-card__more-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  padding: 0;
+  margin-top: 2px;
+  align-self: flex-start;
+}
+
+.post-card__more-btn:hover {
+  color: var(--accent);
+}
+
+/* Plain text-accent hashtag links (no pill backgrounds) */
+.post-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.post-card__tag-link {
+  color: var(--accent);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.post-card__tag-link:hover {
+  text-decoration: underline;
+}
+
+/* Process Making-Of Stage */
+.post-card__process-viewer {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-2);
+  border-top: 1px solid var(--border);
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.post-card__process-stage {
+  position: relative;
+  width: 100%;
+  max-height: 380px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.post-card__process-stage img {
+  width: 100%;
+  height: 100%;
+  max-height: 380px;
+  object-fit: contain;
+}
+
+.post-card__process-nav {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.post-card__process-thumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.post-card__process-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  object-fit: cover;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast), border-color var(--transition-fast);
+}
+
+.post-card__process-thumb.is-active,
+.post-card__process-thumb:hover {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+/* Suggested Creators Strip (Marketing / Social proof) */
+.lumi-suggested-strip {
+  grid-column: 1 / -1;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+.lumi-suggested-strip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.lumi-suggested-strip__title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lumi-suggested-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.lumi-suggested-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.lumi-suggested-card__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.lumi-suggested-card__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
+.lumi-suggested-card__name {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

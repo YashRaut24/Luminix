@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { MdDarkMode, MdLightMode, MdOutlineRssFeed } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
 import { MdOutlinePeopleAlt } from "react-icons/md";
-import { FiTrendingUp } from "react-icons/fi";
-
-import "./Navbar.css";
+import { FiTrendingUp, FiSearch, FiPlus, FiCamera } from "react-icons/fi";
 
 const Navbar = (props) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showMenu, setShowMenu] = useState(false);
   const [showFeedMenu, setShowFeedMenu] = useState(false);
@@ -34,7 +33,7 @@ const Navbar = (props) => {
   const handleCategoryClick = (category) => {
     props.setFeedHeading(category);
     props.setSelectedCategory(category);
-    navigate("/feed"); // ensure feed page
+    navigate("/feed");
     setShowFeedMenu(false);
   };
 
@@ -45,55 +44,105 @@ const Navbar = (props) => {
 
   return (
     <>
-      <div className="logo-button" onClick={() => setShowMenu(!showMenu)}>
+      {/* Isolated 56px Circular Logo Container */}
+      <div
+        className="lumi-logo-container"
+        onClick={() => setShowMenu(!showMenu)}
+        title="Luminix Navigation"
+      >
         <img
-          className="luminix-logo"
           src="./src/images/Luminix.jpg"
-          alt="Luminix Logo"
+          alt="Luminix"
         />
       </div>
 
+      {/* Radial action dock */}
       {showMenu && (
-        <div className="circular-menu">
+        <div className="lumi-radial-dock">
           <button
-            className="menu-icon-btn search-btn"
-            onClick={() => navigate("/feed/search")}
+            type="button"
+            className="lumi-radial-dock__btn"
+            onClick={() => {
+              navigate("/feed/search");
+              setShowMenu(false);
+            }}
+            title="Search Creators"
           >
-            🔍
+            <FiSearch />
           </button>
 
           <button
-            className="menu-icon-btn create-btn"
-            onClick={() => navigate("/feed/create")}
+            type="button"
+            className="lumi-radial-dock__btn"
+            onClick={() => {
+              navigate("/feed/create");
+              setShowMenu(false);
+            }}
+            title="Create Post"
           >
-            +
+            <FiPlus />
           </button>
 
           <button
-            className="menu-icon-btn camera-btns"
-            onClick={() => navigate("/feed/camera")}
+            type="button"
+            className="lumi-radial-dock__btn"
+            onClick={() => {
+              navigate("/feed/camera");
+              setShowMenu(false);
+            }}
+            title="Shoot Flash"
           >
-            📷
+            <FiCamera />
           </button>
         </div>
       )}
 
+      {/* Category selector button */}
       <button
-        className={props.mode ? "dark-feed-button" : "feedbutton"}
-        onClick={() => {
-          navigate("/feed");
-          setShowFeedMenu(!showFeedMenu);
+        type="button"
+        className="btn--icon"
+        style={{
+          position: "fixed",
+          top: "24px",
+          left: "92px",
+          width: "44px",
+          height: "44px",
+          backgroundColor: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-full)",
+          zIndex: 80,
         }}
+        onClick={() => setShowFeedMenu(!showFeedMenu)}
+        title="Browse Topic Categories"
       >
-        <MdOutlineRssFeed />
+        <MdOutlineRssFeed style={{ fontSize: "20px" }} />
       </button>
 
       {showFeedMenu && (
-        <div className="feed-menu">
+        <div
+          style={{
+            position: "fixed",
+            top: "76px",
+            left: "92px",
+            backgroundColor: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)",
+            padding: "8px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+            boxShadow: "var(--shadow-floating)",
+            zIndex: 90,
+            maxHeight: "360px",
+            overflowY: "auto",
+          }}
+        >
           {categories.map((item, index) => (
             <button
               key={index}
-              className="category-item"
+              type="button"
+              className="btn btn--ghost"
+              style={{ justifyContent: "flex-start", padding: "6px 12px", fontSize: "13px" }}
               onClick={() => handleCategoryClick(item)}
             >
               {item}
@@ -102,50 +151,62 @@ const Navbar = (props) => {
         </div>
       )}
 
-      <button
-        className={props.mode ? "dark-mode-profile" : "profile"}
-        onClick={() => navigate("/feed/profile")}
-      >
-        {props.user?.profileImage ? (
-          <img
-            className="profile-display-image"
-            src={`http://localhost:9000${props.user.profileImage}`}
-            alt="profile"
-          />
-        ) : (
-          <CgProfile />
-        )}
-      </button>
+      {/* Solid Surface Right Navigation Rail */}
+      <div className="lumi-right-rail">
+        <button
+          type="button"
+          className={`lumi-rail-btn ${location.pathname === "/feed/profile" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/profile")}
+          data-tooltip="Your Profile"
+        >
+          {props.user?.profileImage ? (
+            <img
+              src={`http://localhost:9000${props.user.profileImage}`}
+              alt="profile"
+            />
+          ) : (
+            <CgProfile />
+          )}
+        </button>
 
-      <button
-        className={props.mode ? "dark-theme-people-button" : "people-button"}
-        title="Creator Network & Connect"
-        onClick={() => navigate("/feed/connect")}
-      >
-        <MdOutlinePeopleAlt />
-      </button>
+        <button
+          type="button"
+          className={`lumi-rail-btn ${location.pathname === "/feed/connect" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/connect")}
+          data-tooltip="Creator Network"
+        >
+          <MdOutlinePeopleAlt />
+        </button>
 
-      <button
-        className={props.mode ? "dark-theme-people-button" : "people-button"}
-        title="Creator Analytics & Diagnostics"
-        onClick={() => navigate("/feed/analytics")}
-      >
-        <FiTrendingUp />
-      </button>
+        <button
+          type="button"
+          className={`lumi-rail-btn ${location.pathname === "/feed/analytics" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/analytics")}
+          data-tooltip="Creator Analytics"
+        >
+          <FiTrendingUp />
+        </button>
 
-      <button
-        className={props.mode ? "dark-theme-toggle" : "theme-toggle"}
-        onClick={props.changeTheme}
-      >
-        {props.mode ? <MdLightMode /> : <MdDarkMode />}
-      </button>
+        <div className="lumi-rail-divider" />
 
-      <button
-        className={props.mode ? "dark-logout" : "logout"}
-        onClick={logout}
-      >
-        <IoMdLogOut />
-      </button>
+        <button
+          type="button"
+          className="lumi-rail-btn"
+          onClick={props.changeTheme}
+          data-tooltip={props.mode ? "Light Mode" : "Dark Mode"}
+        >
+          {props.mode ? <MdLightMode /> : <MdDarkMode />}
+        </button>
+
+        <button
+          type="button"
+          className="lumi-rail-btn"
+          onClick={logout}
+          data-tooltip="Logout"
+        >
+          <IoMdLogOut />
+        </button>
+      </div>
     </>
   );
 };

@@ -20,7 +20,7 @@ function Profile({ mode, user }) {
     const [showThemePanel, setShowThemePanel] = useState(false);
     const [accentColor, setAccentColor] = useState(user?.accentColor || "#8b5cf6");
     const [bannerGradient, setBannerGradient] = useState(
-      user?.profileBackground || "linear-gradient(135deg, #4f46e5, #7c3aed, #db2777)"
+      user?.profileBackground || "#0f172a"
     );
     const [profileLayout, setProfileLayout] = useState(user?.profileLayout || "grid");
     const [savingTheme, setSavingTheme] = useState(false);
@@ -182,10 +182,10 @@ function Profile({ mode, user }) {
   ];
 
   const BANNER_PRESETS = [
-    { name: "Nebula Glow", gradient: "linear-gradient(135deg, #4f46e5, #7c3aed, #db2777)" },
-    { name: "Cyber Neon", gradient: "linear-gradient(135deg, #0f172a, #0284c7, #ec4899)" },
-    { name: "Sunset Horizon", gradient: "linear-gradient(135deg, #ea580c, #db2777, #7c3aed)" },
-    { name: "Emerald Forest", gradient: "linear-gradient(135deg, #065f46, #059669, #10b981)" },
+    { name: "Midnight", gradient: "#0f172a" },
+    { name: "Slate", gradient: "#334155" },
+    { name: "Indigo", gradient: "#312e81" },
+    { name: "Forest", gradient: "#064e3b" },
   ];
 
   const [editedProfile, setEditedProfile] = useState(profile);
@@ -477,7 +477,7 @@ function Profile({ mode, user }) {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "6px",
-                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                        background: "#6366f1",
                         color: "#ffffff",
                         border: "none",
                         padding: "5px 12px",

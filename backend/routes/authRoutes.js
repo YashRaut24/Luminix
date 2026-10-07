@@ -263,6 +263,81 @@ router.get("/posts", async (req, res) => {
   }
 });
 
+// 4. Personalized "For You" Feed based on User Interaction Profile
+router.get("/posts/for-you", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    let currentUser = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUser = await User.findById(decoded.id).populate("following");
+      } catch (err) {}
+    }
+
+    const posts = await Post.find({
+      $or: [
+        { published: true },
+        { published: { $exists: false } },
+        { is_scheduled: false }
+      ]
+    })
+      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges")
+      .populate({
+        path: "remix_of",
+        select: "username email caption file_url createdAt tags author",
+      })
+      .sort({ createdAt: -1 });
+
+    const postsWithData = posts.map(post => ({
+      _id: post._id,
+      author: post.author,
+      username: post.username,
+      email: post.email,
+      target: post.target,
+      file_url: post.file_url,
+      file_name: post.file_name,
+      caption: post.caption,
+      tags: post.tags,
+      upload_time: post.createdAt,
+      likes: post.likes ? post.likes.length : 0,
+      likesList: post.likes || [],
+      comments: post.comments || [],
+      reposts: post.reposts ? post.reposts.length : 0,
+      shares: post.shares || 0,
+      views: post.views || 0,
+      process_steps: post.process_steps || [],
+      remix_of: post.remix_of || null,
+      remix_type: post.remix_type || "Remix",
+      remix_count: post.remix_count || 0
+    }));
+
+    if (!currentUser) {
+      // Default to general ranking if not logged in
+      return res.status(200).json({ posts: postsWithData });
+    }
+
+    // Find all posts that current user has liked
+    const userLikedPosts = await Post.find({ likes: currentUser._id }).select("tags target");
+
+    // Rank candidate posts with AiService
+    const personalizedPosts = aiService.rankForYouFeed(
+      postsWithData,
+      userLikedPosts,
+      currentUser.following || []
+    );
+
+    res.status(200).json({
+      message: "Personalized 'For You' feed ranked successfully",
+      posts: personalizedPosts
+    });
+  } catch (err) {
+    console.error("For You feed ranking error:", err);
+    res.status(500).json({ message: "Failed to rank personalized feed" });
+  }
+});
+
 router.get("/posts/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
@@ -1063,80 +1138,6 @@ router.get("/ai/semantic-search", async (req, res) => {
   }
 });
 
-// 4. Personalized "For You" Feed based on User Interaction Profile
-router.get("/posts/for-you", async (req, res) => {
-  try {
-    const token = req.cookies.luminix_token;
-    let currentUser = null;
-
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        currentUser = await User.findById(decoded.id).populate("following");
-      } catch (err) {}
-    }
-
-    const posts = await Post.find({
-      $or: [
-        { published: true },
-        { published: { $exists: false } },
-        { is_scheduled: false }
-      ]
-    })
-      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges")
-      .populate({
-        path: "remix_of",
-        select: "username email caption file_url createdAt tags author",
-      })
-      .sort({ createdAt: -1 });
-
-    const postsWithData = posts.map(post => ({
-      _id: post._id,
-      author: post.author,
-      username: post.username,
-      email: post.email,
-      target: post.target,
-      file_url: post.file_url,
-      file_name: post.file_name,
-      caption: post.caption,
-      tags: post.tags,
-      upload_time: post.createdAt,
-      likes: post.likes ? post.likes.length : 0,
-      likesList: post.likes || [],
-      comments: post.comments || [],
-      reposts: post.reposts ? post.reposts.length : 0,
-      shares: post.shares || 0,
-      views: post.views || 0,
-      process_steps: post.process_steps || [],
-      remix_of: post.remix_of || null,
-      remix_type: post.remix_type || "Remix",
-      remix_count: post.remix_count || 0
-    }));
-
-    if (!currentUser) {
-      // Default to general ranking if not logged in
-      return res.status(200).json({ posts: postsWithData });
-    }
-
-    // Find all posts that current user has liked
-    const userLikedPosts = await Post.find({ likes: currentUser._id }).select("tags target");
-
-    // Rank candidate posts with AiService
-    const personalizedPosts = aiService.rankForYouFeed(
-      postsWithData,
-      userLikedPosts,
-      currentUser.following || []
-    );
-
-    res.status(200).json({
-      message: "Personalized 'For You' feed ranked successfully",
-      posts: personalizedPosts
-    });
-  } catch (err) {
-    console.error("For You feed ranking error:", err);
-    res.status(500).json({ message: "Failed to rank personalized feed" });
-  }
-});
 
 // ==========================================
 // CREATOR TOOLS (ANALYTICS & SKILL BADGES)
