@@ -59,6 +59,8 @@ function App() {
   }, []);
 
   useEffect(() => {
+    document.body.classList.toggle("darkroom", darkMode);
+    document.body.classList.toggle("lightbox", !darkMode);
     document.body.classList.toggle("dark-mode", darkMode);
     document.body.classList.toggle("light-mode", !darkMode);
   }, [darkMode]);

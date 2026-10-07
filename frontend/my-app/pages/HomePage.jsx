@@ -1,7 +1,6 @@
 import { Outlet, Navigate } from "react-router-dom";
 import Navbar from "../src/components/Navbar";
-import { useState } from "react";
-import "../src/components/Navbar.css"
+
 function HomePage({
   isAuthenticated,
   userData,
@@ -9,12 +8,12 @@ function HomePage({
   changeTheme,
   handleLogout,
   setFeedHeading,
-  setSelectedCategory
+  setSelectedCategory,
 }) {
   if (!isAuthenticated) return <Navigate to="/" />;
 
   return (
-    <div className={darkMode ? "dark-app-container" : "app-container"}>
+    <div className={`darkroom-app-shell ${darkMode ? "darkroom" : "lightbox"}`}>
       <Navbar
         mode={darkMode}
         changeTheme={changeTheme}
@@ -23,10 +22,9 @@ function HomePage({
         setFeedHeading={setFeedHeading}
         setSelectedCategory={setSelectedCategory}
       />
-
-        <div className="home-page">
-            <Outlet />
-        </div>
+      <div className="darkroom-app-content">
+        <Outlet />
+      </div>
     </div>
   );
 }
