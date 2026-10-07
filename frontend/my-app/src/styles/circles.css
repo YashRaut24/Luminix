@@ -1,0 +1,117 @@
+/* ==========================================================================
+   LUMINIX CREATOR CIRCLES & NETWORK
+   Zero gradients, zero glow
+   ========================================================================== */
+
+.darkroom-circles-workspace {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  box-sizing: border-box;
+}
+
+.darkroom-circles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--space-4);
+}
+
+.darkroom-circles-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.darkroom-circles-meta {
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  color: var(--text-3);
+}
+
+.darkroom-circles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.darkroom-circle-card {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-circle-card:hover {
+  border-color: var(--accent);
+}
+
+.darkroom-circle-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.darkroom-circle-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.darkroom-circle-name {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.darkroom-circle-handle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.darkroom-circle-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+.darkroom-circle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.darkroom-circle-btn.is-following {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
