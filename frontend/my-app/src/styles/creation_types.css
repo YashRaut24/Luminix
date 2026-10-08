@@ -1,0 +1,469 @@
+/* ==========================================================================
+   LUMINIX CREATION & POST TYPES STYLESHEET
+   1. Before/After Slider
+   2. Process Time-Lapse Auto-Player & Scrubber
+   3. Version History Scrubber (v1, v2, v3...)
+   4. Series & Chapters Strip & Bookmark
+   5. Time Capsule Locked Frame & Reveal Countdown
+   6. Ambient Sound Layer Mono Widget
+   Strict Constraints: Solid colors only, zero gradients, zero glow
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Before/After Slider Component
+   -------------------------------------------------------------------------- */
+.before-after-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--frame-bg);
+  user-select: none;
+}
+
+.before-after-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.before-after-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Clipped top layer */
+.before-after-layer--clipped {
+  z-index: 2;
+  will-change: clip-path;
+}
+
+/* Divider line */
+.before-after-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--text);
+  z-index: 5;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.before-after-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface);
+  border: 2px solid var(--text);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Range input overlay driving the slider */
+.before-after-range {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: ew-resize;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Labels on before/after */
+.before-after-label {
+  position: absolute;
+  bottom: 10px;
+  padding: 3px 8px;
+  background-color: var(--overlay-bg);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.before-after-label--before {
+  left: 10px;
+}
+
+.before-after-label--after {
+  right: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Process Time-Lapse Player
+   -------------------------------------------------------------------------- */
+.timelapse-viewer {
+  position: relative;
+  width: 100%;
+  background-color: var(--frame-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.timelapse-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--frame-bg);
+}
+
+.timelapse-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: developFadeIn 200ms var(--ease-standard);
+}
+
+.timelapse-controls {
+  padding: 8px 12px;
+  background-color: var(--surface);
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timelapse-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timelapse-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color var(--duration-fast);
+}
+
+.timelapse-btn:hover {
+  border-color: var(--accent);
+}
+
+.timelapse-btn.is-active {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.timelapse-phase-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.timelapse-scrubber {
+  width: 100%;
+  height: 6px;
+  background-color: var(--surface-2);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   3. Version History Bar (v1, v2, v3...)
+   -------------------------------------------------------------------------- */
+.version-history-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.version-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.version-pill {
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+
+.version-pill:hover {
+  color: var(--text);
+  border-color: var(--text-3);
+}
+
+.version-pill.is-active {
+  background-color: var(--surface-2);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.version-note {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Series & Chapters Strip
+   -------------------------------------------------------------------------- */
+.series-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background-color: var(--surface-2);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.series-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.series-title {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.series-chapter {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.series-follow-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
+}
+
+.series-follow-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.series-follow-btn.is-following {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+/* Bookmark link */
+.series-resume-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--warning);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.series-resume-pill:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   5. Time Capsule Locked Frame & Countdown
+   -------------------------------------------------------------------------- */
+.time-capsule-locked {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  text-align: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.time-capsule-bg-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(28px) brightness(0.3);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.time-capsule-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 280px;
+}
+
+.time-capsule-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--warning);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-capsule-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--warning);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.time-capsule-timer {
+  font-family: var(--font-mono);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.time-capsule-hint {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: var(--leading-normal);
+}
+
+.time-capsule-notify-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: border-color var(--duration-fast);
+}
+
+.time-capsule-notify-btn:hover {
+  border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   6. Sound Layer Mono Player
+   -------------------------------------------------------------------------- */
+.sound-layer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  background-color: var(--surface-2);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  user-select: none;
+}
+
+.sound-layer-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+
+.sound-layer-toggle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+
+.sound-layer-toggle:hover {
+  border-color: var(--accent);
+}
+
+.sound-layer-toggle.is-playing {
+  background-color: var(--surface);
+  color: var(--accent);
+  border-color: var(--accent);
+}
