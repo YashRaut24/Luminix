@@ -15,7 +15,11 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiZap,
-  FiClock
+  FiClock,
+  FiSliders,
+  FiVolume2,
+  FiBookOpen,
+  FiMusic
 } from "react-icons/fi";
 import { BsPaletteFill, BsStars } from "react-icons/bs";
 
@@ -50,6 +54,28 @@ function CreatePost(props) {
   // Creative Feature 1: Process / WIP thread builder
   const [enableProcessThread, setEnableProcessThread] = useState(false);
   const [processSteps, setProcessSteps] = useState([]);
+
+  // 6 Creation Types States
+  const [creationType, setCreationType] = useState("standard"); // "standard" | "before_after" | "time_capsule"
+  const [beforeFile, setBeforeFile] = useState(null);
+  const [beforePreview, setBeforePreview] = useState(null);
+  const [beforeLabel, setBeforeLabel] = useState("Original Sketch");
+  const [afterLabel, setAfterLabel] = useState("Final Master");
+
+  // Series and Chapters State
+  const [enableSeries, setEnableSeries] = useState(false);
+  const [seriesName, setSeriesName] = useState("");
+  const [chapterNumber, setChapterNumber] = useState(1);
+  const [totalChapters, setTotalChapters] = useState(1);
+
+  // Time Capsule State
+  const [timeCapsuleDate, setTimeCapsuleDate] = useState("");
+  const [timeCapsuleHint, setTimeCapsuleHint] = useState("");
+
+  // Sound Layer State
+  const [enableSoundLayer, setEnableSoundLayer] = useState(false);
+  const [audioFile, setAudioFile] = useState(null);
+  const [audioTitle, setAudioTitle] = useState("");
 
   // Creative Feature 2: Remix / Respond mode
   const [remixParent, setRemixParent] = useState(null);
@@ -132,6 +158,31 @@ function CreatePost(props) {
     }
   };
 
+  const [previewSliderPos, setPreviewSliderPos] = useState(50);
+
+  const handleBeforeFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected) {
+      setBeforeFile(selected);
+      setBeforePreview(URL.createObjectURL(selected));
+    }
+  };
+
+  const handleRemoveBeforeFile = () => {
+    setBeforeFile(null);
+    setBeforePreview(null);
+  };
+
+  const handleAudioChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected) {
+      setAudioFile(selected);
+      if (!audioTitle) {
+        setAudioTitle(selected.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
   // Process Step handlers
   const handleAddProcessStep = () => {
     if (processSteps.length >= 5) {
@@ -181,6 +232,16 @@ function CreatePost(props) {
       return;
     }
 
+    if (creationType === "before_after" && !beforeFile) {
+      setMessage("Please choose both a 'Before' (original) and 'After' (final) image for the comparison slider.");
+      return;
+    }
+
+    if (creationType === "time_capsule" && !timeCapsuleDate) {
+      setMessage("Please select a future reveal date and time for the Time Capsule.");
+      return;
+    }
+
     if (safetyReport && !safetyReport.isSafe) {
       setMessage(`Upload blocked by Content Safety Shield: ${safetyReport.flags?.join(", ") || "Inappropriate/Toxic content detected."}`);
       return;
@@ -193,6 +254,43 @@ function CreatePost(props) {
       formData.append("target", target);
       formData.append("file_url", file);
       formData.append("tags", JSON.stringify(tags));
+
+      // Resolve creation post_type
+      let resolvedPostType = "standard";
+      if (creationType === "before_after" && beforeFile) {
+        resolvedPostType = "before_after";
+      } else if (creationType === "time_capsule" && timeCapsuleDate) {
+        resolvedPostType = "time_capsule";
+      } else if (enableProcessThread && processSteps.some(s => s.file)) {
+        resolvedPostType = "timelapse";
+      }
+      formData.append("post_type", resolvedPostType);
+
+      // 1. Before / After comparison payload
+      if (creationType === "before_after" && beforeFile) {
+        formData.append("before_image", beforeFile);
+        formData.append("before_label", beforeLabel || "Original Sketch");
+        formData.append("after_label", afterLabel || "Final Master");
+      }
+
+      // 4. Series & Chapters payload
+      if (enableSeries && seriesName.trim()) {
+        formData.append("series_name", seriesName.trim());
+        formData.append("chapter_number", chapterNumber || 1);
+        formData.append("total_chapters", totalChapters || 1);
+      }
+
+      // 5. Time Capsule payload
+      if (creationType === "time_capsule" && timeCapsuleDate) {
+        formData.append("time_capsule_reveal", new Date(timeCapsuleDate).toISOString());
+        formData.append("time_capsule_hint", timeCapsuleHint || "");
+      }
+
+      // 6. Sound Layer payload
+      if (enableSoundLayer && audioFile) {
+        formData.append("audio_file", audioFile);
+        formData.append("audio_title", audioTitle.trim() || audioFile.name);
+      }
 
       // Append Scheduled Publish Time if active
       if (isScheduled) {
@@ -440,6 +538,115 @@ function CreatePost(props) {
               )}
             </div>
 
+            {/* Creator Tool: Series & Chapters */}
+            <div className="form-section series-toggle-section">
+              <div
+                className={`schedule-feature-toggle ${enableSeries ? "enabled" : ""}`}
+                onClick={() => setEnableSeries(!enableSeries)}
+              >
+                <div className="schedule-toggle-left">
+                  <FiBookOpen className="toggle-icon" />
+                  <div>
+                    <span className="toggle-title">Series & Chapters</span>
+                    <p className="toggle-desc">
+                      Group posts into a continuous storyline with reader progression
+                    </p>
+                  </div>
+                </div>
+                <div className={`switch-knob ${enableSeries ? "on" : "off"}`}>
+                  <span />
+                </div>
+              </div>
+
+              {enableSeries && (
+                <div className="subfeature-panel">
+                  <label className="schedule-picker-label">Series Title:</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Cyberpunk Metropolis, Character Studies 2026"
+                    value={seriesName}
+                    onChange={(e) => setSeriesName(e.target.value)}
+                  />
+                  <div className="series-num-grid">
+                    <div>
+                      <label className="schedule-picker-label">Chapter #:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-input"
+                        value={chapterNumber}
+                        onChange={(e) => setChapterNumber(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      />
+                    </div>
+                    <div>
+                      <label className="schedule-picker-label">Total Chapters:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-input"
+                        value={totalChapters}
+                        onChange={(e) => setTotalChapters(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      />
+                    </div>
+                  </div>
+                  {seriesName && (
+                    <span className="schedule-hint">
+                      📚 Post will show as "{seriesName} • Chapter {chapterNumber} of {totalChapters}"
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Creator Tool: Sound Layer (Ambient Loop) */}
+            <div className="form-section sound-toggle-section">
+              <div
+                className={`schedule-feature-toggle ${enableSoundLayer ? "enabled" : ""}`}
+                onClick={() => setEnableSoundLayer(!enableSoundLayer)}
+              >
+                <div className="schedule-toggle-left">
+                  <FiVolume2 className="toggle-icon" />
+                  <div>
+                    <span className="toggle-title">Ambient Sound Layer</span>
+                    <p className="toggle-desc">
+                      Attach a subtle looping audio layer with mono player controls
+                    </p>
+                  </div>
+                </div>
+                <div className={`switch-knob ${enableSoundLayer ? "on" : "off"}`}>
+                  <span />
+                </div>
+              </div>
+
+              {enableSoundLayer && (
+                <div className="subfeature-panel">
+                  <label className="schedule-picker-label">Upload Audio Loop (MP3 / WAV / OGG):</label>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    className="form-input"
+                    onChange={handleAudioChange}
+                  />
+                  {audioFile && (
+                    <>
+                      <label className="schedule-picker-label" style={{ marginTop: "6px" }}>Audio Track Title:</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Rainy Lo-Fi Rooftop, Cyber Synth Ambience"
+                        value={audioTitle}
+                        onChange={(e) => setAudioTitle(e.target.value)}
+                      />
+                      <span className="schedule-hint">
+                        🎵 Attached: {audioFile.name} (auto-loops muted by default)
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Toggle Process / WIP Shots */}
             <div className="form-section process-toggle-section">
               <div
@@ -457,7 +664,7 @@ function CreatePost(props) {
                   <div>
                     <span className="toggle-title">Attach Process "Making-Of" Thread</span>
                     <p className="toggle-desc">
-                      Let viewers swipe through your sketches, layers, and WIP milestones
+                      Auto-play steps as an interactive time-lapse sequence with scrubber
                     </p>
                   </div>
                 </div>
@@ -468,40 +675,243 @@ function CreatePost(props) {
             </div>
           </div>
 
-          {/* Right Column: Final Image & Process Steps */}
+          {/* Right Column: Creation Format & Media */}
           <div className="form-column right-column">
-            <div className="upload-section">
-              <label className="form-label">Final Artwork / Master Piece *</label>
-
-              {!preview ? (
-                <div className="upload-area">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="file-input"
-                    ref={fileInputRef}
-                    id="file-input"
-                  />
-                  <label htmlFor="file-input" className="file-input-label">
-                    <div className="upload-icon">📷</div>
-                    <p className="upload-text">Click to upload final artwork</p>
-                    <p className="upload-hint">PNG, JPG, WebP up to 15MB</p>
-                  </label>
-                </div>
-              ) : (
-                <div className="preview-container">
-                  <img src={preview} alt="Preview" className="preview-image" />
-                  <button
-                    type="button"
-                    className="remove-image-btn"
-                    onClick={handleRemoveFile}
-                  >
-                    ✕ Remove Image
-                  </button>
-                </div>
-              )}
+            {/* Creation Format Segmented Selector */}
+            <div className="creation-type-segment-bar">
+              <button
+                type="button"
+                className={`creation-type-btn ${creationType === "standard" ? "active" : ""}`}
+                onClick={() => setCreationType("standard")}
+              >
+                <FiImage /> Standard Frame
+              </button>
+              <button
+                type="button"
+                className={`creation-type-btn ${creationType === "before_after" ? "active" : ""}`}
+                onClick={() => setCreationType("before_after")}
+              >
+                <FiSliders /> Before / After Slider
+              </button>
+              <button
+                type="button"
+                className={`creation-type-btn ${creationType === "time_capsule" ? "active" : ""}`}
+                onClick={() => setCreationType("time_capsule")}
+              >
+                <FiClock /> Time Capsule
+              </button>
             </div>
+
+            {creationType === "before_after" ? (
+              <div className="before-after-upload-container">
+                <div className="before-after-upload-grid">
+                  {/* Before Plate */}
+                  <div className="ba-drop-box">
+                    <label className="form-label">Before / Original Plate *</label>
+                    <input
+                      type="text"
+                      className="form-input ba-label-input"
+                      value={beforeLabel}
+                      onChange={(e) => setBeforeLabel(e.target.value)}
+                      placeholder="Label (e.g. Original Sketch, Raw Photo)"
+                    />
+                    {!beforePreview ? (
+                      <div className="upload-area ba-upload-area">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleBeforeFileChange}
+                          id="before-file-input"
+                          className="file-input"
+                        />
+                        <label htmlFor="before-file-input" className="file-input-label">
+                          <div className="upload-icon">✏️</div>
+                          <p className="upload-text">Upload Before Image</p>
+                          <p className="upload-hint">Sketch, raw or unedited</p>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="preview-container ba-preview-box">
+                        <img src={beforePreview} alt="Before" className="preview-image" />
+                        <button
+                          type="button"
+                          className="remove-image-btn"
+                          onClick={handleRemoveBeforeFile}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* After Plate */}
+                  <div className="ba-drop-box">
+                    <label className="form-label">After / Final Plate *</label>
+                    <input
+                      type="text"
+                      className="form-input ba-label-input"
+                      value={afterLabel}
+                      onChange={(e) => setAfterLabel(e.target.value)}
+                      placeholder="Label (e.g. Final Master, Color Grade)"
+                    />
+                    {!preview ? (
+                      <div className="upload-area ba-upload-area">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          id="file-input"
+                          className="file-input"
+                          ref={fileInputRef}
+                        />
+                        <label htmlFor="file-input" className="file-input-label">
+                          <div className="upload-icon">🎨</div>
+                          <p className="upload-text">Upload After Image</p>
+                          <p className="upload-hint">Finished artwork</p>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="preview-container ba-preview-box">
+                        <img src={preview} alt="After" className="preview-image" />
+                        <button
+                          type="button"
+                          className="remove-image-btn"
+                          onClick={handleRemoveFile}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live Preview Slider when both images uploaded */}
+                {beforePreview && preview && (
+                  <div className="ba-live-preview-box">
+                    <span className="ba-live-tag">Interactive Preview: Drag to Test</span>
+                    <div className="before-after-container ba-preview-canvas">
+                      <div className="before-after-layer">
+                        <img src={preview} alt="After Preview" />
+                        <span className="before-after-label before-after-label--after">{afterLabel}</span>
+                      </div>
+                      <div
+                        className="before-after-layer before-after-layer--clipped"
+                        style={{ clipPath: `inset(0 calc(100% - ${previewSliderPos}%) 0 0)` }}
+                      >
+                        <img src={beforePreview} alt="Before Preview" />
+                        <span className="before-after-label before-after-label--before">{beforeLabel}</span>
+                      </div>
+                      <div className="before-after-divider" style={{ left: `${previewSliderPos}%` }}>
+                        <div className="before-after-handle">↔</div>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={previewSliderPos}
+                        onChange={(e) => setPreviewSliderPos(e.target.value)}
+                        className="before-after-range"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : creationType === "time_capsule" ? (
+              <div className="time-capsule-creator-box">
+                <div className="upload-section">
+                  <label className="form-label">Hidden Capsule Artwork *</label>
+                  {!preview ? (
+                    <div className="upload-area">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="file-input"
+                        ref={fileInputRef}
+                        id="file-input"
+                      />
+                      <label htmlFor="file-input" className="file-input-label">
+                        <div className="upload-icon">🔒</div>
+                        <p className="upload-text">Upload Secret Piece</p>
+                        <p className="upload-hint">Will stay locked & blurred until reveal date</p>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="preview-container">
+                      <img src={preview} alt="Capsule Preview" className="preview-image" />
+                      <button
+                        type="button"
+                        className="remove-image-btn"
+                        onClick={handleRemoveFile}
+                      >
+                        ✕ Remove Image
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="subfeature-panel" style={{ marginTop: "16px" }}>
+                  <label className="schedule-picker-label">Reveal Date & Time * (Node-Cron Auto-Unlock):</label>
+                  <input
+                    type="datetime-local"
+                    className="form-input"
+                    value={timeCapsuleDate}
+                    min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                    onChange={(e) => setTimeCapsuleDate(e.target.value)}
+                    required
+                  />
+
+                  <label className="schedule-picker-label" style={{ marginTop: "8px" }}>Teaser Hint / Secret Note:</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Anniversary secret release, Album art unveiling"
+                    value={timeCapsuleHint}
+                    onChange={(e) => setTimeCapsuleHint(e.target.value)}
+                  />
+
+                  {timeCapsuleDate && (
+                    <span className="schedule-hint">
+                      ⏳ Capsule unlocks on {new Date(timeCapsuleDate).toLocaleString()}. Visitors will see a live countdown!
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Standard Single Masterpiece Upload */
+              <div className="upload-section">
+                <label className="form-label">Final Artwork / Master Piece *</label>
+
+                {!preview ? (
+                  <div className="upload-area">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="file-input"
+                      ref={fileInputRef}
+                      id="file-input"
+                    />
+                    <label htmlFor="file-input" className="file-input-label">
+                      <div className="upload-icon">📷</div>
+                      <p className="upload-text">Click to upload final artwork</p>
+                      <p className="upload-hint">PNG, JPG, WebP up to 15MB</p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="preview-container">
+                    <img src={preview} alt="Preview" className="preview-image" />
+                    <button
+                      type="button"
+                      className="remove-image-btn"
+                      onClick={handleRemoveFile}
+                    >
+                      ✕ Remove Image
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* AI Creative Co-Pilot: Auto-tagging, Captions, Category, Safety Check */}
             {file && (

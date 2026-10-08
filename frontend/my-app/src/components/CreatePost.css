@@ -1527,11 +1527,142 @@
 .schedule-hint {
   display: block;
   font-size: 12px;
-  color: #2563eb;
+  color: var(--accent);
   font-weight: 600;
   margin-top: 8px;
 }
 
 .dark-create-post-container .schedule-hint {
-  color: #60a5fa;
+  color: var(--accent);
 }
+
+/* --------------------------------------------------------------------------
+   Creation & Post Types Form Controls (Darkroom / Lightbox theme compliant)
+   -------------------------------------------------------------------------- */
+.creation-type-segment-bar {
+  display: flex;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.creation-type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.creation-type-btn:hover {
+  color: var(--text);
+  background-color: var(--surface);
+}
+
+.creation-type-btn.active {
+  background-color: var(--surface);
+  color: var(--accent);
+  font-weight: 700;
+  border-color: var(--rule);
+}
+
+.subfeature-panel {
+  margin-top: 10px;
+  padding: 14px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+.series-num-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Before / After Dual Plate Upload */
+.before-after-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.before-after-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ba-drop-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ba-label-input {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  background: var(--frame-bg);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+}
+
+.ba-upload-area {
+  min-height: 160px;
+  padding: 16px;
+}
+
+.ba-preview-box {
+  max-height: 220px;
+}
+
+.ba-live-preview-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.ba-live-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ba-preview-canvas {
+  height: 220px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+/* Time Capsule Creator */
+.time-capsule-creator-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
