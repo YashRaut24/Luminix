@@ -65,7 +65,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["grid", "list", "showcase"],
     default: "grid"
-  }
+  },
+  followedSeries: [{
+    type: String
+  }],
+  seriesProgress: [{
+    series_id: String,
+    last_chapter: Number,
+    updatedAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });

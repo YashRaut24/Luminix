@@ -79,6 +79,31 @@ cron.schedule("* * * * *", async () => {
         message: `Your piece "${post.caption?.slice(0, 30) || "Artwork"}" is now live on Luminix!`,
         timestamp: new Date(),
       });
+    // Time Capsule Auto-Reveal
+    const dueCapsules = await Post.find({
+      "time_capsule.is_capsule": true,
+      "time_capsule.is_revealed": false,
+      "time_capsule.reveal_date": { $lte: now },
+    });
+
+    for (const capsule of dueCapsules) {
+      capsule.time_capsule.is_revealed = true;
+      await capsule.save();
+
+      console.log(`[Time Capsule] Unlocked capsule: ${capsule._id} by ${capsule.username}`);
+
+      io.emit("time_capsule_unlocked", {
+        postId: capsule._id,
+        author: capsule.username,
+        caption: capsule.caption,
+      });
+
+      io.to(`user_${capsule.author}`).emit("user_notification", {
+        type: "capsule",
+        title: "Time Capsule Unlocked! ⏳🔓",
+        message: `Your time capsule piece is now revealed to the community!`,
+        timestamp: new Date(),
+      });
     }
   } catch (err) {
     console.error("Scheduler error:", err);

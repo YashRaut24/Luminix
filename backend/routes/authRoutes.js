@@ -111,7 +111,25 @@ router.post("/post", upload.any(), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const author = decoded.id;
 
-    const { caption, tags, target, file_name, remix_of, remix_type, process_steps_meta, scheduled_for } = req.body;
+    const {
+      caption,
+      tags,
+      target,
+      file_name,
+      remix_of,
+      remix_type,
+      process_steps_meta,
+      scheduled_for,
+      post_type,
+      before_label,
+      after_label,
+      series_name,
+      chapter_number,
+      total_chapters,
+      time_capsule_reveal,
+      time_capsule_hint,
+      audio_title
+    } = req.body;
 
     const files = req.files || [];
     // The main post file is either the one named "file_url" or the first file uploaded
@@ -135,7 +153,6 @@ router.post("/post", upload.any(), async (req, res) => {
         const parsedMeta = JSON.parse(process_steps_meta);
         if (Array.isArray(parsedMeta)) {
           processSteps = parsedMeta.map((step, index) => {
-            // Find corresponding uploaded file for this step
             const stepFile = files.find(f => f.fieldname === `process_step_${index}`);
             return {
               step_number: index + 1,
@@ -149,6 +166,60 @@ router.post("/post", upload.any(), async (req, res) => {
         console.error("Failed to parse process_steps_meta:", parseErr);
       }
     }
+
+    // Process Before/After comparison file
+    const beforeFile = files.find(f => f.fieldname === "before_image");
+    let beforeAfterData = {
+      before_image_url: beforeFile ? `/uploads/${beforeFile.filename}` : "",
+      after_image_url: file_url,
+      before_label: before_label || "Original",
+      after_label: after_label || "Final"
+    };
+
+    // Process Sound Layer audio file
+    const audioFile = files.find(f => f.fieldname === "audio_file" || (f.mimetype && f.mimetype.startsWith("audio/")));
+    let soundLayerData = {
+      audio_url: audioFile ? `/uploads/${audioFile.filename}` : "",
+      audio_title: audio_title || (audioFile ? audioFile.originalname : ""),
+      auto_loop: true
+    };
+
+    // Process Series & Chapters
+    let seriesData = {
+      series_id: series_name ? series_name.toLowerCase().replace(/[^a-z0-9]+/g, "-") : "",
+      series_name: series_name || "",
+      chapter_number: parseInt(chapter_number, 10) || 1,
+      total_chapters: parseInt(total_chapters, 10) || 1
+    };
+
+    // Process Time Capsule
+    let timeCapsuleData = {
+      is_capsule: false,
+      reveal_date: null,
+      is_revealed: false,
+      hint: ""
+    };
+    if (time_capsule_reveal) {
+      const parsedReveal = new Date(time_capsule_reveal);
+      if (!isNaN(parsedReveal.getTime())) {
+        timeCapsuleData = {
+          is_capsule: true,
+          reveal_date: parsedReveal,
+          is_revealed: parsedReveal <= new Date(),
+          hint: time_capsule_hint || ""
+        };
+      }
+    }
+
+    // Initialize version history with v1
+    const initialVersions = [
+      {
+        version_number: 1,
+        file_url,
+        note: "v1 Initial Masterpiece",
+        date: new Date()
+      }
+    ];
 
     // Check if post is scheduled for future publishing
     let isScheduled = false;
@@ -174,7 +245,13 @@ router.post("/post", upload.any(), async (req, res) => {
       target: target || "public",
       file_url,
       file_name: file_name || mainFile.originalname,
+      post_type: post_type || (beforeFile ? "before_after" : timeCapsuleData.is_capsule ? "time_capsule" : processSteps.length > 0 ? "timelapse" : "standard"),
+      before_after: beforeAfterData,
       process_steps: processSteps,
+      versions: initialVersions,
+      series: seriesData,
+      time_capsule: timeCapsuleData,
+      sound_layer: soundLayerData,
       remix_type: remix_type || "Remix",
       is_scheduled: isScheduled,
       scheduled_for: scheduledDate,
@@ -207,6 +284,109 @@ router.post("/post", upload.any(), async (req, res) => {
   } catch (err) {
     console.error("Post creation error:", err);
     res.status(500).json({ message: "Post upload failed" });
+  }
+});
+
+// Revision / Version upload for an existing post
+router.post("/posts/:id/versions", upload.single("revision_file"), async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    if (String(post.author) !== decoded.id) {
+      return res.status(403).json({ message: "Unauthorized to version this post" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Revision file is required" });
+    }
+
+    const newUrl = `/uploads/${req.file.filename}`;
+    const nextVerNum = (post.versions?.length || 1) + 1;
+    const newVersion = {
+      version_number: nextVerNum,
+      file_url: newUrl,
+      note: req.body.note || `Revision v${nextVerNum}`,
+      date: new Date()
+    };
+
+    post.versions.push(newVersion);
+    post.file_url = newUrl;
+    await post.save();
+
+    res.status(200).json({
+      message: `Version v${nextVerNum} created successfully`,
+      post
+    });
+  } catch (err) {
+    console.error("Version upload error:", err);
+    res.status(500).json({ message: "Failed to upload new version" });
+  }
+});
+
+// Follow/Unfollow a Series
+router.post("/series/follow", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { series_id } = req.body;
+    if (!series_id) return res.status(400).json({ message: "Series ID required" });
+
+    const user = await User.findById(decoded.id);
+    const isFollowed = user.followedSeries && user.followedSeries.includes(series_id);
+
+    if (isFollowed) {
+      user.followedSeries = user.followedSeries.filter(id => id !== series_id);
+    } else {
+      user.followedSeries = user.followedSeries || [];
+      user.followedSeries.push(series_id);
+    }
+    await user.save();
+
+    res.status(200).json({
+      isFollowed: !isFollowed,
+      followedSeries: user.followedSeries
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update series subscription" });
+  }
+});
+
+// Save reader's progress in a Series
+router.post("/series/progress", async (req, res) => {
+  try {
+    const token = req.cookies.luminix_token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { series_id, chapter_number } = req.body;
+
+    const user = await User.findById(decoded.id);
+    user.seriesProgress = user.seriesProgress || [];
+    const existingIndex = user.seriesProgress.findIndex(p => p.series_id === series_id);
+
+    if (existingIndex >= 0) {
+      user.seriesProgress[existingIndex].last_chapter = Math.max(
+        user.seriesProgress[existingIndex].last_chapter,
+        parseInt(chapter_number, 10) || 1
+      );
+      user.seriesProgress[existingIndex].updatedAt = new Date();
+    } else {
+      user.seriesProgress.push({
+        series_id,
+        last_chapter: parseInt(chapter_number, 10) || 1,
+        updatedAt: new Date()
+      });
+    }
+    await user.save();
+
+    res.status(200).json({ progress: user.seriesProgress });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to save reading progress" });
   }
 });
 
@@ -247,7 +427,13 @@ router.get("/posts", async (req, res) => {
       reposts: post.reposts ? post.reposts.length : 0,
       shares: post.shares || 0,
       views: post.views || 0,
+      post_type: post.post_type || "standard",
+      before_after: post.before_after || null,
       process_steps: post.process_steps || [],
+      versions: post.versions || [],
+      series: post.series || null,
+      time_capsule: post.time_capsule || null,
+      sound_layer: post.sound_layer || null,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
       remix_count: post.remix_count || 0
@@ -307,7 +493,13 @@ router.get("/posts/for-you", async (req, res) => {
       reposts: post.reposts ? post.reposts.length : 0,
       shares: post.shares || 0,
       views: post.views || 0,
+      post_type: post.post_type || "standard",
+      before_after: post.before_after || null,
       process_steps: post.process_steps || [],
+      versions: post.versions || [],
+      series: post.series || null,
+      time_capsule: post.time_capsule || null,
+      sound_layer: post.sound_layer || null,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
       remix_count: post.remix_count || 0
