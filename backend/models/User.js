@@ -73,7 +73,11 @@ const userSchema = new mongoose.Schema({
     series_id: String,
     last_chapter: Number,
     updatedAt: { type: Date, default: Date.now }
-  }]
+  }],
+  criticBadges: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true
 });

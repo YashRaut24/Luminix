@@ -8,6 +8,7 @@ const upload = require("../middleware/upload");
 const Post = require("../models/Post");
 const Collection = require("../models/Collection");
 const Flash = require("../models/Flash");
+const CollabListing = require("../models/CollabListing");
 const aiService = require("../services/aiService");
 
 router.post("/signup", async (req, res) => {
@@ -128,7 +129,10 @@ router.post("/post", upload.any(), async (req, res) => {
       total_chapters,
       time_capsule_reveal,
       time_capsule_hint,
-      audio_title
+      audio_title,
+      needs_critique,
+      critique_question,
+      co_author_username
     } = req.body;
 
     const files = req.files || [];
@@ -255,14 +259,50 @@ router.post("/post", upload.any(), async (req, res) => {
       remix_type: remix_type || "Remix",
       is_scheduled: isScheduled,
       scheduled_for: scheduledDate,
-      published: isPublished
+      published: isPublished,
+      needs_critique: needs_critique === "true" || needs_critique === true,
+      critique_question: critique_question || "",
+      co_authors: []
     };
+
+    if (co_author_username && co_author_username.trim()) {
+      const cleanUser = co_author_username.trim().replace(/^@/, "");
+      const invitedUser = await User.findOne({
+        $or: [
+          { name: { $regex: new RegExp(`^${cleanUser}$`, "i") } },
+          { email: { $regex: new RegExp(`^${cleanUser}$`, "i") } },
+          { lumiTag: { $regex: new RegExp(`^@?${cleanUser}$`, "i") } }
+        ]
+      });
+      if (invitedUser && String(invitedUser._id) !== String(author)) {
+        postData.co_authors.push({
+          user: invitedUser._id,
+          username: invitedUser.name,
+          profile_picture: invitedUser.profileImage || "",
+          status: "pending",
+          invited_at: new Date()
+        });
+      }
+    }
 
     if (remix_of) {
       postData.remix_of = remix_of;
     }
 
     const postUpload = await Post.create(postData);
+
+    if (postData.co_authors && postData.co_authors.length > 0) {
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`user_${postData.co_authors[0].user}`).emit("user_notification", {
+          type: "coauthor_invite",
+          title: "Co-Author Invitation 🤝",
+          message: `@${user.name} invited you to co-author "${caption?.slice(0, 30) || "Artwork"}"`,
+          postId: postUpload._id,
+          timestamp: new Date()
+        });
+      }
+    }
 
     // If this is a remix of another post, increment parent post's remix_count
     if (remix_of) {
@@ -390,6 +430,349 @@ router.post("/series/progress", async (req, res) => {
   }
 });
 
+// ==========================================
+// FEEDBACK & COLLABORATION ROUTES
+// ==========================================
+
+// 1. Submit Structured Critique ("What works" / "What to try")
+router.post("/posts/:id/critique", authMiddleware, async (req, res) => {
+  try {
+    const { what_works, what_to_try } = req.body;
+    if (!what_works?.trim() || !what_to_try?.trim()) {
+      return res.status(400).json({ message: "Both 'What works' and 'What to try' are required" });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const user = await User.findById(req.user.id);
+    const newCritique = {
+      author: user._id,
+      username: user.name,
+      profile_picture: user.profileImage || "",
+      what_works: what_works.trim(),
+      what_to_try: what_to_try.trim(),
+      is_helpful: false,
+      created_at: new Date()
+    };
+
+    post.critiques.push(newCritique);
+    await post.save();
+
+    const createdCritique = post.critiques[post.critiques.length - 1];
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("post_critique_added", {
+        postId: post._id,
+        critique: createdCritique
+      });
+
+      if (String(post.author) !== String(user._id)) {
+        io.to(`user_${post.author}`).emit("user_notification", {
+          type: "critique",
+          title: "New Structured Critique 🎯",
+          message: `@${user.name} reviewed: "${post.critique_question || "Your artwork"}"`,
+          avatar: user.profileImage || "",
+          postId: post._id,
+          timestamp: new Date()
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: "Critique submitted successfully",
+      critique: createdCritique,
+      critiques: post.critiques
+    });
+  } catch (err) {
+    console.error("Critique error:", err);
+    res.status(500).json({ message: "Failed to submit critique" });
+  }
+});
+
+// 2. Mark Critique as Helpful (Awards "Critic" Badge)
+router.post("/posts/:id/critique/:critiqueId/helpful", authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    if (String(post.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Only the post author can mark feedback as helpful" });
+    }
+
+    const critique = post.critiques.id(req.params.critiqueId);
+    if (!critique) return res.status(404).json({ message: "Critique not found" });
+
+    if (critique.is_helpful) {
+      return res.status(200).json({ message: "Already marked helpful", critique });
+    }
+
+    critique.is_helpful = true;
+    await post.save();
+
+    // Increment reviewer's Critic Badges counter
+    let reviewerBadges = 1;
+    if (critique.author) {
+      const reviewer = await User.findByIdAndUpdate(
+        critique.author,
+        { $inc: { criticBadges: 1 } },
+        { new: true }
+      );
+      if (reviewer) reviewerBadges = reviewer.criticBadges;
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`user_${critique.author}`).emit("user_notification", {
+          type: "critic_badge",
+          title: "Critic Badge Earned! ⭐",
+          message: `The creator marked your feedback as helpful! You now have ${reviewerBadges} Critic badge(s).`,
+          timestamp: new Date()
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: "Critique marked as helpful! Critic badge awarded.",
+      critique
+    });
+  } catch (err) {
+    console.error("Helpful critique error:", err);
+    res.status(500).json({ message: "Failed to update critique" });
+  }
+});
+
+// 3. Respond to Co-Author Invitation (Accept or Decline)
+router.post("/posts/:id/co-author/respond", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body; // "accepted" | "declined"
+    if (!["accepted", "declined"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status response" });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const coAuthorEntry = post.co_authors.find(
+      (ca) => String(ca.user) === String(req.user.id)
+    );
+
+    if (!coAuthorEntry) {
+      return res.status(403).json({ message: "You are not an invited co-author on this piece" });
+    }
+
+    coAuthorEntry.status = status;
+    coAuthorEntry.responded_at = new Date();
+    await post.save();
+
+    const user = await User.findById(req.user.id);
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user_${post.author}`).emit("user_notification", {
+        type: "coauthor_response",
+        title: status === "accepted" ? "Co-Author Accepted! 🤝" : "Co-Author Invitation Declined",
+        message: `@${user ? user.name : "Collaborator"} ${status} your co-authorship request`,
+        postId: post._id,
+        timestamp: new Date()
+      });
+    }
+
+    res.status(200).json({
+      message: `Co-author invitation ${status}`,
+      post
+    });
+  } catch (err) {
+    console.error("Co-author response error:", err);
+    res.status(500).json({ message: "Failed to update co-author status" });
+  }
+});
+
+// 4. Submit Private Whisper Note (Visible only to creator)
+router.post("/posts/:id/whisper", authMiddleware, async (req, res) => {
+  try {
+    const { note } = req.body;
+    if (!note || !note.trim()) {
+      return res.status(400).json({ message: "Whisper note text required" });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const user = await User.findById(req.user.id);
+    const whisperObj = {
+      author: user._id,
+      username: user.name,
+      profile_picture: user.profileImage || "",
+      note: note.trim(),
+      created_at: new Date()
+    };
+
+    post.whisper_notes.push(whisperObj);
+    await post.save();
+
+    const io = req.app.get("io");
+    if (io && String(post.author) !== String(user._id)) {
+      io.to(`user_${post.author}`).emit("user_notification", {
+        type: "whisper",
+        title: "Private Whisper Note 🤫",
+        message: `@${user.name} sent you a private note on your post`,
+        postId: post._id,
+        timestamp: new Date()
+      });
+    }
+
+    res.status(201).json({
+      message: "Whisper note delivered privately to creator"
+    });
+  } catch (err) {
+    console.error("Whisper error:", err);
+    res.status(500).json({ message: "Failed to send whisper note" });
+  }
+});
+
+// 5. Fetch Private Whisper Notes (Strictly for Post Author)
+router.get("/posts/:id/whispers", authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    if (String(post.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Whisper notes are strictly private to the post creator" });
+    }
+
+    res.status(200).json({
+      whispers: post.whisper_notes || []
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load whisper notes" });
+  }
+});
+
+// 6. Collab Board: Fetch Listings with Filters
+router.get("/collabs", async (req, res) => {
+  try {
+    const { role, skill, status } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (role && role !== "All") filter.role_needed = { $regex: new RegExp(role, "i") };
+    if (skill && skill !== "All") filter.skills_needed = { $regex: new RegExp(skill, "i") };
+
+    const collabs = await CollabListing.find(filter)
+      .populate("author", "name lumiTag profileImage role creatorRole")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ collabs });
+  } catch (err) {
+    console.error("Collabs fetch error:", err);
+    res.status(500).json({ message: "Failed to fetch collab listings" });
+  }
+});
+
+// 7. Collab Board: Create New Listing
+router.post("/collabs", authMiddleware, async (req, res) => {
+  try {
+    const { title, description, role_needed, skills_needed, project_timeline } = req.body;
+    if (!title?.trim() || !description?.trim() || !role_needed?.trim()) {
+      return res.status(400).json({ message: "Title, description, and role needed are required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    const parsedSkills = Array.isArray(skills_needed)
+      ? skills_needed
+      : (skills_needed ? skills_needed.split(",").map(s => s.trim()).filter(Boolean) : []);
+
+    const listing = await CollabListing.create({
+      author: user._id,
+      username: user.name,
+      author_avatar: user.profileImage || "",
+      title: title.trim(),
+      description: description.trim(),
+      role_needed: role_needed.trim(),
+      skills_needed: parsedSkills,
+      project_timeline: project_timeline || "Flexible",
+      status: "open"
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("collab_listing_created", listing);
+    }
+
+    res.status(201).json({
+      message: "Collab request posted to board",
+      listing
+    });
+  } catch (err) {
+    console.error("Collab create error:", err);
+    res.status(500).json({ message: "Failed to create collab listing" });
+  }
+});
+
+// 8. Collab Board: Submit Short Pitch
+router.post("/collabs/:id/pitch", authMiddleware, async (req, res) => {
+  try {
+    const { message, portfolio_link } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: "Pitch message is required" });
+    }
+
+    const listing = await CollabListing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: "Collab listing not found" });
+
+    const user = await User.findById(req.user.id);
+    const newPitch = {
+      applicant: user._id,
+      username: user.name,
+      avatar: user.profileImage || "",
+      message: message.trim(),
+      portfolio_link: portfolio_link ? portfolio_link.trim() : "",
+      created_at: new Date()
+    };
+
+    listing.pitches.push(newPitch);
+    await listing.save();
+
+    const io = req.app.get("io");
+    if (io && String(listing.author) !== String(user._id)) {
+      io.to(`user_${listing.author}`).emit("user_notification", {
+        type: "collab_pitch",
+        title: "New Collab Pitch Received! 🚀",
+        message: `@${user.name} pitched for: "${listing.title}"`,
+        avatar: user.profileImage || "",
+        timestamp: new Date()
+      });
+    }
+
+    res.status(201).json({
+      message: "Pitch sent successfully!",
+      pitch: newPitch
+    });
+  } catch (err) {
+    console.error("Collab pitch error:", err);
+    res.status(500).json({ message: "Failed to submit pitch" });
+  }
+});
+
+// 9. Collab Board: Update Listing Status (open / closed)
+router.patch("/collabs/:id/status", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const listing = await CollabListing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
+
+    if (String(listing.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Unauthorized to update this listing" });
+    }
+
+    listing.status = status || (listing.status === "open" ? "closed" : "open");
+    await listing.save();
+
+    res.status(200).json({ message: "Status updated", listing });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update status" });
+  }
+});
+
 router.get("/posts", async (req, res) => {
   try {
     const posts = await Post.find({
@@ -399,7 +782,7 @@ router.get("/posts", async (req, res) => {
         { is_scheduled: false }
       ]
     })
-      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges")
+      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges criticBadges")
       .populate({
         path: "remix_of",
         select: "username email caption file_url createdAt tags author",
@@ -434,6 +817,11 @@ router.get("/posts", async (req, res) => {
       series: post.series || null,
       time_capsule: post.time_capsule || null,
       sound_layer: post.sound_layer || null,
+      needs_critique: Boolean(post.needs_critique),
+      critique_question: post.critique_question || "",
+      critiques: post.critiques || [],
+      co_authors: post.co_authors || [],
+      whisper_count: post.whisper_notes ? post.whisper_notes.length : 0,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
       remix_count: post.remix_count || 0
@@ -469,7 +857,7 @@ router.get("/posts/for-you", async (req, res) => {
         { is_scheduled: false }
       ]
     })
-      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges")
+      .populate("author", "name email profileImage lumiTag role creatorRole skillBadges criticBadges")
       .populate({
         path: "remix_of",
         select: "username email caption file_url createdAt tags author",
@@ -500,6 +888,11 @@ router.get("/posts/for-you", async (req, res) => {
       series: post.series || null,
       time_capsule: post.time_capsule || null,
       sound_layer: post.sound_layer || null,
+      needs_critique: Boolean(post.needs_critique),
+      critique_question: post.critique_question || "",
+      critiques: post.critiques || [],
+      co_authors: post.co_authors || [],
+      whisper_count: post.whisper_notes ? post.whisper_notes.length : 0,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
       remix_count: post.remix_count || 0

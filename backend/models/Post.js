@@ -201,6 +201,63 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    // 8. Critique Mode
+    needs_critique: {
+      type: Boolean,
+      default: false,
+    },
+    critique_question: {
+      type: String,
+      default: "",
+    },
+    critiques: [
+      {
+        author: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        username: String,
+        profile_picture: String,
+        what_works: { type: String, required: true },
+        what_to_try: { type: String, required: true },
+        is_helpful: { type: Boolean, default: false },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
+
+    // 9. Co-Authors
+    co_authors: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        username: String,
+        profile_picture: String,
+        status: {
+          type: String,
+          enum: ["pending", "accepted", "declined"],
+          default: "pending",
+        },
+        invited_at: { type: Date, default: Date.now },
+        responded_at: { type: Date },
+      },
+    ],
+
+    // 10. Whisper Notes (Private feedback for creator)
+    whisper_notes: [
+      {
+        author: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        username: String,
+        profile_picture: String,
+        note: { type: String, required: true },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
