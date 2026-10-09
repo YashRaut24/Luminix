@@ -100,7 +100,37 @@ function App() {
     element={
       isAuthenticated
         ? <Navigate to="/feed" />
-        : <LandingPage onAuthSuccess={handleAuthSuccess} />
+        : <LandingPage
+            onAuthSuccess={handleAuthSuccess}
+            darkMode={darkMode}
+            changeTheme={changeTheme}
+          />
+    }
+  />
+  <Route
+    path="/signin"
+    element={
+      isAuthenticated
+        ? <Navigate to="/feed" />
+        : <LandingPage
+            onAuthSuccess={handleAuthSuccess}
+            darkMode={darkMode}
+            changeTheme={changeTheme}
+            initialModal="signin"
+          />
+    }
+  />
+  <Route
+    path="/signup"
+    element={
+      isAuthenticated
+        ? <Navigate to="/feed" />
+        : <LandingPage
+            onAuthSuccess={handleAuthSuccess}
+            darkMode={darkMode}
+            changeTheme={changeTheme}
+            initialModal="signup"
+          />
     }
   />
 

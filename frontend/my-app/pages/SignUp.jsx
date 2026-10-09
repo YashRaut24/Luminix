@@ -13,13 +13,13 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const[name,setName] = useState("");
-  const[email,setEmail] = useState("");
-  const[password,setPassword] = useState("");
-  const[confirmPassword,setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     const formData = {
       name,
@@ -27,58 +27,56 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
       password
     };
 
-    if(password !== confirmPassword){
-      alert("Password doesn't match please try again!")
-    }else{
-      axios.post("http://localhost:9000/signup",formData)
-      .then(res=>{
-        alert(res.data.message);
-        onSuccess?.(res.data.user);
-        onSwitchToSignIn();
-      })
-      .catch(err => {
-      console.error(err);
-      alert(err.response?.data?.message || "Server error");
-    });
+    if (password !== confirmPassword) {
+      alert("Password doesn't match please try again!");
+    } else {
+      axios.post("http://localhost:9000/signup", formData)
+        .then(res => {
+          alert(res.data.message);
+          onSuccess?.(res.data.user);
+          onSwitchToSignIn();
+        })
+        .catch(err => {
+          console.error(err);
+          alert(err.response?.data?.message || "Server error");
+        });
     }
-    console.log("Submitting:", { name, email, password });
   };
 
-
   return (
-    <div className="signup-container" >
+    <div className="signup-container" onClick={onClose}>
       <div className="signup-page" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>✕</button>
+        <button className="close-button font-mono" onClick={onClose} title="Close">✕</button>
 
         <div className="signup-header">
-          <h2>Create Account</h2>
-          <p>Join Luminix and start sharing your moments</p>
+          <div className="signup-badge font-mono">[SESSION // REGISTRATION]</div>
+          <h2>Create Workspace Account</h2>
+          <p>Join the Darkroom community of visual creators and peer critics</p>
         </div>
 
-        <form className="signup-form" onSubmit={handleSubmit} >
-
+        <form className="signup-form" onSubmit={handleSubmit}>
           <div className="signup-form-containers">
-            <label>Full Name</label>
+            <label className="font-mono">CREATOR CALLSIGN / FULL NAME</label>
             <div className="input-containers">
               <MdPerson className="input-icon" />
               <input
                 type="text"
                 value={name}
-                placeholder="Enter your name"
-                onChange={(e)=>setName(e.target.value)}
+                placeholder="Elena Vance"
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
           </div>
 
           <div className="signup-form-containers">
-            <label>Email</label>
+            <label className="font-mono">EMAIL ADDRESS</label>
             <div className="input-containers">
               <MdEmail className="input-icon" />
               <input
                 type="email"
                 value={email}
-                placeholder="Enter your email"
+                placeholder="creator@luminix.studio"
                 required
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -86,13 +84,13 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
           </div>
 
           <div className="signup-form-containers">
-            <label>Password</label>
+            <label className="font-mono">PASSWORD</label>
             <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Create a password"                
-                onChange={(e)=>setPassword(e.target.value)}
+                placeholder="Min 6 characters"
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
               />
@@ -100,6 +98,7 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
                 type="button"
                 className="show-password-buttons"
                 onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
               </button>
@@ -107,36 +106,35 @@ function SignUp({ onClose, onSwitchToSignIn, onSuccess }) {
           </div>
 
           <div className="signup-form-containers">
-            <label>Confirm Password</label>
+            <label className="font-mono">CONFIRM PASSWORD</label>
             <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
-                onChange={(e)=>setConfirmPassword(e.target.value)}
+                placeholder="Repeat password"
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
                 className="show-password-buttons"
-                onClick={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
-                }
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                title={showConfirmPassword ? "Hide password" : "Show password"}
               >
                 {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="submit-button">
-            Create Account
+          <button type="submit" className="submit-button font-mono">
+            INITIALIZE CREATOR ACCOUNT
           </button>
         </form>
 
         <div className="signup-footer">
           <p>
             Already have an account?
-            <button onClick={onSwitchToSignIn}> Sign In</button>
+            <button onClick={onSwitchToSignIn} className="font-mono"> Sign In</button>
           </p>
         </div>
       </div>

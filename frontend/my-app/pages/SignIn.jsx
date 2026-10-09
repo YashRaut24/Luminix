@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-
 import {
   MdEmail,
   MdLock,
@@ -8,7 +7,6 @@ import {
   MdVisibilityOff
 } from "react-icons/md";
 import "./SignIn.css";
-
 
 function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +23,7 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
     });
   };
 
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
@@ -35,37 +33,33 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
         { withCredentials: true }
       );
 
-
       onAuthSuccess(res.data.user);
       console.log("LOGIN RESPONSE:", res.data);
-
-
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
   };
 
-
   return (
     <div className="signin-container" onClick={onClose}>
       <div className="signin-page" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>✕</button>
+        <button className="close-button font-mono" onClick={onClose} title="Close">✕</button>
 
         <div className="signin-header">
-          <h2>Welcome Back</h2>
-          <p>Sign in to continue to Luminix</p>
+          <div className="signin-badge font-mono">[SESSION // AUTHENTICATION]</div>
+          <h2>Sign In to Workspace</h2>
+          <p>Access your proofs, critique bays, and co-authored projects</p>
         </div>
 
         <form className="signin-form" onSubmit={handleSubmit}>
-
           <div className="signin-form-containers">
-            <label>Email</label>
+            <label className="font-mono">EMAIL ADDRESS</label>
             <div className="input-containers">
               <MdEmail className="input-icon" />
               <input
                 type="email"
                 name="email"
-                placeholder="Enter your email"
+                placeholder="creator@luminix.studio"
                 required
                 value={formData.email}
                 onChange={handleChange}
@@ -74,12 +68,12 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
           </div>
 
           <div className="signin-form-containers">
-            <label>Password</label>
+            <label className="font-mono">PASSWORD</label>
             <div className="input-containers">
               <MdLock className="input-icon" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder="••••••••••••"
                 name="password"
                 required
                 value={formData.password}
@@ -89,6 +83,7 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
                 type="button"
                 className="show-password-buttons"
                 onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
               </button>
@@ -98,22 +93,22 @@ function SignIn({ onClose, onSwitchToSignUp, onAuthSuccess }) {
           <div className="form-options">
             <label className="checkbox-label">
               <input type="checkbox" />
-              <span>Remember me</span>
+              <span>Remember session</span>
             </label>
-            <button type="button" className="forgot-password">
+            <button type="button" className="forgot-password font-mono">
               Forgot Password?
             </button>
           </div>
 
-          <button type="submit" className="submit-button">
-            Sign In
+          <button type="submit" className="submit-button font-mono">
+            SIGN IN TO DARKROOM
           </button>
         </form>
 
         <div className="signin-footer">
           <p>
             Don't have an account?
-            <button onClick={onSwitchToSignUp}> Sign Up</button>
+            <button onClick={onSwitchToSignUp} className="font-mono"> Create Account</button>
           </p>
         </div>
       </div>
