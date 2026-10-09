@@ -11,8 +11,16 @@ import {
   FiVolumeX,
   FiRepeat,
   FiBookmark,
-  FiPlus
+  FiPlus,
+  FiTarget,
+  FiUsers,
+  FiMessageSquare,
+  FiSend,
+  FiStar,
+  FiX,
+  FiCheck
 } from "react-icons/fi";
+import "../styles/feedback_collab.css";
 
 function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
   const navigate = useNavigate();
@@ -66,6 +74,31 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
   // 6. Sound Layer State
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef(null);
+
+  // 7. Critique Mode State
+  const [critiquesList, setCritiquesList] = useState(post.critiques || []);
+  const [showCritiqueModal, setShowCritiqueModal] = useState(false);
+  const [whatWorks, setWhatWorks] = useState("");
+  const [whatToTry, setWhatToTry] = useState("");
+  const [isSubmittingCritique, setIsSubmittingCritique] = useState(false);
+
+  // 8. Co-Authors State
+  const [coAuthorsList, setCoAuthorsList] = useState(post.co_authors || []);
+  const acceptedCoAuthors = coAuthorsList.filter((ca) => ca.status === "accepted");
+  const pendingCoAuthorInvite =
+    currentUserId &&
+    coAuthorsList.find(
+      (ca) =>
+        String(ca.user?._id || ca.user) === String(currentUserId) &&
+        ca.status === "pending"
+    );
+
+  // 9. Whisper Notes State
+  const [showWhisperModal, setShowWhisperModal] = useState(false);
+  const [whisperText, setWhisperText] = useState("");
+  const [isSubmittingWhisper, setIsSubmittingWhisper] = useState(false);
+  const [showCreatorWhispersTray, setShowCreatorWhispersTray] = useState(false);
+  const [creatorWhispers, setCreatorWhispers] = useState([]);
 
   const frameNumber = String(index + 1).padStart(2, "0");
 
@@ -135,6 +168,97 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
 
     return () => clearInterval(timer);
   }, [isTimelapsePlaying, timelapseFrames.length]);
+
+  // Socket listener for real-time critiques
+  useEffect(() => {
+    const handleCritiqueAdded = (data) => {
+      if (data.postId === post._id) {
+        setCritiquesList((prev) => [...prev, data.critique]);
+      }
+    };
+    socket.on("post_critique_added", handleCritiqueAdded);
+    return () => socket.off("post_critique_added", handleCritiqueAdded);
+  }, [post._id]);
+
+  const handleSubmitCritique = async (e) => {
+    e?.preventDefault();
+    if (!whatWorks.trim() || !whatToTry.trim()) return;
+    try {
+      setIsSubmittingCritique(true);
+      const res = await axios.post(
+        `http://localhost:9000/posts/${post._id}/critique`,
+        { what_works: whatWorks, what_to_try: whatToTry },
+        { withCredentials: true }
+      );
+      setCritiquesList(res.data.critiques || []);
+      setWhatWorks("");
+      setWhatToTry("");
+      setIsSubmittingCritique(false);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit critique");
+      setIsSubmittingCritique(false);
+    }
+  };
+
+  const handleMarkHelpful = async (critiqueId) => {
+    try {
+      await axios.post(
+        `http://localhost:9000/posts/${post._id}/critique/${critiqueId}/helpful`,
+        {},
+        { withCredentials: true }
+      );
+      setCritiquesList((prev) =>
+        prev.map((c) => (c._id === critiqueId ? { ...c, is_helpful: true } : c))
+      );
+    } catch (err) {
+      console.error("Mark helpful error:", err);
+    }
+  };
+
+  const handleCoAuthorResponse = async (status) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:9000/posts/${post._id}/co-author/respond`,
+        { status },
+        { withCredentials: true }
+      );
+      setCoAuthorsList(res.data.post?.co_authors || []);
+    } catch (err) {
+      alert("Failed to respond to co-author invitation");
+    }
+  };
+
+  const handleSendWhisper = async (e) => {
+    e?.preventDefault();
+    if (!whisperText.trim()) return;
+    try {
+      setIsSubmittingWhisper(true);
+      await axios.post(
+        `http://localhost:9000/posts/${post._id}/whisper`,
+        { note: whisperText },
+        { withCredentials: true }
+      );
+      alert("Whisper note delivered privately to creator!");
+      setWhisperText("");
+      setShowWhisperModal(false);
+      setIsSubmittingWhisper(false);
+    } catch (err) {
+      alert("Failed to send whisper note");
+      setIsSubmittingWhisper(false);
+    }
+  };
+
+  const handleOpenCreatorWhispers = async () => {
+    try {
+      setShowCreatorWhispersTray(true);
+      const res = await axios.get(`http://localhost:9000/posts/${post._id}/whispers`, {
+        withCredentials: true,
+      });
+      setCreatorWhispers(res.data.whispers || []);
+    } catch (err) {
+      console.error("Failed to load whispers:", err);
+    }
+  };
 
   const handleLikeClick = async (e) => {
     e?.stopPropagation();
@@ -285,11 +409,69 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
           );
         }}
       >
-        {/* Top metadata strip: Frame number + Creator tag */}
+        {/* Top metadata strip: Frame number + Creator tag + Co-authors */}
         <div className="darkroom-frame__header">
           <span className="darkroom-frame__index font-mono">FRAME {frameNumber}</span>
-          <span className="darkroom-frame__creator">@{post.username}</span>
+          <span className="darkroom-frame__creator">
+            @{post.username}
+            {acceptedCoAuthors.length > 0 && (
+              <span className="coauthor-authorship-tag">
+                &nbsp;&amp; {acceptedCoAuthors.map((ca, i) => (
+                  <strong key={i}>@{ca.username}</strong>
+                ))}
+              </span>
+            )}
+          </span>
         </div>
+
+        {/* Co-Author Pending Invitation Banner */}
+        {pendingCoAuthorInvite && (
+          <div className="coauthor-invite-banner" onClick={(e) => e.stopPropagation()}>
+            <span className="coauthor-invite-banner-text">
+              <FiUsers /> You're invited as co-author!
+            </span>
+            <div className="coauthor-btn-group">
+              <button
+                type="button"
+                className="coauthor-accept-btn"
+                onClick={() => handleCoAuthorResponse("accepted")}
+              >
+                Accept 🤝
+              </button>
+              <button
+                type="button"
+                className="coauthor-decline-btn"
+                onClick={() => handleCoAuthorResponse("declined")}
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 1. Critique Mode Banner */}
+        {post.needs_critique && (
+          <div className="critique-mode-banner" onClick={(e) => e.stopPropagation()}>
+            <div className="critique-mode-badge">
+              <FiTarget /> Needs Critique
+            </div>
+            {post.critique_question && (
+              <p className="critique-question-text">"{post.critique_question}"</p>
+            )}
+            <div className="critique-actions-row">
+              <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)" }}>
+                {critiquesList.length} critique{critiquesList.length === 1 ? "" : "s"}
+              </span>
+              <button
+                type="button"
+                className="critique-open-btn"
+                onClick={() => setShowCritiqueModal(true)}
+              >
+                Critique Piece
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 4. Series & Chapters Strip */}
         {post.series?.series_name && (
@@ -570,6 +752,26 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
           >
             SAVE
           </button>
+
+          {isAuthor ? (
+            <button
+              type="button"
+              className="darkroom-frame__btn"
+              onClick={handleOpenCreatorWhispers}
+              title="View private whisper feedback"
+            >
+              WHISPERS ({post.whisper_count || creatorWhispers.length || 0})
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="darkroom-frame__btn"
+              onClick={() => setShowWhisperModal(true)}
+              title="Send private feedback visible only to the creator"
+            >
+              WHISPER
+            </button>
+          )}
         </div>
       </div>
 
@@ -681,6 +883,248 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 1. Structured Critique Modal */}
+      {showCritiqueModal && (
+        <div
+          className="critique-modal-backdrop"
+          onClick={() => setShowCritiqueModal(false)}
+        >
+          <div
+            className="critique-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="critique-modal-header">
+              <h3 className="critique-modal-title">
+                <FiTarget style={{ color: "var(--accent)" }} /> Critique Room
+              </h3>
+              <button
+                type="button"
+                className="critique-modal-close"
+                onClick={() => setShowCritiqueModal(false)}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="critique-modal-body">
+              {/* Creator's specific question */}
+              {post.critique_question && (
+                <div className="critique-question-box">
+                  <div className="critique-question-label">Creator's Specific Focus Question:</div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
+                    "{post.critique_question}"
+                  </div>
+                </div>
+              )}
+
+              {/* Structured Submission Form (What works / What to try) */}
+              <form onSubmit={handleSubmitCritique} className="critique-form">
+                <div className="critique-field-group">
+                  <label className="critique-field-label critique-field-label--works">
+                    <FiCheck /> What Works (Strengths & Effective Elements) *
+                  </label>
+                  <textarea
+                    className="critique-textarea"
+                    placeholder="e.g. Strong atmospheric lighting, clear silhouette, great anatomical accuracy..."
+                    value={whatWorks}
+                    onChange={(e) => setWhatWorks(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="critique-field-group">
+                  <label className="critique-field-label critique-field-label--try">
+                    <FiStar /> What to Try (Constructive Ideas & Alternate Variations) *
+                  </label>
+                  <textarea
+                    className="critique-textarea"
+                    placeholder="e.g. Try pushing the rim light contrast higher, or experiment with warmer bounce light..."
+                    value={whatToTry}
+                    onChange={(e) => setWhatToTry(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="critique-submit-btn"
+                  disabled={isSubmittingCritique}
+                >
+                  {isSubmittingCritique ? "Submitting..." : "Submit Structured Critique"}
+                </button>
+              </form>
+
+              {/* Critiques List */}
+              <div className="critique-list-header">
+                Community Reviews ({critiquesList.length})
+              </div>
+
+              {critiquesList.length === 0 ? (
+                <p style={{ fontSize: "13px", color: "var(--text-2)", textAlign: "center", margin: "10px 0" }}>
+                  No critiques yet. Be the first to provide constructive feedback!
+                </p>
+              ) : (
+                critiquesList.map((critique, cIdx) => (
+                  <div key={critique._id || cIdx} className="critique-card">
+                    <div className="critique-card-header">
+                      <div className="critique-author-info">
+                        {critique.profile_picture ? (
+                          <img
+                            src={`http://localhost:9000${critique.profile_picture}`}
+                            alt={critique.username}
+                            className="critique-author-avatar"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="critique-author-avatar" style={{ backgroundColor: "var(--rule)" }} />
+                        )}
+                        <span className="critique-author-name">@{critique.username}</span>
+
+                        {/* Critic Badge indicator */}
+                        {(critique.is_helpful || critique.author?.criticBadges > 0) && (
+                          <span className="critic-badge-tag">★ Critic</span>
+                        )}
+                      </div>
+
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-2)" }}>
+                        {new Date(critique.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="critique-structured-body">
+                      <div className="critique-block critique-block--works">
+                        <div className="critique-block-title critique-block-title--works">WHAT WORKS:</div>
+                        <p className="critique-block-text">{critique.what_works}</p>
+                      </div>
+
+                      <div className="critique-block critique-block--try">
+                        <div className="critique-block-title critique-block-title--try">WHAT TO TRY:</div>
+                        <p className="critique-block-text">{critique.what_to_try}</p>
+                      </div>
+                    </div>
+
+                    {/* Author Helpful Button */}
+                    {isAuthor && (
+                      <button
+                        type="button"
+                        className={`critique-helpful-btn ${critique.is_helpful ? "is-helpful" : ""}`}
+                        disabled={critique.is_helpful}
+                        onClick={() => handleMarkHelpful(critique._id)}
+                      >
+                        {critique.is_helpful ? <><FiCheck /> Marked Helpful (Critic Badge Awarded)</> : <><FiStar /> Mark as Helpful (Award Critic Badge)</>}
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Whisper Note Modal (Visitor -> Creator) */}
+      {showWhisperModal && (
+        <div
+          className="critique-modal-backdrop"
+          onClick={() => setShowWhisperModal(false)}
+        >
+          <div
+            className="critique-modal"
+            style={{ maxWidth: "480px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="critique-modal-header">
+              <h3 className="critique-modal-title">
+                🤫 Whisper to @{post.username}
+              </h3>
+              <button
+                type="button"
+                className="critique-modal-close"
+                onClick={() => setShowWhisperModal(false)}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="critique-modal-body">
+              <div className="whisper-notice-banner">
+                🔒 Private feedback: only @{post.username} can read this note. It will never appear publicly.
+              </div>
+
+              <form onSubmit={handleSendWhisper} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <textarea
+                  className="critique-textarea"
+                  rows="4"
+                  placeholder="Share private thoughts, tips, or words of encouragement..."
+                  value={whisperText}
+                  onChange={(e) => setWhisperText(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="critique-submit-btn"
+                  disabled={isSubmittingWhisper}
+                >
+                  {isSubmittingWhisper ? "Delivering..." : "Send Whisper Note"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Creator Whisper Notes Tray (Creator Only) */}
+      {showCreatorWhispersTray && (
+        <div
+          className="critique-modal-backdrop"
+          onClick={() => setShowCreatorWhispersTray(false)}
+        >
+          <div
+            className="critique-modal"
+            style={{ maxWidth: "520px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="critique-modal-header">
+              <h3 className="critique-modal-title">
+                🤫 Private Whisper Notes ({creatorWhispers.length})
+              </h3>
+              <button
+                type="button"
+                className="critique-modal-close"
+                onClick={() => setShowCreatorWhispersTray(false)}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <div className="critique-modal-body">
+              <div className="whisper-notice-banner">
+                Private notes sent by community members directly to you.
+              </div>
+
+              {creatorWhispers.length === 0 ? (
+                <p style={{ fontSize: "13px", color: "var(--text-2)", textAlign: "center", margin: "16px 0" }}>
+                  No whisper notes received on this piece yet.
+                </p>
+              ) : (
+                creatorWhispers.map((w, wIdx) => (
+                  <div key={w._id || wIdx} className="whisper-card-item">
+                    <div className="whisper-card-meta">
+                      <span style={{ fontWeight: "700", color: "var(--text)" }}>@{w.username}</span>
+                      <span>{new Date(w.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="whisper-card-content">{w.note}</p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -19,7 +19,9 @@ import {
   FiSliders,
   FiVolume2,
   FiBookOpen,
-  FiMusic
+  FiMusic,
+  FiTarget,
+  FiUsers
 } from "react-icons/fi";
 import { BsPaletteFill, BsStars } from "react-icons/bs";
 
@@ -76,6 +78,11 @@ function CreatePost(props) {
   const [enableSoundLayer, setEnableSoundLayer] = useState(false);
   const [audioFile, setAudioFile] = useState(null);
   const [audioTitle, setAudioTitle] = useState("");
+
+  // Feedback & Collaboration States
+  const [needsCritique, setNeedsCritique] = useState(false);
+  const [critiqueQuestion, setCritiqueQuestion] = useState("");
+  const [coAuthorUsername, setCoAuthorUsername] = useState("");
 
   // Creative Feature 2: Remix / Respond mode
   const [remixParent, setRemixParent] = useState(null);
@@ -290,6 +297,17 @@ function CreatePost(props) {
       if (enableSoundLayer && audioFile) {
         formData.append("audio_file", audioFile);
         formData.append("audio_title", audioTitle.trim() || audioFile.name);
+      }
+
+      // 7. Critique Mode payload
+      if (needsCritique) {
+        formData.append("needs_critique", true);
+        formData.append("critique_question", critiqueQuestion.trim());
+      }
+
+      // 8. Co-Author Invitation payload
+      if (coAuthorUsername && coAuthorUsername.trim()) {
+        formData.append("co_author_username", coAuthorUsername.trim());
       }
 
       // Append Scheduled Publish Time if active
@@ -672,6 +690,61 @@ function CreatePost(props) {
                   <span />
                 </div>
               </div>
+            </div>
+
+            {/* Feedback & Collaboration: Co-Author Invitation */}
+            <div className="form-section">
+              <label className="form-label" style={{ display: "flex", alignItems: "center" }}>
+                <FiUsers style={{ marginRight: "6px" }} /> Invite Co-Author (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="Enter @username or creator name to co-author..."
+                value={coAuthorUsername}
+                onChange={(e) => setCoAuthorUsername(e.target.value)}
+                className="form-input"
+              />
+              <span className="schedule-hint" style={{ fontSize: "11px", color: "var(--text-2)" }}>
+                🤝 The post will appear on both creators' profiles upon acceptance.
+              </span>
+            </div>
+
+            {/* Feedback & Collaboration: Critique Mode */}
+            <div className="form-section critique-toggle-section">
+              <div
+                className={`schedule-feature-toggle ${needsCritique ? "enabled" : ""}`}
+                onClick={() => setNeedsCritique(!needsCritique)}
+              >
+                <div className="schedule-toggle-left">
+                  <FiTarget className="toggle-icon" />
+                  <div>
+                    <span className="toggle-title">Request Critique Mode</span>
+                    <p className="toggle-desc">
+                      Prompt community feedback with structured "What works / What to try" reviews
+                    </p>
+                  </div>
+                </div>
+                <div className={`switch-knob ${needsCritique ? "on" : "off"}`}>
+                  <span />
+                </div>
+              </div>
+
+              {needsCritique && (
+                <div className="subfeature-panel">
+                  <label className="schedule-picker-label">Specific Question for Critics *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. How is the lighting on the face? Does the silhouette read clearly?"
+                    value={critiqueQuestion}
+                    onChange={(e) => setCritiqueQuestion(e.target.value)}
+                    required={needsCritique}
+                  />
+                  <span className="schedule-hint">
+                    🎯 Critics providing helpful feedback earn the verified "Critic" badge.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
