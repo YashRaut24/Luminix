@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { MdDarkMode, MdLightMode, MdOutlinePeopleAlt } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
-import { FiTrendingUp, FiSearch, FiPlus, FiCamera, FiGrid } from "react-icons/fi";
+import { FiTrendingUp, FiSearch, FiPlus, FiCamera, FiGrid, FiBriefcase, FiEdit3 } from "react-icons/fi";
 
 const Navbar = (props) => {
   const navigate = useNavigate();
@@ -94,6 +94,26 @@ const Navbar = (props) => {
           title="Creator Analytics"
         >
           <FiTrendingUp />
+        </button>
+
+        <button
+          type="button"
+          className={`darkroom-spine__btn ${location.pathname === "/feed/collab" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/collab")}
+          data-label="Collab Board"
+          title="Collab Board"
+        >
+          <FiBriefcase />
+        </button>
+
+        <button
+          type="button"
+          className={`darkroom-spine__btn ${location.pathname === "/feed/sketch" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/sketch")}
+          data-label="Live Sketch"
+          title="Live Sketch Room"
+        >
+          <FiEdit3 />
         </button>
       </nav>
 

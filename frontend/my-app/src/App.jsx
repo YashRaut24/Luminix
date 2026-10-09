@@ -10,6 +10,8 @@ import Click from "./components/Click";
 import Profile from "./components/Profile";
 import CreatorAnalytics from "./components/CreatorAnalytics";
 import CommandPalette from "./components/CommandPalette";
+import CollabBoard from "./components/CollabBoard";
+import LiveSketchRoom from "./components/LiveSketchRoom";
 
 import "./App.css";
 import HomePage from "../pages/HomePage";
@@ -176,6 +178,26 @@ function App() {
       path="analytics"
       element={
         <CreatorAnalytics
+          mode={darkMode}
+          user={userData}
+        />
+      }
+    />
+
+    <Route
+      path="collab"
+      element={
+        <CollabBoard
+          mode={darkMode}
+          user={userData}
+        />
+      }
+    />
+
+    <Route
+      path="sketch"
+      element={
+        <LiveSketchRoom
           mode={darkMode}
           user={userData}
         />
