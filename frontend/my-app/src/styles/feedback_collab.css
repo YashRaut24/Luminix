@@ -1,0 +1,490 @@
+/* ==========================================================================
+   LUMINIX FEEDBACK & COLLABORATION STYLESHEET
+   1. Critique Mode (Needs Critique, What Works / What to Try, Critic Badge)
+   2. Co-Author Badges & Acceptance Banners
+   3. Whisper Notes (Private feedback modal & Creator private tray)
+   Strict Constraints: Solid colors only, zero gradients, zero glow
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Critique Mode
+   -------------------------------------------------------------------------- */
+.critique-mode-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+
+.critique-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+
+.critique-question-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.critique-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.critique-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.critique-open-btn:hover {
+  opacity: 0.9;
+}
+
+/* Structured Critique Modal / Drawer */
+.critique-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.critique-modal {
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.critique-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.critique-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.critique-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.critique-modal-close:hover {
+  color: var(--text);
+}
+
+.critique-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.critique-question-box {
+  padding: 12px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.critique-question-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* Structured Input Fields */
+.critique-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.critique-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.critique-field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.critique-field-label--works {
+  color: #10b981;
+}
+
+.critique-field-label--try {
+  color: #f59e0b;
+}
+
+.critique-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.critique-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.critique-submit-btn {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.critique-submit-btn:hover {
+  opacity: 0.9;
+}
+
+/* Critique List */
+.critique-list-header {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.critique-card {
+  padding: 14px;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.critique-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.critique-author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.critique-author-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 1px solid var(--rule);
+}
+
+.critique-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Critic Badge */
+.critic-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background-color: var(--frame-bg);
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.critique-structured-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.critique-block {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--frame-bg);
+}
+
+.critique-block--works {
+  border-left: 3px solid #10b981;
+}
+
+.critique-block--try {
+  border-left: 3px solid #f59e0b;
+}
+
+.critique-block-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.critique-block-title--works {
+  color: #10b981;
+}
+
+.critique-block-title--try {
+  color: #f59e0b;
+}
+
+.critique-block-text {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.critique-helpful-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.critique-helpful-btn:hover {
+  color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.critique-helpful-btn.is-helpful {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #000000;
+  font-weight: 700;
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   2. Co-Author Badges & Acceptance Banners
+   -------------------------------------------------------------------------- */
+.coauthor-authorship-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.coauthor-authorship-tag strong {
+  color: var(--accent);
+}
+
+.coauthor-invite-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.coauthor-invite-banner-text {
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coauthor-btn-group {
+  display: flex;
+  gap: 6px;
+}
+
+.coauthor-accept-btn {
+  padding: 4px 8px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coauthor-decline-btn {
+  padding: 4px 8px;
+  background-color: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.coauthor-decline-btn:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* --------------------------------------------------------------------------
+   3. Whisper Notes (Private Creator Feedback)
+   -------------------------------------------------------------------------- */
+.whisper-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.whisper-badge-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.whisper-badge-btn.creator-tray-btn {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Whisper Modal */
+.whisper-notice-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.whisper-card-item {
+  padding: 12px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.whisper-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.whisper-card-content {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
