@@ -6,7 +6,8 @@ import { AiOutlineHeart, AiOutlineStar } from "react-icons/ai";
 import { FiTrendingUp, FiMail, FiMapPin, FiCalendar, FiBookmark, FiLock, FiGlobe, FiX } from "react-icons/fi";
 import "./Profile.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
+import DailyFrameStreak from "./DailyFrameStreak";
 
 function Profile({ mode, user }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -454,6 +455,9 @@ function Profile({ mode, user }) {
                     <span>{stats.topLikedMonth}</span>
                   </div>
                 </div>
+
+                {/* Daily Frame Streak Calendar Heatmap (Solid Flat Accent Steps) */}
+                <DailyFrameStreak userId={user?._id || user?.id} mode={mode} />
 
                 <div className="level-progress-section">
                   <div className="level-header-row">
