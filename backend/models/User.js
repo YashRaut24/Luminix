@@ -77,6 +77,29 @@ const userSchema = new mongoose.Schema({
   criticBadges: {
     type: Number,
     default: 0
+  },
+  // Growth & Sharing Fields
+  open_for_commissions: {
+    type: Boolean,
+    default: false
+  },
+  commission_info: {
+    rate_starting_at: { type: String, default: "" },
+    specialties: [{ type: String }],
+    turnaround_time: { type: String, default: "1-2 weeks" },
+    contact_email: { type: String, default: "" }
+  },
+  portfolio_posts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post"
+  }],
+  portfolio_title: {
+    type: String,
+    default: ""
+  },
+  portfolio_bio: {
+    type: String,
+    default: ""
   }
 }, {
   timestamps: true

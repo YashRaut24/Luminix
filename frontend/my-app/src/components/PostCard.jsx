@@ -18,9 +18,12 @@ import {
   FiSend,
   FiStar,
   FiX,
-  FiCheck
+  FiCheck,
+  FiShare2
 } from "react-icons/fi";
 import "../styles/feedback_collab.css";
+import ShareCardModal from "./ShareCardModal";
+import CommissionModal from "./CommissionModal";
 
 function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectColor }) {
   const navigate = useNavigate();
@@ -99,6 +102,10 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
   const [isSubmittingWhisper, setIsSubmittingWhisper] = useState(false);
   const [showCreatorWhispersTray, setShowCreatorWhispersTray] = useState(false);
   const [creatorWhispers, setCreatorWhispers] = useState([]);
+
+  // Growth & Sharing States
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
 
   const frameNumber = String(index + 1).padStart(2, "0");
 
@@ -420,6 +427,20 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
                   <strong key={i}>@{ca.username}</strong>
                 ))}
               </span>
+            )}
+            {post.author?.open_for_commissions && (
+              <button
+                type="button"
+                className="commissions-status-badge is-open"
+                style={{ fontSize: "9px", padding: "1px 5px", marginLeft: "6px", cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCommissionModal(true);
+                }}
+                title="Creator is open for commissions"
+              >
+                <span className="commissions-dot" style={{ width: "5px", height: "5px" }} /> COMMISSIONS
+              </button>
             )}
           </span>
         </div>
@@ -751,6 +772,15 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
             title="Save to Board"
           >
             SAVE
+          </button>
+
+          <button
+            type="button"
+            className="darkroom-frame__btn"
+            onClick={() => setShowShareModal(true)}
+            title="Generate Auto Share Card and Embed Code"
+          >
+            SHARE
           </button>
 
           {isAuthor ? (
@@ -1170,6 +1200,20 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
           </div>
         </div>
       )}
+
+      {/* Auto Share Card & Embed Code Dialog */}
+      <ShareCardModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        post={post}
+      />
+
+      {/* Creator Commission Inquiry Dialog */}
+      <CommissionModal
+        isOpen={showCommissionModal}
+        onClose={() => setShowCommissionModal(false)}
+        creator={post.author || { _id: post.author, name: post.username }}
+      />
     </>
   );
 }

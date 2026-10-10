@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -11,6 +12,7 @@ const Flash = require("../models/Flash");
 const CollabListing = require("../models/CollabListing");
 const WeeklyChallenge = require("../models/WeeklyChallenge");
 const Circle = require("../models/Circle");
+const CommissionInquiry = require("../models/CommissionInquiry");
 const aiService = require("../services/aiService");
 
 router.post("/signup", async (req, res) => {
@@ -2730,6 +2732,377 @@ router.post("/digest/send-email", authMiddleware, async (req, res) => {
   }
 });
 
+
+// ============================================================================
+// GROWTH & SHARING SUITE (THE MARKETING SIDE)
+// 1. Auto Share Cards (Server-generated SVG/OpenGraph preview images)
+// 2. One-Click Public Portfolio Page (/portfolio/@handle)
+// 3. Open for Commissions Badge & Inquiries
+// 4. Standalone Embed Data & Widget
+// ============================================================================
+
+function escapeXml(unsafe) {
+  return String(unsafe || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+// ----------------------------------------------------------------------------
+// 1. AUTO SHARE CARDS
+// ----------------------------------------------------------------------------
+
+// GET /posts/:id/share-card - Generates a 1200x630 OpenGraph share card image
+router.get("/posts/:id/share-card", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate("author", "name email profileImage lumiTag open_for_commissions");
+    if (!post) {
+      return res.status(404).send("Post not found");
+    }
+
+    const host = req.get("host") || "localhost:9000";
+    const protocol = req.protocol || "http";
+    const serverUrl = `${protocol}://${host}`;
+
+    let imgUrl = post.file_url;
+    if (imgUrl && !imgUrl.startsWith("http")) {
+      imgUrl = `${serverUrl}${imgUrl}`;
+    }
+
+    let avatarUrl = post.author?.profileImage;
+    if (avatarUrl && !avatarUrl.startsWith("http")) {
+      avatarUrl = `${serverUrl}${avatarUrl}`;
+    }
+
+    const title = escapeXml(post.caption ? (post.caption.length > 55 ? post.caption.slice(0, 55) + "..." : post.caption) : post.file_name || "Creative Proof");
+    const authorName = escapeXml(post.author?.name || post.username || "Creator");
+    const authorTag = escapeXml(post.author?.lumiTag || `@${authorName.toLowerCase().replace(/\s+/g, "")}`);
+    const stampCount = post.likes ? post.likes.length : 0;
+    const remixCount = post.remix_count || 0;
+    const toolsStr = escapeXml((post.tools && post.tools.length > 0) ? post.tools.slice(0, 2).join(", ") : "Digital");
+    const isOpenForCommissions = !!post.author?.open_for_commissions;
+
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid Darkroom Canvas Background -->
+  <rect width="1200" height="630" fill="#090c10" />
+
+  <!-- Inner Workspace Frame Border -->
+  <rect x="24" y="24" width="1152" height="582" rx="8" fill="#0e131b" stroke="#232836" stroke-width="2" />
+
+  <!-- Left Artwork Plate -->
+  <rect x="48" y="48" width="534" height="534" rx="4" fill="#040608" stroke="#1b212d" stroke-width="1" />
+  <image href="${escapeXml(imgUrl)}" x="49" y="49" width="532" height="532" preserveAspectRatio="xMidYMid slice" />
+
+  <!-- Top Spine Mark -->
+  <rect x="620" y="48" width="220" height="32" rx="4" fill="#161b26" stroke="#6366f1" stroke-width="1.5" />
+  <text x="634" y="69" fill="#6366f1" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">LUMINIX // DARKROOM</text>
+
+  <!-- Frame Title / Caption -->
+  <text x="620" y="145" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="34" font-weight="700">${title}</text>
+
+  <!-- Creator Identification Card -->
+  <g transform="translate(620, 200)">
+    <rect width="510" height="76" rx="4" fill="#141923" stroke="#232836" stroke-width="1" />
+    <circle cx="40" cy="38" r="24" fill="#242c3d" stroke="#6366f1" stroke-width="1" />
+    ${avatarUrl ? `<image href="${escapeXml(avatarUrl)}" x="16" y="14" width="48" height="48" clip-path="circle(24px at 24px 24px)" preserveAspectRatio="xMidYMid slice" />` : ""}
+    <text x="76" y="32" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="18" font-weight="600">${authorName}</text>
+    <text x="76" y="54" fill="#94a3b8" font-family="monospace" font-size="13">${authorTag}</text>
+  </g>
+
+  <!-- Frame Metadata & Tool Badges -->
+  <text x="620" y="330" fill="#94a3b8" font-family="monospace" font-size="14" letter-spacing="0.5">PROOF METRICS: ★ ${stampCount} STAMPS  •  ↻ ${remixCount} REMIXES</text>
+  <text x="620" y="365" fill="#64748b" font-family="monospace" font-size="13">CRAFTED WITH: ${toolsStr.toUpperCase()}</text>
+
+  <!-- Commissions Status Indicator -->
+  ${
+    isOpenForCommissions
+      ? `<g transform="translate(620, 410)">
+          <rect width="260" height="36" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+          <circle cx="18" cy="18" r="4" fill="#34d399" />
+          <text x="32" y="23" fill="#6ee7b7" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">OPEN FOR COMMISSIONS</text>
+        </g>`
+      : ""
+  }
+
+  <!-- Footer Public Web Backlink -->
+  <line x1="620" y1="520" x2="1130" y2="520" stroke="#232836" stroke-width="1" />
+  <text x="620" y="555" fill="#64748b" font-family="monospace" font-size="13">VIEW PROOF WORKSPACE: luminix.art/portfolio/${authorTag}</text>
+</svg>`;
+
+    res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(svg);
+  } catch (err) {
+    console.error("Share card error:", err);
+    res.status(500).send("Failed to generate share card");
+  }
+});
+
+// GET /share/:id - HTML page with full OpenGraph / Twitter metadata
+router.get("/share/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate("author", "name lumiTag");
+    if (!post) return res.status(404).send("Not found");
+
+    const host = req.get("host") || "localhost:9000";
+    const protocol = req.protocol || "http";
+    const shareCardUrl = `${protocol}://${host}/posts/${post._id}/share-card`;
+    const appUrl = `http://localhost:5173/feed`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeXml(post.caption || "Artwork")} by ${escapeXml(post.author?.name || "Creator")} // Luminix</title>
+  <meta name="description" content="View artwork proof, process timelapse and interactive color palette on Luminix Darkroom." />
+  <meta property="og:title" content="${escapeXml(post.caption || "Proof Frame")} // Luminix" />
+  <meta property="og:description" content="Created by ${escapeXml(post.author?.name || "Creator")}. Open in Luminix Darkroom workspace." />
+  <meta property="og:image" content="${shareCardUrl}" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeXml(post.caption || "Proof Frame")} // Luminix" />
+  <meta name="twitter:image" content="${shareCardUrl}" />
+  <meta http-equiv="refresh" content="0; url=${appUrl}" />
+</head>
+<body style="background:#090c10;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+  <p>Redirecting to Luminix Darkroom workspace...</p>
+</body>
+</html>`;
+
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (err) {
+    res.status(500).send("Share page error");
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 2. ONE-CLICK PUBLIC PORTFOLIO PAGE (/portfolio/@handle)
+// ----------------------------------------------------------------------------
+
+// GET /public/portfolio/:handle - Public creator portfolio without login
+router.get("/public/portfolio/:handle", async (req, res) => {
+  try {
+    const rawHandle = req.params.handle.replace(/^@/, "").trim();
+
+    // Match by lumiTag, name or ID
+    let user = await User.findOne({
+      $or: [
+        { lumiTag: `@${rawHandle.toLowerCase()}` },
+        { lumiTag: rawHandle.toLowerCase() },
+        { name: { $regex: new RegExp(`^${rawHandle}$`, "i") } },
+      ],
+    }).select("-password");
+
+    if (!user && mongoose.Types.ObjectId.isValid(rawHandle)) {
+      user = await User.findById(rawHandle).select("-password");
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "Creator portfolio not found" });
+    }
+
+    let posts = [];
+    if (user.portfolio_posts && user.portfolio_posts.length > 0) {
+      posts = await Post.find({
+        _id: { $in: user.portfolio_posts },
+        target: "public",
+        published: true,
+      })
+        .populate("author", "name email profileImage lumiTag open_for_commissions")
+        .sort({ createdAt: -1 });
+    }
+
+    // Fallback if no specific portfolio posts selected yet
+    if (posts.length === 0) {
+      posts = await Post.find({
+        author: user._id,
+        target: "public",
+        published: true,
+      })
+        .populate("author", "name email profileImage lumiTag open_for_commissions")
+        .sort({ "likes.length": -1, createdAt: -1 })
+        .limit(16);
+    }
+
+    res.status(200).json({
+      creator: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        profileImage: user.profileImage,
+        profileBackground: user.profileBackground,
+        bio: user.portfolio_bio || user.bio || "Visual creator on Luminix",
+        lumiTag: user.lumiTag,
+        accentColor: user.accentColor || "#6366f1",
+        open_for_commissions: !!user.open_for_commissions,
+        commission_info: user.commission_info || {},
+        portfolio_title: user.portfolio_title || `${user.name} — Selected Works`,
+        portfolio_bio: user.portfolio_bio || user.bio || "",
+        followersCount: user.followers ? user.followers.length : 0,
+        skillBadges: user.skillBadges || [],
+      },
+      posts,
+      totalFrames: posts.length,
+    });
+  } catch (err) {
+    console.error("Public portfolio fetch error:", err);
+    res.status(500).json({ message: "Failed to load public portfolio" });
+  }
+});
+
+// POST /me/portfolio - Creator updates featured portfolio frames & bio
+router.post("/me/portfolio", authMiddleware, async (req, res) => {
+  try {
+    const { postIds, portfolio_title, portfolio_bio } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (Array.isArray(postIds)) {
+      user.portfolio_posts = postIds;
+    }
+    if (typeof portfolio_title === "string") {
+      user.portfolio_title = portfolio_title.trim();
+    }
+    if (typeof portfolio_bio === "string") {
+      user.portfolio_bio = portfolio_bio.trim();
+    }
+
+    await user.save();
+    res.status(200).json({
+      message: "Public portfolio updated successfully",
+      portfolio_posts: user.portfolio_posts,
+      portfolio_title: user.portfolio_title,
+      portfolio_bio: user.portfolio_bio,
+    });
+  } catch (err) {
+    console.error("Portfolio update error:", err);
+    res.status(500).json({ message: "Failed to update portfolio" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 3. OPEN FOR COMMISSIONS BADGE & INQUIRIES
+// ----------------------------------------------------------------------------
+
+// POST /me/commissions/settings - Creator toggles commissions & updates rates
+router.post("/me/commissions/settings", authMiddleware, async (req, res) => {
+  try {
+    const { open_for_commissions, rate_starting_at, specialties, turnaround_time, contact_email } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (typeof open_for_commissions !== "undefined") {
+      user.open_for_commissions = !!open_for_commissions;
+    }
+
+    user.commission_info = {
+      rate_starting_at: rate_starting_at || user.commission_info?.rate_starting_at || "",
+      specialties: Array.isArray(specialties) ? specialties : (user.commission_info?.specialties || ["Art Direction", "Illustration"]),
+      turnaround_time: turnaround_time || user.commission_info?.turnaround_time || "1-2 weeks",
+      contact_email: contact_email || user.commission_info?.contact_email || user.email || "",
+    };
+
+    await user.save();
+    res.status(200).json({
+      message: "Commission settings updated",
+      open_for_commissions: user.open_for_commissions,
+      commission_info: user.commission_info,
+    });
+  } catch (err) {
+    console.error("Commission settings error:", err);
+    res.status(500).json({ message: "Failed to update commission settings" });
+  }
+});
+
+// POST /users/:id/commissions/inquire - Client sends commission inquiry to creator
+router.post("/users/:id/commissions/inquire", async (req, res) => {
+  try {
+    const { client_name, client_email, project_type, budget, deadline, message } = req.body;
+    const creator = await User.findById(req.params.id);
+    if (!creator) return res.status(404).json({ message: "Creator not found" });
+
+    if (!client_name || !client_email || !message) {
+      return res.status(400).json({ message: "Name, email and project message are required" });
+    }
+
+    const inquiry = new CommissionInquiry({
+      creator: creator._id,
+      client_name: client_name.trim(),
+      client_email: client_email.trim(),
+      project_type: project_type || "Illustration",
+      budget: budget || "",
+      deadline: deadline || "",
+      message: message.trim(),
+    });
+
+    await inquiry.save();
+
+    // Real-time socket notification to creator
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user_${creator._id}`).emit("user_notification", {
+        type: "commission_inquiry",
+        title: "New Commission Inquiry 💼",
+        message: `${client_name} sent a commission request: "${project_type}"`,
+        inquiryId: inquiry._id,
+        timestamp: new Date(),
+      });
+    }
+
+    res.status(201).json({
+      message: `Inquiry successfully delivered to ${creator.name}! They will reply to ${client_email}.`,
+      inquiry,
+    });
+  } catch (err) {
+    console.error("Commission inquiry error:", err);
+    res.status(500).json({ message: "Failed to send commission inquiry" });
+  }
+});
+
+// GET /me/commissions/inquiries - Creator fetches received client inquiries
+router.get("/me/commissions/inquiries", authMiddleware, async (req, res) => {
+  try {
+    const inquiries = await CommissionInquiry.find({ creator: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json({ inquiries });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load commission inquiries" });
+  }
+});
+
+// POST /me/commissions/inquiries/:id/status - Update inquiry status
+router.post("/me/commissions/inquiries/:id/status", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const inquiry = await CommissionInquiry.findOne({ _id: req.params.id, creator: req.user.id });
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    inquiry.status = status;
+    await inquiry.save();
+    res.status(200).json({ message: `Inquiry marked as ${status}`, inquiry });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update inquiry status" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 4. EMBED STANDALONE METADATA
+// ----------------------------------------------------------------------------
+
+router.get("/public/posts/:id/embed", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("author", "name profileImage lumiTag open_for_commissions");
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    res.status(200).json({ post });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load embed data" });
+  }
+});
 
 router.post("/logout", (req, res) => {
   res.clearCookie("luminix_token");

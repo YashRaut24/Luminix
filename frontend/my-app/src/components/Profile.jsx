@@ -25,6 +25,16 @@ function Profile({ mode, user }) {
     );
     const [profileLayout, setProfileLayout] = useState(user?.profileLayout || "grid");
     const [savingTheme, setSavingTheme] = useState(false);
+
+    // Growth & Sharing: Portfolio & Commissions States
+    const [openForCommissions, setOpenForCommissions] = useState(false);
+    const [startingRate, setStartingRate] = useState("");
+    const [turnaroundTime, setTurnaroundTime] = useState("1-2 weeks");
+    const [showCommissionsSettings, setShowCommissionsSettings] = useState(false);
+    const [showInquiriesModal, setShowInquiriesModal] = useState(false);
+    const [inquiries, setInquiries] = useState([]);
+    const [copiedPortfolio, setCopiedPortfolio] = useState(false);
+
     const navigate = useNavigate();
     useEffect(() => {
       const fetchUser = async () => {
@@ -50,6 +60,11 @@ function Profile({ mode, user }) {
           if (res.data.user.accentColor) setAccentColor(res.data.user.accentColor);
           if (res.data.user.profileBackground) setBannerGradient(res.data.user.profileBackground);
           if (res.data.user.profileLayout) setProfileLayout(res.data.user.profileLayout);
+          if (res.data.user.open_for_commissions) setOpenForCommissions(res.data.user.open_for_commissions);
+          if (res.data.user.commission_info) {
+            setStartingRate(res.data.user.commission_info.rate_starting_at || "");
+            setTurnaroundTime(res.data.user.commission_info.turnaround_time || "1-2 weeks");
+          }
 
           // Record profile view
           if (res.data.user._id) {
@@ -241,6 +256,61 @@ function Profile({ mode, user }) {
     setIsEditing(false);
   };
 
+  const handleToggleCommissions = async () => {
+    const nextState = !openForCommissions;
+    setOpenForCommissions(nextState);
+    try {
+      await axios.post("http://localhost:9000/me/commissions/settings", {
+        open_for_commissions: nextState,
+        rate_starting_at: startingRate,
+        turnaround_time: turnaroundTime,
+      }, { withCredentials: true });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveCommissionSettings = async () => {
+    try {
+      await axios.post("http://localhost:9000/me/commissions/settings", {
+        open_for_commissions: openForCommissions,
+        rate_starting_at: startingRate,
+        turnaround_time: turnaroundTime,
+      }, { withCredentials: true });
+      setShowCommissionsSettings(false);
+    } catch (e) {
+      alert("Failed to update commission settings");
+    }
+  };
+
+  const handleOpenInquiries = async () => {
+    try {
+      setShowInquiriesModal(true);
+      const res = await axios.get("http://localhost:9000/me/commissions/inquiries", { withCredentials: true });
+      setInquiries(res.data.inquiries || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateInquiryStatus = async (inquiryId, status) => {
+    try {
+      await axios.post(`http://localhost:9000/me/commissions/inquiries/${inquiryId}/status`, { status }, { withCredentials: true });
+      setInquiries(prev => prev.map(inq => inq._id === inquiryId ? { ...inq, status } : inq));
+    } catch (err) {
+      alert("Failed to update inquiry status");
+    }
+  };
+
+  const portfolioHandle = profile.handle?.startsWith('@') ? profile.handle : `@${profile.name.toLowerCase().replace(/\\s+/g, '')}`;
+  const portfolioUrl = `${window.location.origin}/portfolio/${portfolioHandle}`;
+
+  const handleCopyPortfolio = () => {
+    navigator.clipboard.writeText(portfolioUrl);
+    setCopiedPortfolio(true);
+    setTimeout(() => setCopiedPortfolio(false), 2500);
+  };
+
   const handleChange = (field, value) => {
     setEditedProfile(prev => ({
       ...prev,
@@ -430,6 +500,101 @@ function Profile({ mode, user }) {
                           <button className="cancel-profile-btn" onClick={handleCancel}>Cancel</button>
                         </div>
                       )}
+                    </div>
+
+                    {/* Growth Suite 1: One-Click Public Portfolio */}
+                    <div style={{ marginTop: "12px", borderTop: "1px solid var(--rule)", paddingTop: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)", letterSpacing: "0.08em" }}>
+                        ONE-CLICK PUBLIC PORTFOLIO
+                      </span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          type="button"
+                          className="darkroom-bar__action font-mono"
+                          style={{ flex: 1, fontSize: "11px", justifyContent: "center" }}
+                          onClick={handleCopyPortfolio}
+                          title="Copy public link (no login needed to view)"
+                        >
+                          {copiedPortfolio ? "✓ LINK COPIED" : "🔗 COPY LINK"}
+                        </button>
+                        <button
+                          type="button"
+                          className="darkroom-bar__action darkroom-bar__action--primary font-mono"
+                          style={{ fontSize: "11px", padding: "4px 10px" }}
+                          onClick={() => window.open(portfolioUrl, "_blank")}
+                          title="Open public portfolio in new tab"
+                        >
+                          VIEW ↗
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Growth Suite 2: Open for Commissions Badge & Inquiries */}
+                    <div style={{ marginTop: "10px", borderTop: "1px solid var(--rule)", paddingTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <button
+                          type="button"
+                          className={`commissions-status-badge ${openForCommissions ? "is-open" : ""}`}
+                          onClick={handleToggleCommissions}
+                          title="Toggle Open for Commissions status"
+                        >
+                          <span className="commissions-dot" style={{ backgroundColor: openForCommissions ? "#10b981" : "var(--text-3)" }} />
+                          {openForCommissions ? "OPEN FOR COMMISSIONS" : "COMMISSIONS CLOSED"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="darkroom-bar__action font-mono"
+                          style={{ fontSize: "10px", padding: "2px 6px" }}
+                          onClick={() => setShowCommissionsSettings(!showCommissionsSettings)}
+                        >
+                          ⚙ RATES
+                        </button>
+                      </div>
+
+                      {showCommissionsSettings && (
+                        <div style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--rule)", borderRadius: "var(--radius-xs)", padding: "8px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div>
+                            <label className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>Starting Rate ($):</label>
+                            <input
+                              type="text"
+                              className="circles-invite-input font-mono"
+                              style={{ width: "100%", boxSizing: "border-box", textTransform: "none" }}
+                              placeholder="$150"
+                              value={startingRate}
+                              onChange={(e) => setStartingRate(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>Turnaround Time:</label>
+                            <input
+                              type="text"
+                              className="circles-invite-input font-mono"
+                              style={{ width: "100%", boxSizing: "border-box", textTransform: "none" }}
+                              placeholder="1-2 weeks"
+                              value={turnaroundTime}
+                              onChange={(e) => setTurnaroundTime(e.target.value)}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className="darkroom-bar__action darkroom-bar__action--primary font-mono"
+                            style={{ alignSelf: "flex-end", fontSize: "10px" }}
+                            onClick={handleSaveCommissionSettings}
+                          >
+                            SAVE RATES
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="darkroom-bar__action font-mono"
+                        style={{ fontSize: "11px", justifyContent: "center", marginTop: "2px" }}
+                        onClick={handleOpenInquiries}
+                      >
+                        💼 VIEW INQUIRIES
+                      </button>
                     </div>
 
                     <button className="mood-selector" onClick={handleMoodChange}>
@@ -679,6 +844,85 @@ function Profile({ mode, user }) {
           </div>
         </div>
       )} 
+
+      {/* Inquiries Review Modal */}
+      {showInquiriesModal && (
+        <div className="retention-overlay" onClick={() => setShowInquiriesModal(false)}>
+          <div
+            className="retention-dialog"
+            style={{ maxWidth: "680px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="retention-dialog-header">
+              <div className="retention-dialog-title">
+                <span>💼 CLIENT COMMISSION INQUIRIES ({inquiries.length})</span>
+              </div>
+              <button
+                type="button"
+                className="darkroom-bar__action"
+                onClick={() => setShowInquiriesModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="retention-dialog-body">
+              {inquiries.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "var(--space-5)", fontFamily: "var(--font-mono)", color: "var(--text-3)" }}>
+                  NO INQUIRIES RECEIVED YET. SHARE YOUR PUBLIC PORTFOLIO LINK TO RECEIVE DIRECT CLIENT PROPOSALS!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {inquiries.map((inq) => (
+                    <div key={inq._id} className="inquiry-row-item">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontWeight: 700, color: "var(--text)" }}>{inq.client_name}</span>
+                          <span className="font-mono" style={{ fontSize: "11px", color: "var(--accent)" }}>
+                            &lt;{inq.client_email}&gt;
+                          </span>
+                          <span className={`inquiry-status-pill ${inq.status}`}>
+                            {inq.status}
+                          </span>
+                        </div>
+
+                        <div className="font-mono" style={{ fontSize: "11px", color: "var(--text-3)", marginTop: "4px" }}>
+                          Scope: {inq.project_type} • Budget: {inq.budget || "N/A"} • Deadline: {inq.deadline || "Flexible"}
+                        </div>
+
+                        <p style={{ fontSize: "12px", color: "var(--text-2)", margin: "6px 0 0 0", fontStyle: "italic" }}>
+                          “{inq.message}”
+                        </p>
+                      </div>
+
+                      {inq.status === "pending" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <button
+                            type="button"
+                            className="darkroom-bar__action font-mono"
+                            style={{ backgroundColor: "#064e3b", color: "#6ee7b7", fontSize: "10px", padding: "4px 8px" }}
+                            onClick={() => handleUpdateInquiryStatus(inq._id, "accepted")}
+                          >
+                            ACCEPT
+                          </button>
+                          <button
+                            type="button"
+                            className="darkroom-bar__action font-mono"
+                            style={{ backgroundColor: "#450a0a", color: "#fca5a5", fontSize: "10px", padding: "4px 8px" }}
+                            onClick={() => handleUpdateInquiryStatus(inq._id, "declined")}
+                          >
+                            DECLINE
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
     </div>
   );

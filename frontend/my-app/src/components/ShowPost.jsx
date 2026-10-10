@@ -16,13 +16,16 @@ import {
   FiGrid,
   FiSliders,
   FiCompass,
-  FiMail
+  FiMail,
+  FiShare2
 } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineGroups } from "react-icons/md";
 import WeeklyPromptChallenge from "./WeeklyPromptChallenge";
 import CirclesWorkspace from "./CirclesWorkspace";
 import WeeklyDigestModal from "./WeeklyDigestModal";
+import ShareCardModal from "./ShareCardModal";
+import CommissionModal from "./CommissionModal";
 
 function hexToRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0 };
@@ -79,6 +82,10 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
   const [showWeeklyChallenge, setShowWeeklyChallenge] = useState(false);
   const [showCirclesWorkspace, setShowCirclesWorkspace] = useState(false);
   const [showWeeklyDigest, setShowWeeklyDigest] = useState(false);
+
+  // Growth & Sharing States
+  const [showShareCardModal, setShowShareCardModal] = useState(false);
+  const [showInspectorCommissionModal, setShowInspectorCommissionModal] = useState(false);
 
   const presetFilterColors = [
     "#6366f1", // Indigo Accent
@@ -793,6 +800,29 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                 TIMESTAMP: {new Date(selectedPost.upload_time).toLocaleString()}
               </div>
 
+              {/* Growth & Sharing Action Strip */}
+              <div style={{ display: "flex", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="darkroom-bar__action font-mono"
+                  style={{ flex: 1, fontSize: "11px", justifyContent: "center" }}
+                  onClick={() => setShowShareCardModal(true)}
+                  title="Generate Auto Share Card and Embed Code"
+                >
+                  <FiShare2 /> SHARE &amp; EMBED
+                </button>
+                {selectedPost.author?.open_for_commissions && (
+                  <button
+                    type="button"
+                    className="commissions-status-badge is-open"
+                    onClick={() => setShowInspectorCommissionModal(true)}
+                    title="Inquire about commissions"
+                  >
+                    <span className="commissions-dot" /> COMMISSIONS
+                  </button>
+                )}
+              </div>
+
               {/* Discovery: Tool Tags "Made with" line */}
               {selectedPost.tools && selectedPost.tools.length > 0 && (
                 <div className="inspector-tools-box">
@@ -1140,6 +1170,24 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
         user={user}
         onSelectFrame={handleFrameSelect}
       />
+
+      {/* Growth & Sharing: Auto Share Card & Embed Dialog */}
+      {selectedPost && (
+        <ShareCardModal
+          isOpen={showShareCardModal}
+          onClose={() => setShowShareCardModal(false)}
+          post={selectedPost}
+        />
+      )}
+
+      {/* Growth & Sharing: Commission Inquiry Modal */}
+      {selectedPost && (
+        <CommissionModal
+          isOpen={showInspectorCommissionModal}
+          onClose={() => setShowInspectorCommissionModal(false)}
+          creator={selectedPost.author || { _id: selectedPost.author, name: selectedPost.username }}
+        />
+      )}
     </div>
   );
 }

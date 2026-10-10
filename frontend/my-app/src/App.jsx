@@ -16,6 +16,8 @@ import LiveSketchRoom from "./components/LiveSketchRoom";
 import "./App.css";
 import HomePage from "../pages/HomePage";
 import Connect from "../pages/Connect";
+import PublicPortfolio from "../pages/PublicPortfolio";
+import EmbedFrame from "../pages/EmbedFrame";
 import NotificationToast from "./components/NotificationToast";
 
 function App() {
@@ -132,6 +134,15 @@ function App() {
             initialModal="signup"
           />
     }
+  />
+
+  <Route
+    path="/portfolio/:handle"
+    element={<PublicPortfolio />}
+  />
+  <Route
+    path="/embed/frame/:id"
+    element={<EmbedFrame />}
   />
 
   <Route
