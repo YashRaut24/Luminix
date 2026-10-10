@@ -302,6 +302,21 @@ const postSchema = new mongoose.Schema(
         ref: "Post",
       },
     ],
+
+    // Retention and Community Fields
+    // 15. Weekly Prompt Challenge
+    challenge_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "WeeklyChallenge",
+      default: null,
+    },
+
+    // 16. Private Circle Mini-Feed
+    circle_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Circle",
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -15,9 +15,14 @@ import {
   FiFileText,
   FiGrid,
   FiSliders,
-  FiCompass
+  FiCompass,
+  FiMail
 } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
+import { MdOutlineGroups } from "react-icons/md";
+import WeeklyPromptChallenge from "./WeeklyPromptChallenge";
+import CirclesWorkspace from "./CirclesWorkspace";
+import WeeklyDigestModal from "./WeeklyDigestModal";
 
 function hexToRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0 };
@@ -69,6 +74,11 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
   const [onThisDayMilestone, setOnThisDayMilestone] = useState("ON THIS DAY");
   const [dismissOnThisDay, setDismissOnThisDay] = useState(false);
   const [customHexInput, setCustomHexInput] = useState("");
+
+  // Retention & Community Suite States
+  const [showWeeklyChallenge, setShowWeeklyChallenge] = useState(false);
+  const [showCirclesWorkspace, setShowCirclesWorkspace] = useState(false);
+  const [showWeeklyDigest, setShowWeeklyDigest] = useState(false);
 
   const presetFilterColors = [
     "#6366f1", // Indigo Accent
@@ -303,6 +313,34 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                   </option>
                 ))}
               </select>
+
+              {/* Retention & Community Tools */}
+              <button
+                type="button"
+                className={`discovery-tool-btn font-mono ${showWeeklyChallenge ? "is-active" : ""}`}
+                onClick={() => setShowWeeklyChallenge(true)}
+                title="Weekly Prompt Challenge: one theme per week, voting by stamps without a public leaderboard"
+              >
+                <BsStars /> PROMPT
+              </button>
+
+              <button
+                type="button"
+                className={`discovery-tool-btn font-mono ${showCirclesWorkspace ? "is-active" : ""}`}
+                onClick={() => setShowCirclesWorkspace(true)}
+                title="Circles with invite codes: private mini-feeds and prompts"
+              >
+                <MdOutlineGroups /> CIRCLES
+              </button>
+
+              <button
+                type="button"
+                className={`discovery-tool-btn font-mono ${showWeeklyDigest ? "is-active" : ""}`}
+                onClick={() => setShowWeeklyDigest(true)}
+                title="Weekly Digest: summary of top remixes, your most-stamped frame, and suggested creator"
+              >
+                <FiMail /> DIGEST
+              </button>
             </div>
           </div>
 
@@ -1077,6 +1115,30 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
         onClose={() => setShowOnboarding(false)}
         onComplete={() => fetchPosts()}
         mode={mode}
+      />
+
+      {/* Retention & Community 1: Weekly Prompt Challenge Gallery */}
+      <WeeklyPromptChallenge
+        isOpen={showWeeklyChallenge}
+        onClose={() => setShowWeeklyChallenge(false)}
+        user={user}
+        onSelectFrame={handleFrameSelect}
+      />
+
+      {/* Retention & Community 2: Private Circles Workspace & Mini-Feeds */}
+      <CirclesWorkspace
+        isOpen={showCirclesWorkspace}
+        onClose={() => setShowCirclesWorkspace(false)}
+        user={user}
+        onSelectFrame={handleFrameSelect}
+      />
+
+      {/* Retention & Community 3: Weekly Digest Summary */}
+      <WeeklyDigestModal
+        isOpen={showWeeklyDigest}
+        onClose={() => setShowWeeklyDigest(false)}
+        user={user}
+        onSelectFrame={handleFrameSelect}
       />
     </div>
   );

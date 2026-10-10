@@ -1,0 +1,541 @@
+/* ==========================================================================
+   LUMINIX RETENTION & COMMUNITY SUITE
+   - Weekly Prompt Challenge (Gallery with Stamp Voting, No Leaderboard)
+   - Daily Frame Streak Heatmap (Solid Flat Accent Steps, No Gradients)
+   - Circles with Invite Codes (Private Feeds & Prompts)
+   - Weekly Digest (Top Remixes, Most-Stamped Frame, Creator Spotlight)
+   HARD RULES: No gradients, no glow, solid colors, single accent #6366f1
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. DAILY FRAME STREAK HEATMAP
+   -------------------------------------------------------------------------- */
+
+.streak-heatmap-container {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.streak-heatmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--space-2);
+}
+
+.streak-heatmap-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.streak-counter-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.streak-counter-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--accent);
+  background-color: var(--surface-2);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streak-counter-badge--neutral {
+  border-color: var(--rule);
+  color: var(--text-2);
+}
+
+.streak-matrix-wrapper {
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.streak-matrix {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-flow: column;
+  grid-auto-columns: 12px;
+  gap: 3px;
+  width: max-content;
+}
+
+/* Heatmap Solid Flat Cells - Zero gradients */
+.streak-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform var(--duration-fast);
+}
+
+.streak-cell:hover {
+  transform: scale(1.2);
+  border-color: var(--text);
+}
+
+.streak-cell.level-0 {
+  background-color: var(--surface-2);
+  border-color: var(--rule);
+}
+
+.streak-cell.level-1 {
+  background-color: #6366f1; /* Flat single accent */
+  border-color: #6366f1;
+}
+
+.streak-cell.level-2 {
+  background-color: #4f46e5; /* Flat darker step of same accent hue */
+  border-color: #4f46e5;
+}
+
+.streak-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+}
+
+.streak-legend-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streak-legend-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   2. WEEKLY PROMPT CHALLENGE MODAL & GALLERY
+   -------------------------------------------------------------------------- */
+
+.retention-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.retention-dialog {
+  width: 100%;
+  max-width: 980px;
+  max-height: 90vh;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.retention-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--rule);
+  background-color: var(--surface-2);
+}
+
+.retention-dialog-title {
+  font-family: var(--font-mono);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.retention-dialog-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Weekly Prompt Banner */
+.challenge-theme-card {
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-xs);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.challenge-theme-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+
+.challenge-theme-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.challenge-theme-desc {
+  font-size: var(--font-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.challenge-rules-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.challenge-rule-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+}
+
+/* Non-toxic community gallery (No leaderboard rank) */
+.challenge-gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--space-2);
+}
+
+.challenge-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.challenge-entry-card {
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--duration-fast);
+}
+
+.challenge-entry-card:hover {
+  border-color: var(--accent);
+}
+
+.challenge-entry-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #000000;
+  overflow: hidden;
+  position: relative;
+}
+
+.challenge-entry-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.challenge-entry-info {
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--rule);
+  background-color: var(--surface);
+}
+
+.challenge-author-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.challenge-stamp-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+
+.challenge-stamp-btn.is-stamped {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   3. CIRCLES WITH INVITE CODES
+   -------------------------------------------------------------------------- */
+
+.circles-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.circles-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.circles-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.circles-invite-input {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  text-transform: uppercase;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  width: 130px;
+}
+
+.circles-invite-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.circle-code-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background-color: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.circle-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.circle-prompt-banner {
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.circle-prompt-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+
+.circle-prompt-theme {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.circle-prompt-desc {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+/* --------------------------------------------------------------------------
+   4. WEEKLY DIGEST
+   -------------------------------------------------------------------------- */
+
+.digest-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.digest-header-banner {
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.digest-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .digest-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.digest-metric-box {
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.digest-metric-num {
+  font-family: var(--font-mono);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.digest-metric-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.digest-grid-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.digest-section-card {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.digest-section-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.digest-remix-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+}
+
+.digest-remix-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  background-color: #000000;
+}
+
+.digest-creator-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  padding: var(--space-3);
+  border-radius: var(--radius-xs);
+}
+
+.digest-creator-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--rule);
+  object-fit: cover;
+}

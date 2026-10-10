@@ -92,6 +92,12 @@ function CreatePost(props) {
   const [customToolInput, setCustomToolInput] = useState("");
   const [inspiredByPost, setInspiredByPost] = useState(null);
 
+  // Retention & Community States
+  const [selectedChallengeId, setSelectedChallengeId] = useState("");
+  const [currentChallenge, setCurrentChallenge] = useState(null);
+  const [selectedCircleId, setSelectedCircleId] = useState("");
+  const [userCircles, setUserCircles] = useState([]);
+
   const availableToolPresets = [
     "Figma",
     "Blender",
@@ -146,6 +152,21 @@ function CreatePost(props) {
           .catch((err) => console.log("Failed to load remix parent:", err));
       }
     }
+
+    // Fetch active challenge and user circles
+    axios
+      .get("http://localhost:9000/challenges/current", { withCredentials: true })
+      .then((res) => {
+        if (res.data?.challenge) setCurrentChallenge(res.data.challenge);
+      })
+      .catch((err) => console.log("Challenge fetch note:", err.message));
+
+    axios
+      .get("http://localhost:9000/circles", { withCredentials: true })
+      .then((res) => {
+        if (res.data?.circles) setUserCircles(res.data.circles);
+      })
+      .catch((err) => console.log("Circles fetch note:", err.message));
   }, [location.state, searchParams]);
 
   const extractDominantColors = (imgElement) => {
@@ -386,6 +407,14 @@ function CreatePost(props) {
       formData.append("tools", JSON.stringify(selectedTools));
       if (inspiredByPost) {
         formData.append("inspired_by", inspiredByPost._id);
+      }
+
+      // 10. Retention & Community: Weekly Prompt Challenge & Circle Association
+      if (selectedChallengeId) {
+        formData.append("challenge_id", selectedChallengeId);
+      }
+      if (selectedCircleId) {
+        formData.append("circle_id", selectedCircleId);
       }
 
       // Append Scheduled Publish Time if active
@@ -1029,6 +1058,56 @@ function CreatePost(props) {
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Retention & Community: Weekly Prompt & Circle Association */}
+            <div className="form-section creation-discovery-box">
+              <div className="discovery-section-head font-mono">
+                <span>[COMMUNITY & RETENTION DESTINATIONS]</span>
+              </div>
+
+              {/* Weekly Challenge Destination */}
+              {currentChallenge && (
+                <div style={{ marginBottom: "12px" }}>
+                  <label className="schedule-picker-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>🏆 Enter Weekly Prompt Challenge:</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px", color: "var(--text)" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedChallengeId === currentChallenge._id}
+                      onChange={(e) => setSelectedChallengeId(e.target.checked ? currentChallenge._id : "")}
+                    />
+                    <span>Submit to <strong>“{currentChallenge.theme}”</strong> (Week {currentChallenge.week_number})</span>
+                  </label>
+                  <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)", display: "block", marginTop: "2px" }}>
+                    Voting by Stamps without a public leaderboard
+                  </span>
+                </div>
+              )}
+
+              {/* Private Circle Destination */}
+              <div>
+                <label className="schedule-picker-label">
+                  👥 Post to Private Circle:
+                </label>
+                <select
+                  className="form-input font-mono"
+                  value={selectedCircleId}
+                  onChange={(e) => setSelectedCircleId(e.target.value)}
+                  style={{ background: "var(--surface)", color: "var(--text)", border: "1px solid var(--rule)" }}
+                >
+                  <option value="">Public Feed (No Circle)</option>
+                  {userCircles.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      Circle: {c.name} ({c.invite_code})
+                    </option>
+                  ))}
+                </select>
+                <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)", display: "block", marginTop: "2px" }}>
+                  Only members of this circle will see this frame in their mini-feed
+                </span>
+              </div>
             </div>
           </div>
 

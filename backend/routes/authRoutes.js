@@ -9,6 +9,8 @@ const Post = require("../models/Post");
 const Collection = require("../models/Collection");
 const Flash = require("../models/Flash");
 const CollabListing = require("../models/CollabListing");
+const WeeklyChallenge = require("../models/WeeklyChallenge");
+const Circle = require("../models/Circle");
 const aiService = require("../services/aiService");
 
 router.post("/signup", async (req, res) => {
@@ -137,7 +139,9 @@ router.post("/post", upload.any(), async (req, res) => {
       mood_calm_energetic,
       mood_minimal_detailed,
       tools,
-      inspired_by
+      inspired_by,
+      challenge_id,
+      circle_id
     } = req.body;
 
     const files = req.files || [];
@@ -267,6 +271,8 @@ router.post("/post", upload.any(), async (req, res) => {
       published: isPublished,
       needs_critique: needs_critique === "true" || needs_critique === true,
       critique_question: critique_question || "",
+      challenge_id: challenge_id || null,
+      circle_id: circle_id || null,
       co_authors: []
     };
 
@@ -2210,6 +2216,520 @@ router.post("/profile/theme", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to update profile theme" });
   }
 });
+
+// ============================================================================
+// RETENTION & COMMUNITY SUITE
+// 1. Weekly Prompt Challenge (No Public Leaderboard)
+// 2. Daily Frame Streak Heatmap (Solid Flat Accent Steps)
+// 3. Circles with Private Invite Codes
+// 4. Weekly Digest Summary
+// ============================================================================
+
+// Helper to generate 6-character clean alphanumeric invite code
+function generateInviteCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Helper to compute daily streak data over 112 days (16 weeks x 7 days)
+function computeStreakData(posts) {
+  const countMap = {};
+  posts.forEach((p) => {
+    if (p.createdAt) {
+      const dStr = new Date(p.createdAt).toISOString().split("T")[0];
+      countMap[dStr] = (countMap[dStr] || 0) + 1;
+    }
+  });
+
+  const cells = [];
+  const now = new Date();
+  // Anchor to today's midnight UTC
+  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  // 112 days total (16 weeks)
+  for (let i = 111; i >= 0; i--) {
+    const d = new Date(todayUtc);
+    d.setUTCDate(d.getUTCDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const count = countMap[dateStr] || 0;
+    const level = count === 0 ? 0 : count === 1 ? 1 : 2;
+    cells.push({
+      date: dateStr,
+      count,
+      level,
+      dayOfWeek: d.getUTCDay(), // 0 = Sun, 1 = Mon ...
+    });
+  }
+
+  // Calculate current streak
+  let currentStreak = 0;
+  const todayStr = todayUtc.toISOString().split("T")[0];
+  const yesterday = new Date(todayUtc);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+  let checkDate = new Date(todayUtc);
+  if (!countMap[todayStr] && countMap[yesterdayStr]) {
+    checkDate = yesterday;
+  }
+
+  while (true) {
+    const s = checkDate.toISOString().split("T")[0];
+    if (countMap[s] && countMap[s] > 0) {
+      currentStreak++;
+      checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  // Calculate longest streak across all recorded dates
+  const sortedDates = Object.keys(countMap).sort();
+  let longestStreak = 0;
+  let tempStreak = 0;
+  let prevDate = null;
+
+  sortedDates.forEach((dStr) => {
+    const curD = new Date(dStr);
+    if (!prevDate) {
+      tempStreak = 1;
+    } else {
+      const diffMs = curD.getTime() - prevDate.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        tempStreak = 1;
+      }
+    }
+    prevDate = curD;
+    if (tempStreak > longestStreak) longestStreak = tempStreak;
+  });
+
+  if (currentStreak > longestStreak) longestStreak = currentStreak;
+
+  return {
+    currentStreak,
+    longestStreak,
+    totalFrames: posts.length,
+    activeDays: Object.keys(countMap).length,
+    cells,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// 1. WEEKLY PROMPT CHALLENGE
+// ----------------------------------------------------------------------------
+
+// GET /challenges/current - Fetch or auto-seed current active challenge
+router.get("/challenges/current", async (req, res) => {
+  try {
+    let challenge = await WeeklyChallenge.findOne({ is_active: true }).sort({ createdAt: -1 });
+
+    if (!challenge) {
+      challenge = new WeeklyChallenge({
+        theme: "Neon streets",
+        prompt_tag: "neonstreets",
+        description: "Capture night cityscapes with high-contrast ambient silhouettes and solid neon accents.",
+        week_number: 41,
+        is_active: true,
+        starts_at: new Date(),
+        ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        rules: [
+          "One dominant accent or night exposure",
+          "No blurred glow or artificial gradients",
+          "Solid high-contrast darkroom lighting",
+        ],
+      });
+      await challenge.save();
+    }
+
+    const entriesCount = await Post.countDocuments({
+      $or: [
+        { challenge_id: challenge._id },
+        { tags: challenge.prompt_tag },
+      ],
+    });
+
+    res.status(200).json({ challenge, entriesCount });
+  } catch (err) {
+    console.error("Weekly challenge fetch error:", err);
+    res.status(500).json({ message: "Failed to load current weekly challenge" });
+  }
+});
+
+// GET /challenges/:id/entries - Blind/unranked gallery (voting by Stamps without leaderboard)
+router.get("/challenges/:id/entries", async (req, res) => {
+  try {
+    const challenge = await WeeklyChallenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found" });
+    }
+
+    // Community gallery: entries appear in reverse chronological order
+    // WITHOUT public leaderboard rankings or score comparisons
+    const entries = await Post.find({
+      $or: [
+        { challenge_id: challenge._id },
+        { tags: challenge.prompt_tag },
+      ],
+    })
+      .populate("author", "name email profileImage lumiTag")
+      .sort({ createdAt: -1 })
+      .limit(60);
+
+    res.status(200).json({
+      challenge,
+      entries,
+      totalEntries: entries.length,
+    });
+  } catch (err) {
+    console.error("Challenge entries error:", err);
+    res.status(500).json({ message: "Failed to load challenge gallery" });
+  }
+});
+
+// POST /challenges/:id/enter - Enter a post into the weekly challenge
+router.post("/challenges/:id/enter", authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.body;
+    const challenge = await WeeklyChallenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: "Challenge not found" });
+
+    const post = await Post.findOne({ _id: postId, author: req.user.id });
+    if (!post) return res.status(404).json({ message: "Frame not found or unauthorized" });
+
+    post.challenge_id = challenge._id;
+    if (!post.tags.includes(challenge.prompt_tag)) {
+      post.tags.push(challenge.prompt_tag);
+    }
+    await post.save();
+
+    res.status(200).json({
+      message: `Frame successfully submitted to weekly prompt: "${challenge.theme}"`,
+      post,
+    });
+  } catch (err) {
+    console.error("Challenge entry error:", err);
+    res.status(500).json({ message: "Failed to enter challenge" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 2. DAILY FRAME STREAK (CALENDAR HEATMAP)
+// ----------------------------------------------------------------------------
+
+router.get("/users/:id/streak", async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.params.id }).select("createdAt _id").sort({ createdAt: 1 });
+    const streakData = computeStreakData(posts);
+    res.status(200).json(streakData);
+  } catch (err) {
+    console.error("Streak calculation error:", err);
+    res.status(500).json({ message: "Failed to compute daily frame streak" });
+  }
+});
+
+router.get("/me/streak", authMiddleware, async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.user.id }).select("createdAt _id").sort({ createdAt: 1 });
+    const streakData = computeStreakData(posts);
+    res.status(200).json(streakData);
+  } catch (err) {
+    console.error("My streak calculation error:", err);
+    res.status(500).json({ message: "Failed to compute streak" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 3. CIRCLES WITH INVITE CODES (PRIVATE GROUPS)
+// ----------------------------------------------------------------------------
+
+// POST /circles - Create a new circle
+router.post("/circles", authMiddleware, async (req, res) => {
+  try {
+    const { name, description, avatar, promptTheme, promptDesc } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Circle name is required" });
+    }
+
+    let inviteCode = generateInviteCode();
+    // Ensure uniqueness
+    while (await Circle.findOne({ invite_code: inviteCode })) {
+      inviteCode = generateInviteCode();
+    }
+
+    const circle = new Circle({
+      name: name.trim(),
+      description: (description || "").trim(),
+      invite_code: inviteCode,
+      creator: req.user.id,
+      avatar: avatar || "",
+      members: [
+        {
+          user: req.user.id,
+          role: "admin",
+          joined_at: new Date(),
+        },
+      ],
+      prompt: {
+        theme: promptTheme || "Weekly Circle Study",
+        description: promptDesc || "Share experiments and works in progress",
+        updated_at: new Date(),
+      },
+    });
+
+    await circle.save();
+    res.status(201).json({ message: "Circle created successfully", circle });
+  } catch (err) {
+    console.error("Create circle error:", err);
+    res.status(500).json({ message: "Failed to create circle" });
+  }
+});
+
+// POST /circles/join - Join a circle via 6-character private invite code
+router.post("/circles/join", authMiddleware, async (req, res) => {
+  try {
+    const { invite_code } = req.body;
+    if (!invite_code) {
+      return res.status(400).json({ message: "Invite code is required" });
+    }
+
+    const code = invite_code.trim().toUpperCase();
+    const circle = await Circle.findOne({ invite_code: code });
+    if (!circle) {
+      return res.status(404).json({ message: "Invalid invite code. Circle not found." });
+    }
+
+    const alreadyMember = circle.members.some(
+      (m) => m.user.toString() === req.user.id
+    );
+    if (alreadyMember) {
+      return res.status(400).json({ message: "You are already a member of this Circle", circle });
+    }
+
+    circle.members.push({
+      user: req.user.id,
+      role: "member",
+      joined_at: new Date(),
+    });
+
+    await circle.save();
+    await circle.populate("members.user", "name email profileImage lumiTag");
+    await circle.populate("creator", "name email profileImage");
+
+    res.status(200).json({
+      message: `Welcome to ${circle.name}!`,
+      circle,
+    });
+  } catch (err) {
+    console.error("Join circle error:", err);
+    res.status(500).json({ message: "Failed to join circle" });
+  }
+});
+
+// GET /circles - List all circles user belongs to
+router.get("/circles", authMiddleware, async (req, res) => {
+  try {
+    const circles = await Circle.find({ "members.user": req.user.id })
+      .populate("creator", "name email profileImage")
+      .populate("members.user", "name email profileImage lumiTag")
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({ circles });
+  } catch (err) {
+    console.error("Fetch circles error:", err);
+    res.status(500).json({ message: "Failed to fetch circles" });
+  }
+});
+
+// GET /circles/:id - Circle details & prompt
+router.get("/circles/:id", authMiddleware, async (req, res) => {
+  try {
+    const circle = await Circle.findById(req.params.id)
+      .populate("creator", "name email profileImage")
+      .populate("members.user", "name email profileImage lumiTag");
+
+    if (!circle) return res.status(404).json({ message: "Circle not found" });
+
+    const isMember = circle.members.some((m) => m.user?._id?.toString() === req.user.id);
+    if (!isMember) {
+      return res.status(403).json({ message: "Private Circle. Invite code required to enter." });
+    }
+
+    res.status(200).json({ circle });
+  } catch (err) {
+    console.error("Fetch circle error:", err);
+    res.status(500).json({ message: "Failed to load circle details" });
+  }
+});
+
+// GET /circles/:id/feed - Mini-feed for this specific circle
+router.get("/circles/:id/feed", authMiddleware, async (req, res) => {
+  try {
+    const circle = await Circle.findById(req.params.id);
+    if (!circle) return res.status(404).json({ message: "Circle not found" });
+
+    const isMember = circle.members.some((m) => m.user.toString() === req.user.id);
+    if (!isMember) {
+      return res.status(403).json({ message: "Private circle feed access denied" });
+    }
+
+    const posts = await Post.find({ circle_id: circle._id })
+      .populate("author", "name email profileImage lumiTag")
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.status(200).json({ posts, circle });
+  } catch (err) {
+    console.error("Circle feed error:", err);
+    res.status(500).json({ message: "Failed to load circle feed" });
+  }
+});
+
+// POST /circles/:id/prompt - Update the circle's private prompt
+router.post("/circles/:id/prompt", authMiddleware, async (req, res) => {
+  try {
+    const { theme, description } = req.body;
+    const circle = await Circle.findById(req.params.id);
+    if (!circle) return res.status(404).json({ message: "Circle not found" });
+
+    const member = circle.members.find((m) => m.user.toString() === req.user.id);
+    if (!member || (member.role !== "admin" && circle.creator.toString() !== req.user.id)) {
+      return res.status(403).json({ message: "Only circle admins can update the prompt" });
+    }
+
+    circle.prompt = {
+      theme: (theme || circle.prompt.theme).trim(),
+      description: (description || "").trim(),
+      updated_at: new Date(),
+    };
+
+    await circle.save();
+    res.status(200).json({ message: "Circle prompt updated", prompt: circle.prompt });
+  } catch (err) {
+    console.error("Update circle prompt error:", err);
+    res.status(500).json({ message: "Failed to update circle prompt" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 4. WEEKLY DIGEST SUMMARY
+// ----------------------------------------------------------------------------
+
+router.get("/digest/weekly", authMiddleware, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) return res.status(404).json({ message: "User not found" });
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Top Remixes (highest remix count or remixed creations)
+    let topRemixes = await Post.find({
+      $or: [
+        { remix_count: { $gt: 0 } },
+        { remix_of: { $ne: null } },
+      ],
+    })
+      .populate("author", "name email profileImage lumiTag")
+      .populate("remix_of", "file_url caption author")
+      .sort({ remix_count: -1, "likes.length": -1, createdAt: -1 })
+      .limit(3);
+
+    // Fallback if no remixes in database
+    if (topRemixes.length === 0) {
+      topRemixes = await Post.find({})
+        .populate("author", "name email profileImage lumiTag")
+        .sort({ "likes.length": -1 })
+        .limit(3);
+    }
+
+    // 2. User's Most-Stamped Frame
+    let userPosts = await Post.find({
+      author: req.user.id,
+      createdAt: { $gte: sevenDaysAgo },
+    }).sort({ "likes.length": -1 });
+
+    if (userPosts.length === 0) {
+      // Fallback to all-time best frame
+      userPosts = await Post.find({ author: req.user.id }).sort({ "likes.length": -1 }).limit(1);
+    }
+    const mostStampedFrame = userPosts.length > 0 ? userPosts[0] : null;
+
+    // 3. Suggested Creator to Follow
+    const followingIds = (currentUser.following || []).map((id) => id.toString());
+    followingIds.push(req.user.id.toString());
+
+    let suggestedCreator = await User.findOne({
+      _id: { $nin: followingIds },
+    })
+      .select("-password")
+      .sort({ growthRate: -1, criticBadges: -1, profileViews: -1, createdAt: -1 });
+
+    if (!suggestedCreator) {
+      // Fallback to any other creator
+      suggestedCreator = await User.findOne({ _id: { $ne: req.user.id } }).select("-password");
+    }
+
+    let creatorSamplePost = null;
+    if (suggestedCreator) {
+      creatorSamplePost = await Post.findOne({ author: suggestedCreator._id }).sort({ createdAt: -1 });
+    }
+
+    // 4. Week in Review metrics
+    const framesDeveloped = await Post.countDocuments({
+      author: req.user.id,
+      createdAt: { $gte: sevenDaysAgo },
+    });
+
+    const userAllPosts = await Post.find({ author: req.user.id }).select("createdAt likes");
+    const streakInfo = computeStreakData(userAllPosts);
+    const totalStampsReceived = userAllPosts.reduce((acc, p) => acc + (p.likes?.length || 0), 0);
+
+    res.status(200).json({
+      periodLabel: "WEEK 41 DIGEST",
+      generatedAt: new Date(),
+      topRemixes,
+      mostStampedFrame,
+      suggestedCreator: suggestedCreator
+        ? {
+            ...suggestedCreator.toObject(),
+            samplePost: creatorSamplePost,
+          }
+        : null,
+      metrics: {
+        framesDeveloped,
+        totalStampsReceived,
+        streakDays: streakInfo.currentStreak,
+        longestStreak: streakInfo.longestStreak,
+      },
+    });
+  } catch (err) {
+    console.error("Weekly digest error:", err);
+    res.status(500).json({ message: "Failed to generate weekly digest" });
+  }
+});
+
+// POST /digest/send-email - Trigger in-app confirmation & simulated email
+router.post("/digest/send-email", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({
+      message: `Weekly digest report dispatched to ${user.email}. Check your inbox!`,
+      recipient: user.email,
+      timestamp: new Date(),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send digest email" });
+  }
+});
+
 
 router.post("/logout", (req, res) => {
   res.clearCookie("luminix_token");
