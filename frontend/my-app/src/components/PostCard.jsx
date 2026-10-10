@@ -22,7 +22,7 @@ import {
 } from "react-icons/fi";
 import "../styles/feedback_collab.css";
 
-function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
+function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectColor }) {
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem("userData");
@@ -772,6 +772,48 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin }) {
               WHISPER
             </button>
           )}
+        </div>
+
+        {/* Discovery Metadata Strip: 5 Color Palette Swatches, Tool Tags, Inspired By */}
+        <div className="frame-discovery-strip" onClick={(e) => e.stopPropagation()}>
+          {post.palette && post.palette.length > 0 ? (
+            <div className="frame-swatches-row" title="Dominant colors (Click swatch to filter feed)">
+              {post.palette.slice(0, 5).map((color, cIdx) => (
+                <span
+                  key={cIdx}
+                  className="frame-color-dot"
+                  style={{ backgroundColor: color }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectColor) onSelectColor(color);
+                  }}
+                  title={`Color: ${color} - Click to filter feed`}
+                />
+              ))}
+            </div>
+          ) : (
+            <div />
+          )}
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {post.inspired_by && (
+              <span
+                className="frame-provenance-tag font-mono"
+                title={`Inspired by @${post.inspired_by.username || "creator"}`}
+              >
+                ↗ @{post.inspired_by.username || "creator"}
+              </span>
+            )}
+            {post.tools && post.tools.length > 0 && (
+              <div className="frame-tools-row">
+                {post.tools.slice(0, 2).map((t, tIdx) => (
+                  <span key={tIdx} className="frame-tool-badge font-mono">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

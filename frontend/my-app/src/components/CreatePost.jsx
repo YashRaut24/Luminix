@@ -84,6 +84,29 @@ function CreatePost(props) {
   const [critiqueQuestion, setCritiqueQuestion] = useState("");
   const [coAuthorUsername, setCoAuthorUsername] = useState("");
 
+  // Discovery Suite States: Palette, Mood Dial, Tools, Provenance
+  const [palette, setPalette] = useState(["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"]);
+  const [moodCalm, setMoodCalm] = useState(50);
+  const [moodMinimal, setMoodMinimal] = useState(50);
+  const [selectedTools, setSelectedTools] = useState(["Figma"]);
+  const [customToolInput, setCustomToolInput] = useState("");
+  const [inspiredByPost, setInspiredByPost] = useState(null);
+
+  const availableToolPresets = [
+    "Figma",
+    "Blender",
+    "Procreate",
+    "Photoshop",
+    "Cinema 4D",
+    "After Effects",
+    "Illustrator",
+    "Unity",
+    "Unreal Engine",
+    "Spline",
+    "TouchDesigner",
+    "Midjourney"
+  ];
+
   // Creative Feature 2: Remix / Respond mode
   const [remixParent, setRemixParent] = useState(null);
   const [remixType, setRemixType] = useState("Style Interpretation");
@@ -108,18 +131,54 @@ function CreatePost(props) {
   useEffect(() => {
     if (location.state?.remixPost) {
       setRemixParent(location.state.remixPost);
+      setInspiredByPost(location.state.remixPost);
     } else {
       const remixId = searchParams.get("remixOf");
       if (remixId) {
         axios
           .get(`http://localhost:9000/posts/${remixId}`, { withCredentials: true })
           .then((res) => {
-            if (res.data.post) setRemixParent(res.data.post);
+            if (res.data.post) {
+              setRemixParent(res.data.post);
+              setInspiredByPost(res.data.post);
+            }
           })
           .catch((err) => console.log("Failed to load remix parent:", err));
       }
     }
   }, [location.state, searchParams]);
+
+  const extractDominantColors = (imgElement) => {
+    try {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const w = (canvas.width = 100);
+      const h = (canvas.height = 100);
+      ctx.drawImage(imgElement, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const colorCounts = {};
+
+      for (let i = 0; i < data.length; i += 16) {
+        const r = Math.round(data[i] / 32) * 32;
+        const g = Math.round(data[i + 1] / 32) * 32;
+        const b = Math.round(data[i + 2] / 32) * 32;
+        const a = data[i + 3];
+        if (a < 128) continue;
+        const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+      }
+
+      const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
+      const colors = sorted.slice(0, 5);
+      const fallbacks = ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
+      while (colors.length < 5) {
+        colors.push(fallbacks[colors.length]);
+      }
+      return colors;
+    } catch (err) {
+      return ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
+    }
+  };
 
   const triggerAiAnalysis = async (selectedFile, textHint) => {
     if (!selectedFile) return;
@@ -150,8 +209,18 @@ function CreatePost(props) {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setPreview(previewUrl);
       triggerAiAnalysis(selectedFile, caption);
+
+      // Auto-extract 5 dominant palette colors
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = previewUrl;
+      img.onload = () => {
+        const extracted = extractDominantColors(img);
+        setPalette(extracted);
+      };
     }
   };
 
@@ -308,6 +377,15 @@ function CreatePost(props) {
       // 8. Co-Author Invitation payload
       if (coAuthorUsername && coAuthorUsername.trim()) {
         formData.append("co_author_username", coAuthorUsername.trim());
+      }
+
+      // 9. Discovery Suite: Palette, Mood Dial, Tools, Provenance
+      formData.append("palette", JSON.stringify(palette));
+      formData.append("mood_calm_energetic", moodCalm);
+      formData.append("mood_minimal_detailed", moodMinimal);
+      formData.append("tools", JSON.stringify(selectedTools));
+      if (inspiredByPost) {
+        formData.append("inspired_by", inspiredByPost._id);
       }
 
       // Append Scheduled Publish Time if active
@@ -743,6 +821,212 @@ function CreatePost(props) {
                   <span className="schedule-hint">
                     🎯 Critics providing helpful feedback earn the verified "Critic" badge.
                   </span>
+                </div>
+              )}
+            </div>
+
+            {/* Discovery Suite: Dominant Palette, Mood Dial & Tool Tags */}
+            <div className="form-section creation-discovery-box">
+              <div className="discovery-section-head font-mono">
+                <span>[DISCOVERY CALIBRATION // 4 MODES]</span>
+              </div>
+
+              {/* 1. Dominant 5-Color Palette */}
+              <div className="palette-calibration-group">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label className="schedule-picker-label" style={{ margin: 0 }}>
+                    5 Dominant Colors (Auto-Extracted from Upload):
+                  </label>
+                  <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>
+                    CLICK SWATCH TO TWEAK
+                  </span>
+                </div>
+                <div className="creation-palette-strip">
+                  {palette.map((color, idx) => (
+                    <div
+                      key={idx}
+                      className="creation-swatch-slot"
+                      style={{ backgroundColor: color }}
+                      title={`Color #${idx + 1}: ${color} (Click to change)`}
+                    >
+                      <input
+                        type="color"
+                        value={color.length === 7 ? color : "#6366f1"}
+                        onChange={(e) => {
+                          const updated = [...palette];
+                          updated[idx] = e.target.value;
+                          setPalette(updated);
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="darkroom-bar__action"
+                    style={{ fontSize: "11px", padding: "4px 8px" }}
+                    onClick={() => {
+                      const samplePalettes = [
+                        ["#090c10", "#161d27", "#6366f1", "#4f46e5", "#f0f4f8"],
+                        ["#1e293b", "#0f172a", "#ef4444", "#f59e0b", "#10b981"],
+                        ["#2a2d34", "#3f88c5", "#004e89", "#ffba08", "#f45b69"],
+                        ["#1a1a2e", "#16213e", "#0f3460", "#e94560", "#f5f5f5"]
+                      ];
+                      const randomSet = samplePalettes[Math.floor(Math.random() * samplePalettes.length)];
+                      setPalette(randomSet);
+                    }}
+                  >
+                    RANDOMIZE
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Mood Dial Calibration */}
+              <div className="mood-calibration-group" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label className="schedule-picker-label" style={{ margin: 0 }}>
+                  Mood Dial (Re-ranks search & discovery):
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "var(--text-3)", marginBottom: "4px" }}>
+                      <span>CALM (0)</span>
+                      <span className="font-mono" style={{ color: "var(--accent)" }}>{moodCalm}%</span>
+                      <span>ENERGETIC (100)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={moodCalm}
+                      onChange={(e) => setMoodCalm(Number(e.target.value))}
+                      className="mood-range-input"
+                    />
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "var(--text-3)", marginBottom: "4px" }}>
+                      <span>MINIMAL (0)</span>
+                      <span className="font-mono" style={{ color: "var(--accent)" }}>{moodMinimal}%</span>
+                      <span>DETAILED (100)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={moodMinimal}
+                      onChange={(e) => setMoodMinimal(Number(e.target.value))}
+                      className="mood-range-input"
+                    />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginTop: "4px" }}>
+                  {[
+                    { label: "Zen Minimal", c: 15, m: 10 },
+                    { label: "Cyber Kinetic", c: 85, m: 80 },
+                    { label: "Moody Ambient", c: 25, m: 50 },
+                    { label: "Maximalist Detail", c: 70, m: 95 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      className="mood-preset-btn font-mono"
+                      onClick={() => {
+                        setMoodCalm(preset.c);
+                        setMoodMinimal(preset.m);
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Creator Tool Tags */}
+              <div className="tool-tags-group">
+                <label className="schedule-picker-label" style={{ marginBottom: "6px" }}>
+                  Tools Used (Appears as "Made with" in Inspector):
+                </label>
+                <div className="creation-tool-chips-grid">
+                  {availableToolPresets.map((tool) => {
+                    const isSelected = selectedTools.includes(tool);
+                    return (
+                      <button
+                        key={tool}
+                        type="button"
+                        className={`creation-tool-chip font-mono ${isSelected ? "is-selected" : ""}`}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTools(selectedTools.filter((t) => t !== tool));
+                          } else {
+                            setSelectedTools([...selectedTools, tool]);
+                          }
+                        }}
+                      >
+                        {isSelected ? `✓ ${tool}` : tool}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Add custom tool (e.g. Cinema 4D, Spline)..."
+                    value={customToolInput}
+                    onChange={(e) => setCustomToolInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (customToolInput.trim() && !selectedTools.includes(customToolInput.trim())) {
+                          setSelectedTools([...selectedTools, customToolInput.trim()]);
+                          setCustomToolInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="darkroom-bar__action"
+                    onClick={() => {
+                      if (customToolInput.trim() && !selectedTools.includes(customToolInput.trim())) {
+                        setSelectedTools([...selectedTools, customToolInput.trim()]);
+                        setCustomToolInput("");
+                      }
+                    }}
+                  >
+                    ADD
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Provenance Attribution */}
+              {inspiredByPost && (
+                <div
+                  style={{
+                    padding: "8px 10px",
+                    backgroundColor: "var(--surface-2)",
+                    border: "1px solid var(--rule)",
+                    borderRadius: "var(--radius-xs)",
+                    fontSize: "11px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <div>
+                    <span className="font-mono" style={{ color: "var(--accent)", fontWeight: "700" }}>
+                      PROVENANCE ATTRIBUTION:
+                    </span>
+                    <div style={{ color: "var(--text)", marginTop: "2px" }}>
+                      Inspired by @{inspiredByPost.username} ({inspiredByPost.caption?.slice(0, 30) || "Original Proof"})
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="tag-remove"
+                    onClick={() => setInspiredByPost(null)}
+                    title="Remove inspiration attribution"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
             </div>

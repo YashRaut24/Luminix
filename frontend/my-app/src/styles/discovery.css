@@ -1,0 +1,681 @@
+/* ==========================================================================
+   LUMINIX DARKROOM / LIGHTBOX DISCOVERY SUITE STYLES
+   - Palette search & dominant color swatches
+   - Mood dial (Calm ↔ Energetic, Minimal ↔ Detailed)
+   - Tool tags ("Made with" chips & feed filter)
+   - On this day (Archive rewind & milestone resurfacing)
+   - Provenance chain (Attribution tree & "Inspired by" lineage)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. On This Day: Archive Rewind Banner
+   -------------------------------------------------------------------------- */
+.darkroom-on-this-day-banner {
+  background-color: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  animation: fadeIn 200ms ease;
+}
+
+.on-this-day-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.on-this-day-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  object-fit: cover;
+  background-color: var(--frame-bg);
+  flex-shrink: 0;
+}
+
+.on-this-day-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.on-this-day-badge {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.on-this-day-title {
+  font-size: var(--font-sm);
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.on-this-day-sub {
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.on-this-day-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.on-this-day-btn-remix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+
+.on-this-day-btn-remix:hover {
+  background-color: var(--accent-hover);
+}
+
+.on-this-day-btn-dismiss {
+  background-color: transparent;
+  border: 1px solid var(--rule);
+  color: var(--text-3);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.on-this-day-btn-dismiss:hover {
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+/* --------------------------------------------------------------------------
+   2. Workspace Bar Discovery Controls
+   -------------------------------------------------------------------------- */
+.discovery-tools-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.discovery-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.discovery-tool-btn:hover {
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+.discovery-tool-btn.is-active {
+  background-color: var(--frame-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.discovery-tool-select {
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-family: var(--font-mono);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--duration-fast);
+}
+
+.discovery-tool-select:focus,
+.discovery-tool-select:hover {
+  border-color: var(--accent);
+}
+
+/* Active filter pill chip */
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 10px;
+}
+
+.chip-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: inline-block;
+}
+
+.chip-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.chip-clear-btn:hover {
+  color: var(--stamp-active);
+}
+
+/* --------------------------------------------------------------------------
+   3. Palette Popover Panel
+   -------------------------------------------------------------------------- */
+.discovery-palette-panel {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: fadeIn 150ms ease;
+}
+
+.palette-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+.palette-swatches-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.palette-swatch-item {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  transition: transform var(--duration-fast), border-color var(--duration-fast);
+  position: relative;
+}
+
+.palette-swatch-item:hover {
+  transform: scale(1.15);
+  border-color: #ffffff;
+}
+
+.palette-swatch-item.is-selected {
+  border: 2px solid var(--accent);
+  transform: scale(1.15);
+}
+
+.palette-custom-input-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.palette-color-picker {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  background: none;
+}
+
+.palette-hex-text-input {
+  width: 80px;
+  padding: 4px 6px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-size: var(--font-xs);
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.palette-hex-text-input:focus {
+  border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   4. Mood Dial Popover Panel
+   -------------------------------------------------------------------------- */
+.discovery-mood-panel {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: fadeIn 150ms ease;
+}
+
+.mood-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+.mood-sliders-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.mood-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mood-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.mood-slider-active-val {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mood-range-input {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 4px;
+  background-color: var(--surface-2);
+}
+
+.mood-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+}
+
+.mood-presets-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mood-preset-btn {
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.mood-preset-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.mood-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mood-toggle-apply {
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.mood-toggle-reset {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--text-3);
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.mood-toggle-reset:hover {
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   5. PostCard Metadata Extensions
+   -------------------------------------------------------------------------- */
+.frame-discovery-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background-color: var(--surface-2);
+  border-top: 1px solid var(--rule);
+  font-size: 10px;
+}
+
+.frame-swatches-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.frame-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform var(--duration-fast);
+}
+
+.frame-color-dot:hover {
+  transform: scale(1.4);
+}
+
+.frame-tools-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.frame-tool-badge {
+  font-size: 9px;
+  color: var(--text-2);
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.frame-provenance-tag {
+  font-size: 9px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Inspector: "Made With" Tools & Provenance Tree
+   -------------------------------------------------------------------------- */
+.inspector-tools-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+}
+
+.inspector-tools-label {
+  font-size: 10px;
+  color: var(--text-2);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.inspector-tools-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inspector-tool-chip {
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inspector-palette-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+}
+
+.inspector-palette-swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inspector-palette-item {
+  flex: 1;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  transition: transform var(--duration-fast);
+}
+
+.inspector-palette-item:hover {
+  transform: scale(1.08);
+}
+
+/* Provenance Lineage Tree */
+.inspector-provenance-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+}
+
+.provenance-tree-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: border-color var(--duration-fast);
+}
+
+.provenance-tree-step:hover {
+  border-color: var(--accent);
+}
+
+.provenance-step-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  object-fit: cover;
+  background-color: var(--surface);
+  flex-shrink: 0;
+}
+
+.provenance-step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.provenance-step-label {
+  font-size: 9px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.provenance-step-author {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.provenance-step-caption {
+  font-size: 10px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.provenance-chain-arrow {
+  display: flex;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: 12px;
+  margin: -4px 0;
+}
+
+/* --------------------------------------------------------------------------
+   7. CreatePost Discovery Form Controls
+   -------------------------------------------------------------------------- */
+.creation-discovery-box {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.discovery-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+.creation-tool-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.creation-tool-chip {
+  background-color: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text-2);
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.creation-tool-chip:hover {
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+.creation-tool-chip.is-selected {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.creation-palette-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.creation-swatch-slot {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rule);
+  position: relative;
+  overflow: hidden;
+}
+
+.creation-swatch-slot input[type="color"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}

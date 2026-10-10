@@ -258,6 +258,50 @@ const postSchema = new mongoose.Schema(
         created_at: { type: Date, default: Date.now },
       },
     ],
+
+    // Discovery Suite Fields
+    // 11. Dominant Color Palette (5 hex codes)
+    palette: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // 12. Mood Dial (0 to 100)
+    mood_calm_energetic: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100,
+    },
+    mood_minimal_detailed: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100,
+    },
+
+    // 13. Tool Tags (e.g. Figma, Procreate, Blender)
+    tools: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // 14. Provenance Chain & "Inspired by" attribution
+    inspired_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
+    provenance_chain: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
   },
   {
     timestamps: true,

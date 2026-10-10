@@ -132,7 +132,12 @@ router.post("/post", upload.any(), async (req, res) => {
       audio_title,
       needs_critique,
       critique_question,
-      co_author_username
+      co_author_username,
+      palette,
+      mood_calm_energetic,
+      mood_minimal_detailed,
+      tools,
+      inspired_by
     } = req.body;
 
     const files = req.files || [];
@@ -264,6 +269,61 @@ router.post("/post", upload.any(), async (req, res) => {
       critique_question: critique_question || "",
       co_authors: []
     };
+
+    // Discovery: 1. Dominant Color Palette
+    let paletteArray = [];
+    if (palette) {
+      try {
+        paletteArray = Array.isArray(palette) ? palette : JSON.parse(palette);
+      } catch (e) {
+        if (typeof palette === "string") {
+          paletteArray = palette.split(",").map(c => c.trim()).filter(Boolean);
+        }
+      }
+    }
+    if (!paletteArray || paletteArray.length === 0) {
+      paletteArray = ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
+    }
+    postData.palette = paletteArray.slice(0, 5);
+
+    // Discovery: 2. Mood Dial
+    const moodCalm = typeof mood_calm_energetic !== "undefined" ? Number(mood_calm_energetic) : 50;
+    const moodDetailed = typeof mood_minimal_detailed !== "undefined" ? Number(mood_minimal_detailed) : 50;
+    postData.mood_calm_energetic = isNaN(moodCalm) ? 50 : Math.max(0, Math.min(100, moodCalm));
+    postData.mood_minimal_detailed = isNaN(moodDetailed) ? 50 : Math.max(0, Math.min(100, moodDetailed));
+
+    // Discovery: 3. Tool Tags
+    let toolsArray = [];
+    if (tools) {
+      try {
+        toolsArray = Array.isArray(tools) ? tools : JSON.parse(tools);
+      } catch (e) {
+        if (typeof tools === "string") {
+          toolsArray = tools.split(",").map(t => t.trim()).filter(Boolean);
+        }
+      }
+    }
+    postData.tools = toolsArray;
+
+    // Discovery: 5. Provenance Chain & "Inspired by"
+    const inspiredById = inspired_by || remix_of || null;
+    let provenanceChain = [];
+    if (inspiredById) {
+      postData.inspired_by = inspiredById;
+      try {
+        const parentPost = await Post.findById(inspiredById);
+        if (parentPost) {
+          if (parentPost.provenance_chain && parentPost.provenance_chain.length > 0) {
+            provenanceChain = [...parentPost.provenance_chain, parentPost._id];
+          } else {
+            provenanceChain = [parentPost._id];
+          }
+        }
+      } catch (provErr) {
+        console.error("Provenance resolution error:", provErr);
+      }
+    }
+    postData.provenance_chain = provenanceChain;
 
     if (co_author_username && co_author_username.trim()) {
       const cleanUser = co_author_username.trim().replace(/^@/, "");
@@ -775,17 +835,40 @@ router.patch("/collabs/:id/status", authMiddleware, async (req, res) => {
 
 router.get("/posts", async (req, res) => {
   try {
-    const posts = await Post.find({
+    const { tool, color } = req.query;
+    let query = {
       $or: [
         { published: true },
         { published: { $exists: false } },
         { is_scheduled: false }
       ]
-    })
+    };
+
+    if (tool && tool.trim()) {
+      query.tools = { $in: [new RegExp(tool.trim(), "i")] };
+    }
+
+    const posts = await Post.find(query)
       .populate("author", "name email profileImage lumiTag role creatorRole skillBadges criticBadges")
       .populate({
         path: "remix_of",
-        select: "username email caption file_url createdAt tags author",
+        select: "username email caption file_url createdAt tags author tools palette",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
+      })
+      .populate({
+        path: "inspired_by",
+        select: "username email caption file_url createdAt tags author tools palette",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
+      })
+      .populate({
+        path: "provenance_chain",
+        select: "username email caption file_url createdAt tags author tools",
         populate: {
           path: "author",
           select: "name lumiTag profileImage"
@@ -824,7 +907,14 @@ router.get("/posts", async (req, res) => {
       whisper_count: post.whisper_notes ? post.whisper_notes.length : 0,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
-      remix_count: post.remix_count || 0
+      remix_count: post.remix_count || 0,
+      // Discovery suite properties
+      palette: post.palette && post.palette.length > 0 ? post.palette : ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"],
+      mood_calm_energetic: typeof post.mood_calm_energetic === "number" ? post.mood_calm_energetic : 50,
+      mood_minimal_detailed: typeof post.mood_minimal_detailed === "number" ? post.mood_minimal_detailed : 50,
+      tools: post.tools || [],
+      inspired_by: post.inspired_by || null,
+      provenance_chain: post.provenance_chain || []
     }));
 
     res.status(200).json({
@@ -834,6 +924,68 @@ router.get("/posts", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch posts" });
+  }
+});
+
+// Discovery: On this day - Resurface historical work from prior years or archive milestones
+router.get("/posts/on-this-day", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDay = now.getDate();
+    const currentYear = now.getFullYear();
+
+    const userPosts = await Post.find({
+      author: userId,
+      $or: [
+        { published: true },
+        { published: { $exists: false } }
+      ]
+    })
+      .populate("author", "name lumiTag profileImage")
+      .populate("inspired_by", "username caption file_url")
+      .sort({ createdAt: 1 });
+
+    if (!userPosts || userPosts.length === 0) {
+      return res.status(200).json({ post: null, message: "No historical posts found" });
+    }
+
+    // 1. Check for posts on today's calendar date from previous year(s)
+    let matchedPost = userPosts.find(p => {
+      const d = new Date(p.createdAt);
+      return (
+        d.getFullYear() < currentYear &&
+        d.getMonth() === currentMonth &&
+        Math.abs(d.getDate() - currentDay) <= 1
+      );
+    });
+
+    let milestoneLabel = "ON THIS DAY";
+
+    if (matchedPost) {
+      const postYear = new Date(matchedPost.createdAt).getFullYear();
+      const yearsAgo = currentYear - postYear;
+      milestoneLabel = `${yearsAgo} YEAR${yearsAgo > 1 ? "S" : ""} AGO TODAY`;
+    } else {
+      // 2. If no exact anniversary on today's calendar day, resurface user's earliest proof
+      // as an "ARCHIVE REWIND" milestone
+      matchedPost = userPosts[0];
+      const postDate = new Date(matchedPost.createdAt);
+      const diffDays = Math.floor((now - postDate) / (1000 * 60 * 60 * 24));
+      milestoneLabel = diffDays >= 365 
+        ? `${Math.floor(diffDays / 365)} YEAR FLASHBACK` 
+        : `ARCHIVE MILESTONE (${diffDays > 0 ? `${diffDays} DAYS AGO` : "EARLY PROOF"})`;
+    }
+
+    res.status(200).json({
+      post: matchedPost,
+      milestoneLabel,
+      message: "Historical milestone found"
+    });
+  } catch (err) {
+    console.error("On this day error:", err);
+    res.status(500).json({ message: "Failed to fetch on-this-day post" });
   }
 });
 
@@ -860,7 +1012,23 @@ router.get("/posts/for-you", async (req, res) => {
       .populate("author", "name email profileImage lumiTag role creatorRole skillBadges criticBadges")
       .populate({
         path: "remix_of",
-        select: "username email caption file_url createdAt tags author",
+        select: "username email caption file_url createdAt tags author tools palette",
+      })
+      .populate({
+        path: "inspired_by",
+        select: "username email caption file_url createdAt tags author tools palette",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
+      })
+      .populate({
+        path: "provenance_chain",
+        select: "username email caption file_url createdAt tags author tools",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
       })
       .sort({ createdAt: -1 });
 
@@ -895,7 +1063,14 @@ router.get("/posts/for-you", async (req, res) => {
       whisper_count: post.whisper_notes ? post.whisper_notes.length : 0,
       remix_of: post.remix_of || null,
       remix_type: post.remix_type || "Remix",
-      remix_count: post.remix_count || 0
+      remix_count: post.remix_count || 0,
+      // Discovery suite properties
+      palette: post.palette && post.palette.length > 0 ? post.palette : ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"],
+      mood_calm_energetic: typeof post.mood_calm_energetic === "number" ? post.mood_calm_energetic : 50,
+      mood_minimal_detailed: typeof post.mood_minimal_detailed === "number" ? post.mood_minimal_detailed : 50,
+      tools: post.tools || [],
+      inspired_by: post.inspired_by || null,
+      provenance_chain: post.provenance_chain || []
     }));
 
     if (!currentUser) {
@@ -929,7 +1104,23 @@ router.get("/posts/:id", async (req, res) => {
       .populate("author", "name email profileImage lumiTag role creatorRole")
       .populate({
         path: "remix_of",
-        select: "username email caption file_url createdAt tags author",
+        select: "username email caption file_url createdAt tags author tools palette",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
+      })
+      .populate({
+        path: "inspired_by",
+        select: "username email caption file_url createdAt tags author tools palette",
+        populate: {
+          path: "author",
+          select: "name lumiTag profileImage"
+        }
+      })
+      .populate({
+        path: "provenance_chain",
+        select: "username email caption file_url createdAt tags author tools",
         populate: {
           path: "author",
           select: "name lumiTag profileImage"
