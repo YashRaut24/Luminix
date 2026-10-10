@@ -1,0 +1,322 @@
+/* ==========================================================================
+   Luminix Accessibility Suite Styles
+   Pure solid colors, zero gradients, zero glow, clean monospace metrics.
+   ========================================================================== */
+
+/* 1. Darkroom Frame Alt Badge & Popover */
+.darkroom-alt-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.darkroom-alt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background-color: var(--frame-bg, #0d1117);
+  color: var(--text, #f0f6fc);
+  border: 1px solid var(--rule, #30363d);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 2px);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  line-height: 1.2;
+}
+
+.darkroom-alt-badge:hover {
+  background-color: var(--panel-bg, #161b22);
+  border-color: var(--accent, #6366f1);
+  color: #ffffff;
+}
+
+.darkroom-alt-badge.is-added {
+  border-color: var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+
+.darkroom-alt-badge.is-added:hover {
+  background-color: var(--accent, #6366f1);
+  color: #ffffff;
+}
+
+.darkroom-alt-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 290px;
+  background-color: var(--panel-bg, #161b22);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 3px);
+  padding: 10px 12px;
+  z-index: 60;
+  box-shadow: none;
+}
+
+.darkroom-alt-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule, #30363d);
+}
+
+.darkroom-alt-popover__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent, #6366f1);
+}
+
+.darkroom-alt-popover__close {
+  background: transparent;
+  border: none;
+  color: var(--text-3, #8b949e);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.darkroom-alt-popover__close:hover {
+  color: var(--text, #f0f6fc);
+}
+
+.darkroom-alt-popover__text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text, #f0f6fc);
+  margin: 0 0 8px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.darkroom-alt-popover__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  color: var(--text-3, #8b949e);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule, #30363d);
+}
+
+/* 2. Studio CreatePost Accessibility Alt-Text Panel */
+.studio-alt-section {
+  background-color: var(--frame-bg, #0d1117);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 2px);
+  padding: 14px 16px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.studio-alt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.studio-alt-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-alt-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text, #f0f6fc);
+  text-transform: uppercase;
+}
+
+.studio-alt-mark-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--panel-bg, #161b22);
+  color: var(--accent, #6366f1);
+  border: 1px solid var(--accent, #6366f1);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs, 2px);
+}
+
+.studio-alt-mark-badge.is-idle {
+  border-color: var(--rule, #30363d);
+  color: var(--text-3, #8b949e);
+}
+
+.studio-alt-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.studio-alt-btn {
+  background-color: var(--panel-bg, #161b22);
+  color: var(--text-2, #c9d1d9);
+  border: 1px solid var(--rule, #30363d);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs, 2px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.studio-alt-btn:hover:not(:disabled) {
+  border-color: var(--accent, #6366f1);
+  color: #ffffff;
+}
+
+.studio-alt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.studio-alt-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg, #040d1a);
+  color: var(--text, #f0f6fc);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 2px);
+  padding: 10px 12px;
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 72px;
+  outline: none;
+}
+
+.studio-alt-textarea:focus {
+  border-color: var(--accent, #6366f1);
+}
+
+.studio-alt-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: var(--text-3, #8b949e);
+}
+
+.studio-alt-caption-hint {
+  font-size: 11px;
+  color: var(--text-3, #8b949e);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 3. Darkroom Inspector Accessibility Card */
+.inspector-alt-box {
+  background-color: var(--frame-bg, #0d1117);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 2px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inspector-alt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inspector-alt-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-2, #c9d1d9);
+  text-transform: uppercase;
+}
+
+.inspector-alt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--panel-bg, #161b22);
+  color: var(--accent, #6366f1);
+  border: 1px solid var(--accent, #6366f1);
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs, 2px);
+}
+
+.inspector-alt-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text, #f0f6fc);
+  background-color: var(--bg, #040d1a);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 2px);
+  padding: 8px 10px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.inspector-alt-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-alt-input {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg, #040d1a);
+  color: var(--text, #f0f6fc);
+  border: 1px solid var(--rule, #30363d);
+  border-radius: var(--radius-xs, 2px);
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+}
+
+.inspector-alt-input:focus {
+  border-color: var(--accent, #6366f1);
+}
+
+.inspector-alt-btn-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}

@@ -317,6 +317,22 @@ const postSchema = new mongoose.Schema(
       ref: "Circle",
       default: null,
     },
+
+    // Accessibility Suite: Auto Alt-Text
+    alt_text: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    has_alt_text: {
+      type: Boolean,
+      default: false,
+    },
+    alt_text_source: {
+      type: String,
+      enum: ["ai_vision", "creator_edited", "creator_written", "none"],
+      default: "none",
+    },
   },
   {
     timestamps: true,

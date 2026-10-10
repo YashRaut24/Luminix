@@ -17,7 +17,9 @@ import {
   FiSliders,
   FiCompass,
   FiMail,
-  FiShare2
+  FiShare2,
+  FiEye,
+  FiCheck
 } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineGroups } from "react-icons/md";
@@ -86,6 +88,49 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
   // Growth & Sharing States
   const [showShareCardModal, setShowShareCardModal] = useState(false);
   const [showInspectorCommissionModal, setShowInspectorCommissionModal] = useState(false);
+
+  // Accessibility States
+  const [isEditingAlt, setIsEditingAlt] = useState(false);
+  const [altEditText, setAltEditText] = useState("");
+  const [isSavingAlt, setIsSavingAlt] = useState(false);
+
+  const handleSaveAltText = async () => {
+    if (!selectedPost) return;
+    try {
+      setIsSavingAlt(true);
+      const res = await axios.patch(
+        `http://localhost:9000/posts/${selectedPost._id}/alt-text`,
+        { alt_text: altEditText },
+        { withCredentials: true }
+      );
+      if (res.data?.post) {
+        setSelectedPost((prev) => ({
+          ...prev,
+          alt_text: res.data.post.alt_text,
+          has_alt_text: res.data.post.has_alt_text,
+          alt_text_source: res.data.post.alt_text_source,
+        }));
+        setPosts((prev) =>
+          prev.map((p) =>
+            p._id === selectedPost._id
+              ? {
+                  ...p,
+                  alt_text: res.data.post.alt_text,
+                  has_alt_text: res.data.post.has_alt_text,
+                  alt_text_source: res.data.post.alt_text_source,
+                }
+              : p
+          )
+        );
+      }
+      setIsEditingAlt(false);
+    } catch (err) {
+      console.error("Save alt text error:", err);
+      alert(err.response?.data?.message || "Failed to update alt text");
+    } finally {
+      setIsSavingAlt(false);
+    }
+  };
 
   const presetFilterColors = [
     "#6366f1", // Indigo Accent
@@ -789,7 +834,7 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
               >
                 <img
                   src={`http://localhost:9000${selectedPost.file_url}`}
-                  alt={selectedPost.caption}
+                  alt={selectedPost.alt_text || selectedPost.caption || "Selected frame"}
                   style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 />
               </div>
@@ -820,6 +865,78 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                   >
                     <span className="commissions-dot" /> COMMISSIONS
                   </button>
+                )}
+              </div>
+
+              {/* Accessibility: Auto Alt-Text Mark and Inspector Card */}
+              <div className="inspector-alt-box">
+                <div className="inspector-alt-header">
+                  <span className="inspector-alt-label font-mono">
+                    <FiEye style={{ marginRight: "4px", verticalAlign: "-2px" }} /> ACCESSIBILITY
+                  </span>
+                  {(selectedPost.has_alt_text || selectedPost.alt_text) ? (
+                    <span className="inspector-alt-badge font-mono" title="Screen-reader description verified">
+                      <FiCheck /> ALT TEXT ADDED
+                    </span>
+                  ) : (
+                    <span className="inspector-alt-badge font-mono" style={{ color: "var(--text-3)", borderColor: "var(--rule)" }}>
+                      NO ALT TEXT
+                    </span>
+                  )}
+                </div>
+
+                {isEditingAlt ? (
+                  <div className="inspector-alt-edit-row">
+                    <textarea
+                      value={altEditText}
+                      onChange={(e) => setAltEditText(e.target.value)}
+                      className="inspector-alt-input"
+                      rows="3"
+                      placeholder="Enter accessible image description..."
+                    />
+                    <div className="inspector-alt-btn-group">
+                      <button
+                        type="button"
+                        className="studio-alt-btn font-mono"
+                        onClick={() => setIsEditingAlt(false)}
+                      >
+                        CANCEL
+                      </button>
+                      <button
+                        type="button"
+                        className="studio-alt-btn font-mono"
+                        style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                        disabled={isSavingAlt}
+                        onClick={handleSaveAltText}
+                      >
+                        {isSavingAlt ? "SAVING..." : "SAVE ALT TEXT"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="inspector-alt-text">
+                      {selectedPost.alt_text || "No alternative text specified for this frame."}
+                    </p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span className="font-mono" style={{ fontSize: "9px", color: "var(--text-3)" }}>
+                        {selectedPost.alt_text_source === "ai_vision" ? "SOURCE: VISION MODEL" : selectedPost.alt_text_source === "creator_edited" ? "SOURCE: CREATOR VERIFIED" : "UNSPECIFIED"}
+                      </span>
+                      {user && (user.id === selectedPost.author?._id || user._id === selectedPost.author?._id || user.id === selectedPost.author || user._id === selectedPost.author) && (
+                        <button
+                          type="button"
+                          className="studio-alt-btn font-mono"
+                          style={{ fontSize: "10px", padding: "2px 7px" }}
+                          onClick={() => {
+                            setAltEditText(selectedPost.alt_text || "");
+                            setIsEditingAlt(true);
+                          }}
+                        >
+                          EDIT
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
 

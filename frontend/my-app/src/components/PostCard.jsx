@@ -106,6 +106,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
   // Growth & Sharing States
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [showAltPopover, setShowAltPopover] = useState(false);
 
   const frameNumber = String(index + 1).padStart(2, "0");
 
@@ -416,33 +417,72 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
           );
         }}
       >
-        {/* Top metadata strip: Frame number + Creator tag + Co-authors */}
+        {/* Top metadata strip: Frame number + Creator tag + Co-authors + ALT accessibility mark */}
         <div className="darkroom-frame__header">
-          <span className="darkroom-frame__index font-mono">FRAME {frameNumber}</span>
-          <span className="darkroom-frame__creator">
-            @{post.username}
-            {acceptedCoAuthors.length > 0 && (
-              <span className="coauthor-authorship-tag">
-                &nbsp;&amp; {acceptedCoAuthors.map((ca, i) => (
-                  <strong key={i}>@{ca.username}</strong>
-                ))}
-              </span>
-            )}
-            {post.author?.open_for_commissions && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+            <span className="darkroom-frame__index font-mono">FRAME {frameNumber}</span>
+            <span className="darkroom-frame__creator">
+              @{post.username}
+              {acceptedCoAuthors.length > 0 && (
+                <span className="coauthor-authorship-tag">
+                  &nbsp;&amp; {acceptedCoAuthors.map((ca, i) => (
+                    <strong key={i}>@{ca.username}</strong>
+                  ))}
+                </span>
+              )}
+              {post.author?.open_for_commissions && (
+                <button
+                  type="button"
+                  className="commissions-status-badge is-open"
+                  style={{ fontSize: "9px", padding: "1px 5px", marginLeft: "6px", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCommissionModal(true);
+                  }}
+                  title="Creator is open for commissions"
+                >
+                  <span className="commissions-dot" style={{ width: "5px", height: "5px" }} /> COMMISSIONS
+                </button>
+              )}
+            </span>
+          </div>
+
+          {/* Accessibility Suite: "Alt text added" Mark */}
+          {(post.has_alt_text || post.alt_text) && (
+            <div className="darkroom-alt-badge-wrap" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
-                className="commissions-status-badge is-open"
-                style={{ fontSize: "9px", padding: "1px 5px", marginLeft: "6px", cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCommissionModal(true);
-                }}
-                title="Creator is open for commissions"
+                className={`darkroom-alt-badge is-added ${showAltPopover ? "is-active" : ""}`}
+                onClick={() => setShowAltPopover(!showAltPopover)}
+                title="Alt text added: click to view accessibility description"
+                aria-label="View image alt text"
               >
-                <span className="commissions-dot" style={{ width: "5px", height: "5px" }} /> COMMISSIONS
+                ALT
               </button>
-            )}
-          </span>
+              {showAltPopover && (
+                <div className="darkroom-alt-popover" onClick={(e) => e.stopPropagation()}>
+                  <div className="darkroom-alt-popover__header">
+                    <span className="darkroom-alt-popover__tag">
+                      <FiCheck /> ALT TEXT ADDED
+                    </span>
+                    <button
+                      type="button"
+                      className="darkroom-alt-popover__close"
+                      onClick={() => setShowAltPopover(false)}
+                      title="Close"
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                  <p className="darkroom-alt-popover__text">{post.alt_text}</p>
+                  <div className="darkroom-alt-popover__footer">
+                    <span>{post.alt_text_source === "ai_vision" ? "VISION MODEL" : "CREATOR VERIFIED"}</span>
+                    <span>ACCESSIBILITY READY</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Co-Author Pending Invitation Banner */}
@@ -551,7 +591,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
             <div className="time-capsule-locked">
               <img
                 src={`http://localhost:9000${post.file_url}`}
-                alt="Locked"
+                alt={post.alt_text ? `Locked frame: ${post.alt_text}` : "Locked time capsule artwork"}
                 className="time-capsule-bg-blur"
               />
               <div className="time-capsule-content">
@@ -582,7 +622,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
               <div className="before-after-layer">
                 <img
                   src={`http://localhost:9000${post.before_after?.after_image_url || activeDisplayUrl}`}
-                  alt="After"
+                  alt={post.alt_text ? `${post.alt_text} (${post.before_after?.after_label || "Final"})` : (post.before_after?.after_label || "Final masterpiece")}
                 />
               </div>
 
@@ -595,7 +635,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
               >
                 <img
                   src={`http://localhost:9000${post.before_after?.before_image_url}`}
-                  alt="Before"
+                  alt={post.alt_text ? `${post.alt_text} (${post.before_after?.before_label || "Original"})` : (post.before_after?.before_label || "Original sketch")}
                 />
               </div>
 
@@ -631,7 +671,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
               <div className="timelapse-stage">
                 <img
                   src={`http://localhost:9000${timelapseFrames[timelapseIndex]?.file_url}`}
-                  alt="Timelapse Phase"
+                  alt={post.alt_text ? `${post.alt_text} - Phase ${timelapseIndex + 1}` : "Timelapse phase"}
                 />
               </div>
               <div className="timelapse-controls">
@@ -671,7 +711,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
             <>
               <img
                 src={`http://localhost:9000${activeDisplayUrl}`}
-                alt={post.file_name || `Frame ${frameNumber}`}
+                alt={post.alt_text || post.caption || post.file_name || `Frame ${frameNumber}`}
                 loading="lazy"
               />
 

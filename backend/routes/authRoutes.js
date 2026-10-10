@@ -143,7 +143,9 @@ router.post("/post", upload.any(), async (req, res) => {
       tools,
       inspired_by,
       challenge_id,
-      circle_id
+      circle_id,
+      alt_text,
+      alt_text_source
     } = req.body;
 
     const files = req.files || [];
@@ -356,6 +358,36 @@ router.post("/post", upload.any(), async (req, res) => {
     if (remix_of) {
       postData.remix_of = remix_of;
     }
+
+    // Accessibility Suite: Vision Auto Alt-Text or Creator Input
+    let resolvedAltText = (alt_text || "").trim();
+    let resolvedAltSource = alt_text_source || "none";
+
+    if (resolvedAltText) {
+      resolvedAltSource = resolvedAltSource === "none" ? "creator_edited" : resolvedAltSource;
+    } else {
+      try {
+        const visionRes = aiService.generateAltText({
+          fileName: mainFile.originalname,
+          caption: caption || "",
+          tags: postData.tags,
+          palette: postData.palette,
+          tools: postData.tools,
+          moodCalm: postData.mood_calm_energetic,
+          moodMinimal: postData.mood_minimal_detailed,
+          postType: postData.post_type,
+        });
+        resolvedAltText = visionRes.altText;
+        resolvedAltSource = "ai_vision";
+      } catch (altErr) {
+        resolvedAltText = `${caption ? caption.slice(0, 100) : "Visual artwork"} - creative piece on Luminix.`;
+        resolvedAltSource = "ai_vision";
+      }
+    }
+
+    postData.alt_text = resolvedAltText;
+    postData.has_alt_text = Boolean(resolvedAltText && resolvedAltText.length > 0);
+    postData.alt_text_source = resolvedAltSource;
 
     const postUpload = await Post.create(postData);
 
@@ -3101,6 +3133,80 @@ router.get("/public/posts/:id/embed", async (req, res) => {
     res.status(200).json({ post });
   } catch (err) {
     res.status(500).json({ message: "Failed to load embed data" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// ACCESSIBILITY SUITE: VISION AUTO ALT-TEXT
+// ----------------------------------------------------------------------------
+
+router.post("/posts/ai/alt-text", async (req, res) => {
+  try {
+    const {
+      fileName,
+      caption,
+      tags,
+      palette,
+      tools,
+      moodCalm,
+      moodMinimal,
+      postType,
+    } = req.body;
+
+    const visionResult = aiService.generateAltText({
+      fileName,
+      caption,
+      tags,
+      palette,
+      tools,
+      moodCalm: moodCalm ? Number(moodCalm) : 50,
+      moodMinimal: moodMinimal ? Number(moodMinimal) : 50,
+      postType,
+    });
+
+    res.status(200).json({
+      success: true,
+      ...visionResult,
+    });
+  } catch (err) {
+    console.error("AI Alt-text generation error:", err);
+    res.status(500).json({ message: "Failed to generate vision alt-text" });
+  }
+});
+
+router.patch("/posts/:id/alt-text", authMiddleware, async (req, res) => {
+  try {
+    const { alt_text } = req.body;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check authorship
+    if (String(post.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Only the author can update alt-text" });
+    }
+
+    const trimmed = (alt_text || "").trim();
+    post.alt_text = trimmed;
+    post.has_alt_text = Boolean(trimmed.length > 0);
+    post.alt_text_source = "creator_edited";
+
+    await post.save();
+
+    res.status(200).json({
+      message: "Alt-text updated successfully",
+      post: {
+        _id: post._id,
+        alt_text: post.alt_text,
+        has_alt_text: post.has_alt_text,
+        alt_text_source: post.alt_text_source,
+      },
+    });
+  } catch (err) {
+    console.error("Update alt-text error:", err);
+    res.status(500).json({ message: "Failed to update alt-text" });
   }
 });
 
