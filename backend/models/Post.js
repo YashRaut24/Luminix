@@ -116,16 +116,37 @@ const postSchema = new mongoose.Schema(
     // 1. Post Type Variant
     post_type: {
       type: String,
-      enum: ["standard", "before_after", "timelapse", "time_capsule"],
+      enum: ["standard", "compare", "before_after", "timelapse", "time_capsule"],
       default: "standard",
+    },
+    postType: {
+      type: String,
+      enum: ["standard", "compare", "before_after", "timelapse", "time_capsule"],
+      default: "standard",
+    },
+    afterFileUrl: {
+      type: String,
+      default: "",
+    },
+    beforeLabel: {
+      type: String,
+      default: "Before",
+      maxlength: 24,
+      trim: true,
+    },
+    afterLabel: {
+      type: String,
+      default: "After",
+      maxlength: 24,
+      trim: true,
     },
 
     // 2. Before/After Comparison
     before_after: {
       before_image_url: { type: String, default: "" },
       after_image_url: { type: String, default: "" },
-      before_label: { type: String, default: "Original" },
-      after_label: { type: String, default: "Final" },
+      before_label: { type: String, default: "Before" },
+      after_label: { type: String, default: "After" },
     },
 
     // 3. Process Steps & Time-Lapse

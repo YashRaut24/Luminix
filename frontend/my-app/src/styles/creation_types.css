@@ -10,7 +10,7 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. Before/After Slider Component
+   1. Before/After Slider Component (Compare Post)
    -------------------------------------------------------------------------- */
 .before-after-container {
   position: relative;
@@ -19,6 +19,17 @@
   overflow: hidden;
   background-color: var(--frame-bg);
   user-select: none;
+  touch-action: pan-y;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.15s ease;
+}
+
+/* Focus outline appears on the frame when the range input is focused */
+.before-after-container:focus-within,
+.before-after-container:has(.before-after-range:focus),
+.before-after-container:has(.before-after-range:focus-visible) {
+  outline: 2px solid var(--accent, #6366f1);
 }
 
 .before-after-layer {
@@ -34,47 +45,53 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  pointer-events: none;
 }
 
-/* Clipped top layer */
+/* Clipped top ("before") layer: revealed from left, clipped from right */
 .before-after-layer--clipped {
   z-index: 2;
+  clip-path: inset(0 calc(100% - var(--ba-pos, 50%)) 0 0);
   will-change: clip-path;
 }
 
-/* Divider line */
+/* Decorative divider line positioned via CSS variable */
 .before-after-divider {
   position: absolute;
   top: 0;
   bottom: 0;
+  left: var(--ba-pos, 50%);
   width: 2px;
-  background-color: var(--text);
+  background-color: var(--text, #ffffff);
   z-index: 5;
   pointer-events: none;
   transform: translateX(-50%);
 }
 
+/* 40px circular handle with 2px border on the divider */
 .before-after-handle {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background-color: var(--surface);
-  border: 2px solid var(--text);
-  color: var(--text);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--surface, #18181b);
+  border: 2px solid var(--text, #ffffff);
+  color: var(--text, #ffffff);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: -1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
-/* Range input overlay driving the slider */
+/* Invisible range input overlay driving keyboard, touch, and accessibility */
 .before-after-range {
   position: absolute;
   top: 0;
@@ -86,34 +103,91 @@
   z-index: 10;
   margin: 0;
   padding: 0;
+  touch-action: pan-y;
   -webkit-appearance: none;
   appearance: none;
 }
 
-/* Labels on before/after */
+/* Pill labels in top corners */
+.ba-pill,
 .before-after-label {
   position: absolute;
-  bottom: 10px;
-  padding: 3px 8px;
-  background-color: var(--overlay-bg);
-  color: var(--text);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-xs);
-  font-family: var(--font-mono);
-  font-size: 10px;
+  top: 12px;
+  bottom: auto;
+  padding: 4px 10px;
+  background-color: rgba(15, 15, 18, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   z-index: 6;
   pointer-events: none;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.ba-pill--before,
 .before-after-label--before {
-  left: 10px;
+  left: 12px;
+  right: auto;
 }
 
+.ba-pill--after,
 .before-after-label--after {
-  right: 10px;
+  right: 12px;
+  left: auto;
+}
+
+/* "Drag to compare" hint that fades out after ~3 seconds */
+.ba-drag-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  background-color: rgba(15, 15, 18, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  z-index: 6;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: baDragHintFadeOut 3s ease forwards;
+}
+
+@keyframes baDragHintFadeOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+    visibility: hidden;
+  }
+}
+
+/* Edge Case: Hint animation is removed under reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ba-drag-hint {
+    animation: none;
+    opacity: 0;
+    display: none;
+  }
 }
 
 /* --------------------------------------------------------------------------

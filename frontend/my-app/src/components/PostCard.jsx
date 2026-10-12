@@ -391,8 +391,16 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
       : null;
   const activeDisplayUrl = activeVersion ? activeVersion.file_url : post.file_url;
 
-  const isBeforeAfter =
-    post.post_type === "before_after" && Boolean(post.before_after?.before_image_url);
+  const isCompare =
+    post.postType === "compare" ||
+    post.post_type === "compare" ||
+    (post.post_type === "before_after" && Boolean(post.before_after?.before_image_url || post.afterFileUrl)) ||
+    Boolean(post.afterFileUrl && (post.file_url || post.before_after?.before_image_url));
+
+  const compareBeforeUrl = post.file_url || post.before_after?.before_image_url;
+  const compareAfterUrl = post.afterFileUrl || post.before_after?.after_image_url || activeDisplayUrl;
+  const compareBeforeLabel = (post.beforeLabel || post.before_after?.before_label || "Original").slice(0, 24);
+  const compareAfterLabel = (post.afterLabel || post.before_after?.after_label || "Final").slice(0, 24);
 
   const isLockedCapsule =
     post.time_capsule?.is_capsule && !isCapsuleUnlocked;
@@ -615,39 +623,35 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
                 </button>
               </div>
             </div>
-          ) : isBeforeAfter ? (
-            /* 1. Before/After Slider View */
-            <div className="before-after-container" onClick={(e) => e.stopPropagation()}>
+          ) : isCompare ? (
+            /* 1. Before/After Compare Slider View */
+            <div
+              className="before-after-container"
+              style={{ "--ba-pos": `${sliderPos}%` }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* After Image Layer (Bottom) */}
               <div className="before-after-layer">
                 <img
-                  src={`http://localhost:9000${post.before_after?.after_image_url || activeDisplayUrl}`}
-                  alt={post.alt_text ? `${post.alt_text} (${post.before_after?.after_label || "Final"})` : (post.before_after?.after_label || "Final masterpiece")}
+                  src={`http://localhost:9000${compareAfterUrl}`}
+                  alt={post.alt_text ? `${post.alt_text} (${compareAfterLabel})` : compareAfterLabel}
                 />
               </div>
 
-              {/* Before Image Layer (Top, clipped with inset) */}
-              <div
-                className="before-after-layer before-after-layer--clipped"
-                style={{
-                  clipPath: `inset(0 calc(100% - ${sliderPos}%) 0 0)`,
-                }}
-              >
+              {/* Before Image Layer (Top, clipped with inset via CSS var --ba-pos) */}
+              <div className="before-after-layer before-after-layer--clipped">
                 <img
-                  src={`http://localhost:9000${post.before_after?.before_image_url}`}
-                  alt={post.alt_text ? `${post.alt_text} (${post.before_after?.before_label || "Original"})` : (post.before_after?.before_label || "Original sketch")}
+                  src={`http://localhost:9000${compareBeforeUrl}`}
+                  alt={post.alt_text ? `${post.alt_text} (${compareBeforeLabel})` : compareBeforeLabel}
                 />
               </div>
 
-              {/* Slider Divider Line */}
-              <div
-                className="before-after-divider"
-                style={{ left: `${sliderPos}%` }}
-              >
-                <div className="before-after-handle font-mono">↔</div>
+              {/* Decorative Divider Line with 40px Circular Handle */}
+              <div className="before-after-divider" aria-hidden="true">
+                <div className="before-after-handle">↔</div>
               </div>
 
-              {/* Native range input driver */}
+              {/* Native invisible range input driver */}
               <input
                 type="range"
                 min="0"
@@ -655,15 +659,21 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
                 value={sliderPos}
                 onChange={(e) => setSliderPos(Number(e.target.value))}
                 className="before-after-range"
-                aria-label="Before/After divider"
+                aria-label={`Compare ${compareBeforeLabel} and ${compareAfterLabel}`}
               />
 
-              <span className="before-after-label before-after-label--before">
-                {post.before_after?.before_label || "Original"}
+              {/* Pill labels in the top corners */}
+              <span className="ba-pill ba-pill--before">
+                {compareBeforeLabel}
               </span>
-              <span className="before-after-label before-after-label--after">
-                {post.before_after?.after_label || "Final"}
+              <span className="ba-pill ba-pill--after">
+                {compareAfterLabel}
               </span>
+
+              {/* "Drag to compare" hint that fades out after ~3 seconds */}
+              <div className="ba-drag-hint" aria-hidden="true">
+                Drag to compare
+              </div>
             </div>
           ) : isTimelapseActive ? (
             /* 2. Process Time-Lapse Player */

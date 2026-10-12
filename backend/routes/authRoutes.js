@@ -127,8 +127,11 @@ router.post("/post", upload.any(), async (req, res) => {
       process_steps_meta,
       scheduled_for,
       post_type,
+      postType,
       before_label,
       after_label,
+      beforeLabel,
+      afterLabel,
       series_name,
       chapter_number,
       total_chapters,
@@ -150,8 +153,8 @@ router.post("/post", upload.any(), async (req, res) => {
     } = req.body;
 
     const files = req.files || [];
-    // The main post file is either the one named "file_url" or the first file uploaded
-    const mainFile = files.find(f => f.fieldname === "file_url") || files[0];
+    // The main post ("before") file is either "media" or "file_url" or the first uploaded file
+    const mainFile = files.find(f => f.fieldname === "media" || f.fieldname === "file_url") || files[0];
 
     if (!mainFile) {
       return res.status(400).json({ message: "Main post file is required" });
@@ -163,6 +166,13 @@ router.post("/post", upload.any(), async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Process Compare / Before-After "after" image
+    const afterFile = files.find(f => f.fieldname === "after" || f.fieldname === "after_image");
+    const afterFileUrl = afterFile ? `/uploads/${afterFile.filename}` : (req.body.afterFileUrl || "");
+    const resolvedBeforeLabel = (beforeLabel || before_label || "Before").toString().trim().slice(0, 24) || "Before";
+    const resolvedAfterLabel = (afterLabel || after_label || "After").toString().trim().slice(0, 24) || "After";
+    const isCompare = Boolean(afterFile || postType === "compare" || post_type === "compare" || post_type === "before_after");
 
     // Process WIP shots if any
     let processSteps = [];
@@ -185,13 +195,12 @@ router.post("/post", upload.any(), async (req, res) => {
       }
     }
 
-    // Process Before/After comparison file
-    const beforeFile = files.find(f => f.fieldname === "before_image");
+    // Before/After comparison structure
     let beforeAfterData = {
-      before_image_url: beforeFile ? `/uploads/${beforeFile.filename}` : "",
-      after_image_url: file_url,
-      before_label: before_label || "Original",
-      after_label: after_label || "Final"
+      before_image_url: file_url,
+      after_image_url: afterFileUrl,
+      before_label: resolvedBeforeLabel,
+      after_label: resolvedAfterLabel
     };
 
     // Process Sound Layer audio file
@@ -263,7 +272,11 @@ router.post("/post", upload.any(), async (req, res) => {
       target: target || "public",
       file_url,
       file_name: file_name || mainFile.originalname,
-      post_type: post_type || (beforeFile ? "before_after" : timeCapsuleData.is_capsule ? "time_capsule" : processSteps.length > 0 ? "timelapse" : "standard"),
+      post_type: isCompare ? "compare" : (post_type || (timeCapsuleData.is_capsule ? "time_capsule" : processSteps.length > 0 ? "timelapse" : "standard")),
+      postType: isCompare ? "compare" : (postType || "standard"),
+      afterFileUrl: afterFileUrl,
+      beforeLabel: resolvedBeforeLabel,
+      afterLabel: resolvedAfterLabel,
       before_after: beforeAfterData,
       process_steps: processSteps,
       versions: initialVersions,

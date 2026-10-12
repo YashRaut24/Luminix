@@ -58,12 +58,13 @@ function CreatePost(props) {
   const [enableProcessThread, setEnableProcessThread] = useState(false);
   const [processSteps, setProcessSteps] = useState([]);
 
-  // 6 Creation Types States
-  const [creationType, setCreationType] = useState("standard"); // "standard" | "before_after" | "time_capsule"
-  const [beforeFile, setBeforeFile] = useState(null);
-  const [beforePreview, setBeforePreview] = useState(null);
-  const [beforeLabel, setBeforeLabel] = useState("Original Sketch");
-  const [afterLabel, setAfterLabel] = useState("Final Master");
+  // 6 Creation Types States (Standard, Compare/Before & After, Time Capsule)
+  const [creationType, setCreationType] = useState("standard");
+  const [isComparePost, setIsComparePost] = useState(false);
+  const [afterFile, setAfterFile] = useState(null);
+  const [afterPreview, setAfterPreview] = useState(null);
+  const [beforeLabel, setBeforeLabel] = useState("Before");
+  const [afterLabel, setAfterLabel] = useState("After");
 
   // Series and Chapters State
   const [enableSeries, setEnableSeries] = useState(false);
@@ -139,6 +140,8 @@ function CreatePost(props) {
     "04. Detailing & Texturing",
     "05. Lighting & Post-Processing"
   ];
+
+  const isCompareMode = isComparePost || creationType === "compare" || creationType === "before_after";
 
   // Check if navigating in with a remix post
   useEffect(() => {
@@ -362,17 +365,17 @@ function CreatePost(props) {
 
   const [previewSliderPos, setPreviewSliderPos] = useState(50);
 
-  const handleBeforeFileChange = (e) => {
+  const handleAfterFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
-      setBeforeFile(selected);
-      setBeforePreview(URL.createObjectURL(selected));
+      setAfterFile(selected);
+      setAfterPreview(URL.createObjectURL(selected));
     }
   };
 
-  const handleRemoveBeforeFile = () => {
-    setBeforeFile(null);
-    setBeforePreview(null);
+  const handleRemoveAfterFile = () => {
+    setAfterFile(null);
+    setAfterPreview(null);
   };
 
   const handleAudioChange = (e) => {
@@ -429,13 +432,15 @@ function CreatePost(props) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const isCompareMode = isComparePost || creationType === "compare" || creationType === "before_after";
+
     if (!file || !caption.trim() || !target.trim()) {
       setMessage("Please add an image, caption, and select an audience.");
       return;
     }
 
-    if (creationType === "before_after" && !beforeFile) {
-      setMessage("Please choose both a 'Before' (original) and 'After' (final) image for the comparison slider.");
+    if (isCompareMode && !afterFile) {
+      setMessage("Please choose the second ('After') image for the Before and after comparison slider.");
       return;
     }
 
@@ -452,27 +457,30 @@ function CreatePost(props) {
     try {
       const formData = new FormData();
       formData.append("caption", caption);
-      formData.append("postType", postType);
       formData.append("target", target);
-      formData.append("file_url", file);
+      formData.append("media", file); // Main ("before") image file
+      formData.append("file_url", file); // Fallback / legacy field
       formData.append("tags", JSON.stringify(tags));
 
-      // Resolve creation post_type
-      let resolvedPostType = "standard";
-      if (creationType === "before_after" && beforeFile) {
-        resolvedPostType = "before_after";
-      } else if (creationType === "time_capsule" && timeCapsuleDate) {
-        resolvedPostType = "time_capsule";
-      } else if (enableProcessThread && processSteps.some(s => s.file)) {
-        resolvedPostType = "timelapse";
-      }
-      formData.append("post_type", resolvedPostType);
-
-      // 1. Before / After comparison payload
-      if (creationType === "before_after" && beforeFile) {
-        formData.append("before_image", beforeFile);
-        formData.append("before_label", beforeLabel || "Original Sketch");
-        formData.append("after_label", afterLabel || "Final Master");
+      // Resolve creation post_type & postType
+      if (isCompareMode && afterFile) {
+        formData.append("after", afterFile); // Second ("after") image file
+        formData.append("after_image", afterFile); // Fallback alias
+        formData.append("postType", "compare");
+        formData.append("post_type", "compare");
+        formData.append("beforeLabel", (beforeLabel || "Before").trim().slice(0, 24));
+        formData.append("afterLabel", (afterLabel || "After").trim().slice(0, 24));
+        formData.append("before_label", (beforeLabel || "Before").trim().slice(0, 24));
+        formData.append("after_label", (afterLabel || "After").trim().slice(0, 24));
+      } else {
+        formData.append("postType", "standard");
+        let resolvedPostType = "standard";
+        if (creationType === "time_capsule" && timeCapsuleDate) {
+          resolvedPostType = "time_capsule";
+        } else if (enableProcessThread && processSteps.some(s => s.file)) {
+          resolvedPostType = "timelapse";
+        }
+        formData.append("post_type", resolvedPostType);
       }
 
       // 4. Series & Chapters payload
@@ -1295,78 +1303,80 @@ function CreatePost(props) {
             <div className="creation-type-segment-bar">
               <button
                 type="button"
-                className={`creation-type-btn ${creationType === "standard" ? "active" : ""}`}
-                onClick={() => setCreationType("standard")}
+                className={`creation-type-btn ${!isCompareMode && creationType === "standard" ? "active" : ""}`}
+                onClick={() => {
+                  setCreationType("standard");
+                  setIsComparePost(false);
+                }}
               >
                 <FiImage /> Standard Frame
               </button>
               <button
                 type="button"
-                className={`creation-type-btn ${creationType === "before_after" ? "active" : ""}`}
-                onClick={() => setCreationType("before_after")}
+                className={`creation-type-btn ${isCompareMode ? "active" : ""}`}
+                onClick={() => {
+                  setIsComparePost(true);
+                  setCreationType("compare");
+                }}
               >
-                <FiSliders /> Before / After Slider
+                <FiSliders /> Before and after post
               </button>
               <button
                 type="button"
                 className={`creation-type-btn ${creationType === "time_capsule" ? "active" : ""}`}
-                onClick={() => setCreationType("time_capsule")}
+                onClick={() => {
+                  setCreationType("time_capsule");
+                  setIsComparePost(false);
+                }}
               >
                 <FiClock /> Time Capsule
               </button>
             </div>
 
-            {creationType === "before_after" ? (
+            {/* "Before and after post" Explicit Toggle Bar */}
+            <div className="compare-toggle-bar">
+              <label className="compare-toggle-label">
+                <input
+                  type="checkbox"
+                  checked={isCompareMode}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsComparePost(checked);
+                    if (checked) {
+                      setCreationType("compare");
+                    } else if (creationType === "compare" || creationType === "before_after") {
+                      setCreationType("standard");
+                    }
+                  }}
+                />
+                <span className="compare-toggle-badge font-mono">
+                  {isCompareMode ? "COMPARE ACTIVE" : "STANDARD"}
+                </span>
+                <span className="compare-toggle-title">Before and after post</span>
+              </label>
+              <span className="compare-toggle-hint font-mono">
+                Compare two versions of an image with a draggable divider (edit vs original, sketch vs final)
+              </span>
+            </div>
+
+            {isCompareMode ? (
               <div className="before-after-upload-container">
                 <div className="before-after-upload-grid">
-                  {/* Before Plate */}
+                  {/* Before Plate (Primary / media) */}
                   <div className="ba-drop-box">
-                    <label className="form-label">Before / Original Plate *</label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <label className="form-label">Before / Original Plate *</label>
+                      <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>
+                        {beforeLabel.length}/24
+                      </span>
+                    </div>
                     <input
                       type="text"
                       className="form-input ba-label-input"
                       value={beforeLabel}
-                      onChange={(e) => setBeforeLabel(e.target.value)}
-                      placeholder="Label (e.g. Original Sketch, Raw Photo)"
-                    />
-                    {!beforePreview ? (
-                      <div className="upload-area ba-upload-area">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleBeforeFileChange}
-                          id="before-file-input"
-                          className="file-input"
-                        />
-                        <label htmlFor="before-file-input" className="file-input-label">
-                          <div className="upload-icon">✏️</div>
-                          <p className="upload-text">Upload Before Image</p>
-                          <p className="upload-hint">Sketch, raw or unedited</p>
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="preview-container ba-preview-box">
-                        <img src={beforePreview} alt="Before" className="preview-image" />
-                        <button
-                          type="button"
-                          className="remove-image-btn"
-                          onClick={handleRemoveBeforeFile}
-                        >
-                          ✕ Remove
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* After Plate */}
-                  <div className="ba-drop-box">
-                    <label className="form-label">After / Final Plate *</label>
-                    <input
-                      type="text"
-                      className="form-input ba-label-input"
-                      value={afterLabel}
-                      onChange={(e) => setAfterLabel(e.target.value)}
-                      placeholder="Label (e.g. Final Master, Color Grade)"
+                      maxLength={24}
+                      onChange={(e) => setBeforeLabel(e.target.value.slice(0, 24))}
+                      placeholder="Label (e.g. Original, Sketch)"
                     />
                     {!preview ? (
                       <div className="upload-area ba-upload-area">
@@ -1379,14 +1389,14 @@ function CreatePost(props) {
                           ref={fileInputRef}
                         />
                         <label htmlFor="file-input" className="file-input-label">
-                          <div className="upload-icon">🎨</div>
-                          <p className="upload-text">Upload After Image</p>
-                          <p className="upload-hint">Finished artwork</p>
+                          <div className="upload-icon">✏️</div>
+                          <p className="upload-text">Upload Before Image</p>
+                          <p className="upload-hint">Sketch, raw, or original (media)</p>
                         </label>
                       </div>
                     ) : (
                       <div className="preview-container ba-preview-box">
-                        <img src={preview} alt="After" className="preview-image" />
+                        <img src={preview} alt="Before preview" className="preview-image" />
                         <button
                           type="button"
                           className="remove-image-btn"
@@ -1397,35 +1407,95 @@ function CreatePost(props) {
                       </div>
                     )}
                   </div>
+
+                  {/* After Plate (Second file / after) */}
+                  <div className="ba-drop-box">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <label className="form-label">After / Edit Plate *</label>
+                      <span className="font-mono" style={{ fontSize: "10px", color: "var(--text-3)" }}>
+                        {afterLabel.length}/24
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input ba-label-input"
+                      value={afterLabel}
+                      maxLength={24}
+                      onChange={(e) => setAfterLabel(e.target.value.slice(0, 24))}
+                      placeholder="Label (e.g. Final, Color Grade)"
+                    />
+                    {!afterPreview ? (
+                      <div className="upload-area ba-upload-area">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAfterFileChange}
+                          id="after-file-input"
+                          className="file-input"
+                        />
+                        <label htmlFor="after-file-input" className="file-input-label">
+                          <div className="upload-icon">🎨</div>
+                          <p className="upload-text">Upload After Image</p>
+                          <p className="upload-hint">Final artwork or edited (after)</p>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="preview-container ba-preview-box">
+                        <img src={afterPreview} alt="After preview" className="preview-image" />
+                        <button
+                          type="button"
+                          className="remove-image-btn"
+                          onClick={handleRemoveAfterFile}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Live Preview Slider when both images uploaded */}
-                {beforePreview && preview && (
+                {/* Interactive Live Preview when both images uploaded */}
+                {preview && afterPreview && (
                   <div className="ba-live-preview-box">
-                    <span className="ba-live-tag">Interactive Preview: Drag to Test</span>
-                    <div className="before-after-container ba-preview-canvas">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span className="ba-live-tag font-mono">INTERACTIVE PREVIEW: DRAG TO TEST</span>
+                      <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)" }}>
+                        {previewSliderPos}%
+                      </span>
+                    </div>
+                    <div
+                      className="before-after-container ba-preview-canvas"
+                      style={{ "--ba-pos": `${previewSliderPos}%` }}
+                    >
+                      {/* After Image Layer (Bottom) */}
                       <div className="before-after-layer">
-                        <img src={preview} alt="After Preview" />
-                        <span className="before-after-label before-after-label--after">{afterLabel}</span>
+                        <img src={afterPreview} alt="After Preview" />
                       </div>
-                      <div
-                        className="before-after-layer before-after-layer--clipped"
-                        style={{ clipPath: `inset(0 calc(100% - ${previewSliderPos}%) 0 0)` }}
-                      >
-                        <img src={beforePreview} alt="Before Preview" />
-                        <span className="before-after-label before-after-label--before">{beforeLabel}</span>
+                      {/* Before Image Layer (Top, clipped with inset via CSS var --ba-pos) */}
+                      <div className="before-after-layer before-after-layer--clipped">
+                        <img src={preview} alt="Before Preview" />
                       </div>
-                      <div className="before-after-divider" style={{ left: `${previewSliderPos}%` }}>
-                        <div className="before-after-handle">↔</div>
+                      {/* Decorative Divider Line & 40px Circular Handle */}
+                      <div className="before-after-divider" aria-hidden="true">
+                        <div className="before-after-handle font-mono">↔</div>
                       </div>
+                      {/* Native range input overlay */}
                       <input
                         type="range"
                         min="0"
                         max="100"
                         value={previewSliderPos}
-                        onChange={(e) => setPreviewSliderPos(e.target.value)}
+                        onChange={(e) => setPreviewSliderPos(Number(e.target.value))}
                         className="before-after-range"
+                        aria-label="Interactive test compare slider"
                       />
+                      {/* Pill labels in top corners */}
+                      <span className="ba-pill ba-pill--before">{beforeLabel || "Before"}</span>
+                      <span className="ba-pill ba-pill--after">{afterLabel || "After"}</span>
+                      {/* Drag hint */}
+                      <div className="ba-drag-hint" aria-hidden="true">
+                        Drag to compare
+                      </div>
                     </div>
                   </div>
                 )}
