@@ -206,6 +206,27 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-server.listen(9000, () => {
+const { ensureWeeklyChallenge } = require("./services/challengeService");
+
+// Weekly Challenge Cron: runs every Monday 00:00 UTC (0 0 * * 1)
+cron.schedule(
+  "0 0 * * 1",
+  async () => {
+    try {
+      await ensureWeeklyChallenge();
+      console.log("[WeeklyChallenge] Rotated weekly prompt for new Monday UTC cycle");
+    } catch (err) {
+      console.error("[WeeklyChallenge] Rotation error:", err);
+    }
+  },
+  { timezone: "UTC" }
+);
+
+server.listen(9000, async () => {
   console.log("Server running with Socket.io on port 9000");
+  try {
+    await ensureWeeklyChallenge();
+  } catch (err) {
+    console.warn("[WeeklyChallenge] Startup initialization warning:", err.message);
+  }
 });

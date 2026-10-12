@@ -23,6 +23,7 @@ import {
 } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineGroups } from "react-icons/md";
+import ChallengeFeedBanner from "./ChallengeFeedBanner";
 import WeeklyPromptChallenge from "./WeeklyPromptChallenge";
 import CirclesWorkspace from "./CirclesWorkspace";
 import WeeklyDigestModal from "./WeeklyDigestModal";
@@ -369,9 +370,9 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
               {/* Retention & Community Tools */}
               <button
                 type="button"
-                className={`discovery-tool-btn font-mono ${showWeeklyChallenge ? "is-active" : ""}`}
-                onClick={() => setShowWeeklyChallenge(true)}
-                title="Weekly Prompt Challenge: one theme per week, voting by stamps without a public leaderboard"
+                className="discovery-tool-btn font-mono"
+                onClick={() => navigate("/feed/challenge")}
+                title="Weekly Prompt Challenge: one shared prompt per week, no permanent leaderboard"
               >
                 <BsStars /> PROMPT
               </button>
@@ -415,6 +416,9 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
             </button>
           </div>
         </div>
+
+        {/* Weekly Prompt Challenge Slim Banner at the top of the feed */}
+        <ChallengeFeedBanner />
 
         {/* Discovery 1. Palette Search Popover Panel */}
         {showPalettePopover && (

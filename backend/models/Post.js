@@ -325,11 +325,18 @@ const postSchema = new mongoose.Schema(
     ],
 
     // Retention and Community Fields
-    // 15. Weekly Prompt Challenge
+    // 15. Weekly Prompt Challenge (indexed, nullable)
+    challengeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "WeeklyChallenge",
+      default: null,
+      index: true,
+    },
     challenge_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "WeeklyChallenge",
       default: null,
+      index: true,
     },
 
     // 16. Private Circle Mini-Feed

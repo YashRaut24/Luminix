@@ -15,6 +15,7 @@ const Circle = require("../models/Circle");
 const CommissionInquiry = require("../models/CommissionInquiry");
 const aiService = require("../services/aiService");
 const paletteService = require("../services/paletteService");
+const { ensureWeeklyChallenge } = require("../services/challengeService");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -2387,44 +2388,31 @@ function computeStreakData(posts) {
 // 1. WEEKLY PROMPT CHALLENGE
 // ----------------------------------------------------------------------------
 
-// GET /challenges/current - Fetch or auto-seed current active challenge
+// GET /challenges/current - Fetch active weekly prompt & entry count (idempotent rotation)
 router.get("/challenges/current", async (req, res) => {
   try {
-    let challenge = await WeeklyChallenge.findOne({ is_active: true }).sort({ createdAt: -1 });
+    const challenge = await ensureWeeklyChallenge();
 
-    if (!challenge) {
-      challenge = new WeeklyChallenge({
-        theme: "Neon streets",
-        prompt_tag: "neonstreets",
-        description: "Capture night cityscapes with high-contrast ambient silhouettes and solid neon accents.",
-        week_number: 41,
-        is_active: true,
-        starts_at: new Date(),
-        ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        rules: [
-          "One dominant accent or night exposure",
-          "No blurred glow or artificial gradients",
-          "Solid high-contrast darkroom lighting",
-        ],
-      });
-      await challenge.save();
-    }
-
-    const entriesCount = await Post.countDocuments({
+    const entryCount = await Post.countDocuments({
       $or: [
+        { challengeId: challenge._id },
         { challenge_id: challenge._id },
         { tags: challenge.prompt_tag },
       ],
     });
 
-    res.status(200).json({ challenge, entriesCount });
+    res.status(200).json({
+      challenge,
+      entryCount,
+      entriesCount: entryCount,
+    });
   } catch (err) {
     console.error("Weekly challenge fetch error:", err);
     res.status(500).json({ message: "Failed to load current weekly challenge" });
   }
 });
 
-// GET /challenges/:id/entries - Blind/unranked gallery (voting by Stamps without leaderboard)
+// GET /challenges/:id/entries - Gallery entries (sort=new|top, default: new)
 router.get("/challenges/:id/entries", async (req, res) => {
   try {
     const challenge = await WeeklyChallenge.findById(req.params.id);
@@ -2432,22 +2420,28 @@ router.get("/challenges/:id/entries", async (req, res) => {
       return res.status(404).json({ message: "Challenge not found" });
     }
 
-    // Community gallery: entries appear in reverse chronological order
-    // WITHOUT public leaderboard rankings or score comparisons
+    const sortParam = (req.query.sort || "new").toLowerCase();
+    // Default newest, option for most liked
+    const sortCriteria = sortParam === "top" 
+      ? { likes: -1, createdAt: -1 } 
+      : { createdAt: -1 };
+
     const entries = await Post.find({
       $or: [
+        { challengeId: challenge._id },
         { challenge_id: challenge._id },
         { tags: challenge.prompt_tag },
       ],
     })
-      .populate("author", "name email profileImage lumiTag")
-      .sort({ createdAt: -1 })
-      .limit(60);
+      .populate("author", "name email profileImage lumiTag open_for_commissions")
+      .sort(sortCriteria)
+      .limit(100);
 
     res.status(200).json({
       challenge,
       entries,
       totalEntries: entries.length,
+      sort: sortParam,
     });
   } catch (err) {
     console.error("Challenge entries error:", err);
@@ -2455,29 +2449,107 @@ router.get("/challenges/:id/entries", async (req, res) => {
   }
 });
 
-// POST /challenges/:id/enter - Enter a post into the weekly challenge
+// GET /challenges/:id/eligible-posts - Authenticated user's public posts eligible to enter
+router.get("/challenges/:id/eligible-posts", authMiddleware, async (req, res) => {
+  try {
+    const challenge = await WeeklyChallenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found" });
+    }
+
+    // Check if user has already entered this challenge (one entry per user rule)
+    const existingEntry = await Post.findOne({
+      author: req.user.id,
+      $or: [
+        { challengeId: challenge._id },
+        { challenge_id: challenge._id },
+      ],
+    });
+
+    // Public posts owned by the user
+    const eligiblePosts = await Post.find({
+      author: req.user.id,
+      target: "public",
+    })
+      .select("_id caption file_url createdAt likes views tags postType")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      challenge,
+      eligiblePosts,
+      alreadyEntered: Boolean(existingEntry),
+      enteredPostId: existingEntry ? existingEntry._id : null,
+      existingEntry,
+    });
+  } catch (err) {
+    console.error("Eligible posts fetch error:", err);
+    res.status(500).json({ message: "Failed to fetch eligible posts" });
+  }
+});
+
+// POST /challenges/:id/enter - Enter a post into the weekly challenge with server enforcement
 router.post("/challenges/:id/enter", authMiddleware, async (req, res) => {
   try {
     const { postId } = req.body;
+    if (!postId) {
+      return res.status(400).json({ message: "Post ID is required." });
+    }
+
     const challenge = await WeeklyChallenge.findById(req.params.id);
-    if (!challenge) return res.status(404).json({ message: "Challenge not found" });
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found." });
+    }
 
-    const post = await Post.findOne({ _id: postId, author: req.user.id });
-    if (!post) return res.status(404).json({ message: "Frame not found or unauthorized" });
+    // RULE: The challenge must be currently open
+    const now = new Date();
+    const starts = challenge.startsAt || challenge.starts_at || new Date(0);
+    const ends = challenge.endsAt || challenge.ends_at || new Date(Date.now() + 86400000);
+    if (challenge.is_active === false || now < starts || now >= ends) {
+      return res.status(400).json({ message: "This weekly challenge is currently closed." });
+    }
 
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+
+    // RULE: Only the post's owner can enter it
+    if (String(post.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Only the post's owner can enter it into the challenge." });
+    }
+
+    // RULE: Only public posts can enter
+    if (post.target !== "public") {
+      return res.status(400).json({ message: "Only public posts can enter the challenge." });
+    }
+
+    // RULE: One entry per user per challenge, checked in the database
+    const existingEntry = await Post.findOne({
+      author: req.user.id,
+      $or: [
+        { challengeId: challenge._id },
+        { challenge_id: challenge._id },
+      ],
+    });
+
+    if (existingEntry) {
+      return res.status(400).json({ message: "You have already entered this challenge with another post." });
+    }
+
+    post.challengeId = challenge._id;
     post.challenge_id = challenge._id;
-    if (!post.tags.includes(challenge.prompt_tag)) {
+    if (challenge.prompt_tag && !post.tags.includes(challenge.prompt_tag)) {
       post.tags.push(challenge.prompt_tag);
     }
     await post.save();
 
     res.status(200).json({
-      message: `Frame successfully submitted to weekly prompt: "${challenge.theme}"`,
+      message: `Post successfully entered into weekly prompt: "${challenge.title || challenge.theme}"!`,
       post,
     });
   } catch (err) {
     console.error("Challenge entry error:", err);
-    res.status(500).json({ message: "Failed to enter challenge" });
+    res.status(500).json({ message: "Failed to enter challenge." });
   }
 });
 

@@ -1,0 +1,585 @@
+/* ==========================================================================
+   LUMINIX WEEKLY PROMPT CHALLENGE STYLESHEET
+   1. Feed Slim Banner (at the top of the feed)
+   2. Challenge Page Hero, Timer & Countdown
+   3. New / Most Liked Toggle & Gallery Grid
+   4. Modal Post Picker (Accessible, Escape & Backdrop close)
+   5. Edge Cases: Warning color strictly on dot only for light/dark contrast
+   Strict Constraints: Solid colors only, zero gradients, zero glow
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Feed Slim Banner
+   -------------------------------------------------------------------------- */
+.challenge-feed-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm, 6px);
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  user-select: none;
+}
+
+.challenge-feed-banner:hover {
+  border-color: var(--accent, #6366f1);
+  background-color: var(--surface-2, rgba(255, 255, 255, 0.03));
+}
+
+.challenge-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Warning-colored pulsing dot for urgency (contrast-safe: strictly dot only) */
+.challenge-pulse-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  background-color: #eab308; /* Solid warning yellow/amber */
+  animation: challengeDotPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes challengeDotPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+}
+
+.challenge-banner-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.challenge-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.challenge-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.challenge-banner-countdown {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.challenge-banner-count {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.challenge-banner-action-link {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #6366f1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Challenge Page Hero
+   -------------------------------------------------------------------------- */
+.challenge-page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+}
+
+.challenge-hero-card {
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md, 8px);
+  padding: 28px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.challenge-hero-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.challenge-week-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #6366f1);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.challenge-hero-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background-color: var(--frame-bg);
+  border: 1px solid var(--rule);
+  border-radius: 9999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text);
+}
+
+.challenge-hero-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.challenge-hero-prompt {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 760px;
+}
+
+.challenge-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* Primary "Enter with a post" button */
+.challenge-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: var(--accent, #6366f1);
+  color: #ffffff;
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.challenge-primary-btn:hover {
+  opacity: 0.92;
+}
+
+.challenge-primary-btn:active {
+  transform: translateY(1px);
+}
+
+.challenge-primary-btn.is-entered {
+  background-color: var(--surface-2);
+  color: var(--text);
+  border-color: var(--rule);
+  cursor: default;
+}
+
+.challenge-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background-color: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.challenge-back-btn:hover {
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+/* Server status line */
+.challenge-status-line {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs, 4px);
+  margin-top: 4px;
+}
+
+.challenge-status-line--success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.challenge-status-line--error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+/* --------------------------------------------------------------------------
+   3. Sort Toggle (New / Most Liked) & Filter Bar
+   -------------------------------------------------------------------------- */
+.challenge-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.challenge-sort-group {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm, 6px);
+  padding: 3px;
+  gap: 4px;
+}
+
+.challenge-sort-btn {
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--text-2);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+}
+
+.challenge-sort-btn:hover {
+  color: var(--text);
+}
+
+.challenge-sort-btn.is-active {
+  background-color: var(--frame-bg);
+  color: var(--accent, #6366f1);
+  border-color: var(--rule);
+  font-weight: 700;
+}
+
+.challenge-entries-counter {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Entries Grid
+   -------------------------------------------------------------------------- */
+.challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   5. Empty States (Strictly one action each)
+   -------------------------------------------------------------------------- */
+.challenge-empty-box {
+  padding: 60px 24px;
+  text-align: center;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md, 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.challenge-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.challenge-empty-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+  max-width: 440px;
+}
+
+.challenge-empty-action {
+  padding: 10px 20px;
+  background-color: var(--accent, #6366f1);
+  color: #ffffff;
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.challenge-empty-action:hover {
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   6. Modal Post Picker
+   -------------------------------------------------------------------------- */
+.post-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.post-picker-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  background-color: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md, 8px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.post-picker-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.post-picker-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-picker-close {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-picker-close:hover {
+  color: var(--text);
+}
+
+.post-picker-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.post-picker-hint {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.post-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.post-picker-card {
+  position: relative;
+  background-color: var(--frame-bg);
+  border: 2px solid var(--rule);
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-picker-card:hover {
+  border-color: var(--text-2);
+}
+
+.post-picker-card.is-selected {
+  border-color: var(--accent, #6366f1);
+}
+
+.post-picker-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.post-picker-card-info {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.post-picker-card-caption {
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.post-picker-card-date {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  color: var(--text-3);
+}
+
+.post-picker-selected-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--accent, #6366f1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.post-picker-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--frame-bg);
+}
+
+.post-picker-cancel-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-2);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.post-picker-submit-btn {
+  padding: 8px 18px;
+  background-color: var(--accent, #6366f1);
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: var(--radius-sm, 6px);
+  color: #ffffff;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.post-picker-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .challenge-feed-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .challenge-banner-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .challenge-hero-title {
+    font-size: 22px;
+  }
+}

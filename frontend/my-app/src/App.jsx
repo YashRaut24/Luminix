@@ -13,6 +13,7 @@ import CreatorAnalytics from "./components/CreatorAnalytics";
 import CommandPalette from "./components/CommandPalette";
 import CollabBoard from "./components/CollabBoard";
 import LiveSketchRoom from "./components/LiveSketchRoom";
+import ChallengePage from "./components/ChallengePage";
 
 import "./App.css";
 import HomePage from "../pages/HomePage";
@@ -245,6 +246,26 @@ function App() {
       path="sketch"
       element={
         <LiveSketchRoom
+          mode={darkMode}
+          user={userData}
+        />
+      }
+    />
+
+    <Route
+      path="challenge"
+      element={
+        <ChallengePage
+          mode={darkMode}
+          user={userData}
+        />
+      }
+    />
+
+    <Route
+      path="challenge/:id"
+      element={
+        <ChallengePage
           mode={darkMode}
           user={userData}
         />
