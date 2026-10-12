@@ -471,6 +471,18 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                 >
                   APPLY
                 </button>
+                <button
+                  type="button"
+                  className="discovery-tool-btn font-mono"
+                  style={{ fontSize: "10px", padding: "4px 8px", borderColor: "var(--accent)", color: "var(--accent)" }}
+                  onClick={() => {
+                    const clean = (customHexInput || colorFilter || "6366f1").replace(/^#/, "");
+                    navigate(`/feed/color-search?hex=${clean}`);
+                  }}
+                  title="Open Dedicated Nearest-Neighbor Color Search Page"
+                >
+                  FULL SEARCH PAGE →
+                </button>
                 {colorFilter && (
                   <button
                     type="button"
@@ -960,7 +972,7 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="inspector-tools-label font-mono">DOMINANT PALETTE:</span>
                     <span className="font-mono" style={{ fontSize: "9px", color: "var(--text-3)" }}>
-                      CLICK SWATCH TO FILTER
+                      CLICK SWATCH TO SEARCH
                     </span>
                   </div>
                   <div className="inspector-palette-swatches">
@@ -969,8 +981,11 @@ function ShowPost({ mode, refreshTrigger, feedHeading, selectedCategory, user })
                         key={idx}
                         className="inspector-palette-item font-mono"
                         style={{ backgroundColor: hex }}
-                        onClick={() => setColorFilter(hex)}
-                        title={`Filter feed by color ${hex}`}
+                        onClick={() => {
+                          const clean = hex.replace(/^#/, "");
+                          navigate(`/feed/color-search?hex=${clean}`);
+                        }}
+                        title={`Search for posts with color ${hex}`}
                       >
                         {hex}
                       </div>

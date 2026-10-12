@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./SearchUser.css";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { BsStars } from "react-icons/bs";
+import { Link, useNavigate } from "react-router-dom";
+import { BsStars, BsPaletteFill } from "react-icons/bs";
 import { FiSearch, FiUser, FiHeart, FiMessageCircle, FiLayers, FiCompass } from "react-icons/fi";
 
 function SearchUser({ mode }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [matchingCreators, setMatchingCreators] = useState([]);
@@ -76,6 +77,24 @@ function SearchUser({ mode }) {
         <p className="search-subtitle">
           Search by conceptual vibe, visual style, technical keywords, or creator handle
         </p>
+
+        {/* Discovery Switcher */}
+        <div className="color-search-nav-tabs" style={{ justifyContent: "center", marginTop: "16px", borderBottom: "none", paddingBottom: 0 }}>
+          <button
+            type="button"
+            className="color-nav-tab is-active font-mono"
+            onClick={() => {}}
+          >
+            <BsStars /> SEMANTIC VIBE SEARCH
+          </button>
+          <button
+            type="button"
+            className="color-nav-tab font-mono"
+            onClick={() => navigate("/feed/color-search")}
+          >
+            <BsPaletteFill /> PALETTE COLOR SEARCH
+          </button>
+        </div>
       </div>
 
       {/* Semantic Search Input Bar */}

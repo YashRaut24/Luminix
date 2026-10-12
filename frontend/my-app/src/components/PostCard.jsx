@@ -847,7 +847,7 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
         {/* Discovery Metadata Strip: 5 Color Palette Swatches, Tool Tags, Inspired By */}
         <div className="frame-discovery-strip" onClick={(e) => e.stopPropagation()}>
           {post.palette && post.palette.length > 0 ? (
-            <div className="frame-swatches-row" title="Dominant colors (Click swatch to filter feed)">
+            <div className="frame-swatches-row" title="Dominant colors (Click swatch to search by color)">
               {post.palette.slice(0, 5).map((color, cIdx) => (
                 <span
                   key={cIdx}
@@ -855,9 +855,10 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
                   style={{ backgroundColor: color }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (onSelectColor) onSelectColor(color);
+                    const clean = color.replace(/^#/, "");
+                    navigate(`/feed/color-search?hex=${clean}`);
                   }}
-                  title={`Color: ${color} - Click to filter feed`}
+                  title={`Color: ${color} - Search posts with this color`}
                 />
               ))}
             </div>

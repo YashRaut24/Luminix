@@ -20,6 +20,7 @@ import { BsStars, BsPaletteFill } from "react-icons/bs";
 const COMMANDS = [
   { id: "feed", title: "Feed & Explorations", subtitle: "Go to community feed", icon: <FiHome />, path: "/feed", category: "Navigation" },
   { id: "search", title: "Semantic Discovery", subtitle: "Search creations by vibe or keyword", icon: <FiCompass />, path: "/feed/search", category: "Navigation" },
+  { id: "color-search", title: "Palette Color Search", subtitle: "Find creations by RGB Euclidean dominant color proximity", icon: <BsPaletteFill />, path: "/feed/color-search", category: "Discovery" },
   { id: "create", title: "Create New Piece", subtitle: "Publish artwork or WIP thread", icon: <FiPlus />, path: "/feed/create", category: "Actions" },
   { id: "challenge", title: "Weekly Prompt Challenge", subtitle: "Theme gallery with stamp voting (No leaderboard)", icon: <BsStars />, path: "/feed", category: "Retention & Community" },
   { id: "streak", title: "Daily Frame Streak", subtitle: "View calendar heatmap and active streak", icon: <FiTrendingUp />, path: "/feed/profile", category: "Retention & Community" },

@@ -14,6 +14,7 @@ const WeeklyChallenge = require("../models/WeeklyChallenge");
 const Circle = require("../models/Circle");
 const CommissionInquiry = require("../models/CommissionInquiry");
 const aiService = require("../services/aiService");
+const paletteService = require("../services/paletteService");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -280,21 +281,35 @@ router.post("/post", upload.any(), async (req, res) => {
       co_authors: []
     };
 
-    // Discovery: 1. Dominant Color Palette
+    // Discovery: 1. Dominant Color Palette (48x48 coarse-bucket extraction at upload time)
     let paletteArray = [];
-    if (palette) {
+    if (mainFile && mainFile.path) {
+      try {
+        const extracted = paletteService.extractPaletteFromFile(mainFile.path);
+        if (extracted && extracted.length > 0) {
+          paletteArray = extracted;
+        }
+      } catch (palErr) {
+        console.warn("Palette extraction on upload warning:", palErr.message);
+      }
+    }
+
+    if (paletteArray.length === 0 && palette) {
       try {
         paletteArray = Array.isArray(palette) ? palette : JSON.parse(palette);
       } catch (e) {
         if (typeof palette === "string") {
-          paletteArray = palette.split(",").map(c => c.trim()).filter(Boolean);
+          paletteArray = palette.split(",").map((c) => c.trim()).filter(Boolean);
         }
       }
     }
-    if (!paletteArray || paletteArray.length === 0) {
-      paletteArray = ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
-    }
-    postData.palette = paletteArray.slice(0, 5);
+
+    // Filter valid 6-digit hexes only, store up to 5 colors (empty array if processing fails)
+    paletteArray = (paletteArray || [])
+      .filter((h) => paletteService.hexToRgb(h) !== null)
+      .slice(0, 5);
+
+    postData.palette = paletteArray;
 
     // Discovery: 2. Mood Dial
     const moodCalm = typeof mood_calm_energetic !== "undefined" ? Number(mood_calm_energetic) : 50;
@@ -3207,6 +3222,55 @@ router.patch("/posts/:id/alt-text", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Update alt-text error:", err);
     res.status(500).json({ message: "Failed to update alt-text" });
+  }
+});
+
+// ----------------------------------------------------------------------------
+// DISCOVERY: DOMINANT PALETTE NEAREST-NEIGHBOR COLOR SEARCH
+// ----------------------------------------------------------------------------
+
+router.get("/posts/search/color", async (req, res) => {
+  try {
+    const { hex } = req.query;
+
+    if (!hex || !paletteService.hexToRgb(hex)) {
+      return res.status(400).json({ message: "Invalid 6-digit hex color" });
+    }
+
+    const cleanHex = hex.trim().startsWith("#") ? hex.trim() : `#${hex.trim()}`;
+
+    // Scan the newest 500 public posts in memory
+    const candidatePosts = await Post.find({
+      target: "public",
+      published: { $ne: false },
+      palette: { $exists: true, $ne: [] },
+    })
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .populate("author", "name profileImage lumiTag open_for_commissions");
+
+    const matchedResults = paletteService.searchPostsByColor(candidatePosts, cleanHex);
+
+    const formattedPosts = matchedResults.map(
+      ({ post, distance, matchPercentage, matchedColor }) => {
+        const pObj = post.toObject ? post.toObject() : post;
+        return {
+          ...pObj,
+          score: distance,
+          matchPercentage,
+          matchedColor,
+        };
+      }
+    );
+
+    res.status(200).json({
+      queryHex: cleanHex.toLowerCase(),
+      count: formattedPosts.length,
+      posts: formattedPosts,
+    });
+  } catch (err) {
+    console.error("Color search error:", err);
+    res.status(500).json({ message: "Failed to search posts by color" });
   }
 });
 

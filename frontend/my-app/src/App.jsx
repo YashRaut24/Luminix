@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import ShowPost from "./components/ShowPost";
 import CreatePost from "./components/CreatePost";
 import SearchUser from "./components/SearchUser";
+import ColorSearch from "./components/ColorSearch";
 import Click from "./components/Click";
 import Profile from "./components/Profile";
 import CreatorAnalytics from "./components/CreatorAnalytics";
@@ -180,6 +181,11 @@ function App() {
     <Route
       path="search"
       element={<SearchUser mode={darkMode} />}
+    />
+
+    <Route
+      path="color-search"
+      element={<ColorSearch mode={darkMode} />}
     />
 
     <Route

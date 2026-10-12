@@ -5,6 +5,7 @@ import { MdDarkMode, MdLightMode, MdOutlinePeopleAlt } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { IoMdLogOut } from "react-icons/io";
 import { FiTrendingUp, FiSearch, FiPlus, FiCamera, FiGrid, FiBriefcase, FiEdit3 } from "react-icons/fi";
+import { BsPaletteFill } from "react-icons/bs";
 
 const Navbar = (props) => {
   const navigate = useNavigate();
@@ -54,6 +55,16 @@ const Navbar = (props) => {
           title="Search Creators"
         >
           <FiSearch />
+        </button>
+
+        <button
+          type="button"
+          className={`darkroom-spine__btn ${location.pathname === "/feed/color-search" ? "is-active" : ""}`}
+          onClick={() => navigate("/feed/color-search")}
+          data-label="Palette Color Search"
+          title="Palette Color Search"
+        >
+          <BsPaletteFill />
         </button>
 
         <button

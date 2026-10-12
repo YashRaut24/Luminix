@@ -180,31 +180,83 @@ function CreatePost(props) {
     try {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      const w = (canvas.width = 100);
-      const h = (canvas.height = 100);
-      ctx.drawImage(imgElement, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h).data;
-      const colorCounts = {};
+      const targetW = 48;
+      const targetH = 48;
+      canvas.width = targetW;
+      canvas.height = targetH;
+      ctx.drawImage(imgElement, 0, 0, targetW, targetH);
+      const imgData = ctx.getImageData(0, 0, targetW, targetH).data;
 
-      for (let i = 0; i < data.length; i += 16) {
-        const r = Math.round(data[i] / 32) * 32;
-        const g = Math.round(data[i + 1] / 32) * 32;
-        const b = Math.round(data[i + 2] / 32) * 32;
-        const a = data[i + 3];
+      // Group pixels into coarse buckets (16 levels per channel = 4096 buckets)
+      const buckets = new Map();
+      for (let i = 0; i < imgData.length; i += 4) {
+        const r = imgData[i];
+        const g = imgData[i + 1];
+        const b = imgData[i + 2];
+        const a = imgData[i + 3];
         if (a < 128) continue;
-        const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-        colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+
+        const rB = Math.min(15, Math.floor(r / 16));
+        const gB = Math.min(15, Math.floor(g / 16));
+        const bB = Math.min(15, Math.floor(b / 16));
+        const key = (rB << 8) | (gB << 4) | bB;
+
+        let entry = buckets.get(key);
+        if (!entry) {
+          entry = { count: 0, sumR: 0, sumG: 0, sumB: 0 };
+          buckets.set(key, entry);
+        }
+        entry.count += 1;
+        entry.sumR += r;
+        entry.sumG += g;
+        entry.sumB += b;
       }
 
-      const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
-      const colors = sorted.slice(0, 5);
-      const fallbacks = ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
-      while (colors.length < 5) {
-        colors.push(fallbacks[colors.length]);
+      // Average the pixels in each bucket
+      const ranked = [];
+      for (const [, entry] of buckets) {
+        if (entry.count > 0) {
+          ranked.push({
+            count: entry.count,
+            r: Math.round(entry.sumR / entry.count),
+            g: Math.round(entry.sumG / entry.count),
+            b: Math.round(entry.sumB / entry.count),
+          });
+        }
       }
-      return colors;
+
+      // Rank buckets by pixel count (descending)
+      ranked.sort((a, b) => b.count - a.count);
+
+      const rgbDist = (c1, c2) =>
+        Math.sqrt(
+          Math.pow(c1.r - c2.r, 2) +
+          Math.pow(c1.g - c2.g, 2) +
+          Math.pow(c1.b - c2.b, 2)
+        );
+
+      // Pick top buckets, skipping any within distance 60 of one already picked
+      const picked = [];
+      for (const candidate of ranked) {
+        const tooClose = picked.some((p) => rgbDist(candidate, p) < 60);
+        if (!tooClose) {
+          picked.push(candidate);
+          if (picked.length >= 5) break;
+        }
+      }
+
+      const toHex = (c) => {
+        const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+        const rh = clamp(c.r).toString(16).padStart(2, "0");
+        const gh = clamp(c.g).toString(16).padStart(2, "0");
+        const bh = clamp(c.b).toString(16).padStart(2, "0");
+        return `#${rh}${gh}${bh}`.toLowerCase();
+      };
+
+      return picked.map(toHex);
     } catch (err) {
-      return ["#1e293b", "#334155", "#6366f1", "#475569", "#0f172a"];
+      console.warn("Client palette extraction error:", err);
+      return [];
     }
   };
 
