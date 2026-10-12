@@ -24,6 +24,7 @@ import {
 import "../styles/feedback_collab.css";
 import ShareCardModal from "./ShareCardModal";
 import CommissionModal from "./CommissionModal";
+import CritiquePanel from "./CritiquePanel";
 
 function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectColor }) {
   const navigate = useNavigate();
@@ -519,22 +520,29 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
         )}
 
         {/* 1. Critique Mode Banner */}
-        {post.needs_critique && (
+        {(post.critiqueOpen || post.needs_critique) && (
           <div className="critique-mode-banner" onClick={(e) => e.stopPropagation()}>
             <div className="critique-mode-badge">
               <FiTarget /> Needs Critique
             </div>
-            {post.critique_question && (
-              <p className="critique-question-text">"{post.critique_question}"</p>
+            {(post.critiqueQuestion || post.critique_question) && (
+              <p className="critique-question-text">"{post.critiqueQuestion || post.critique_question}"</p>
             )}
             <div className="critique-actions-row">
               <span className="font-mono" style={{ fontSize: "11px", color: "var(--text-2)" }}>
-                {critiquesList.length} critique{critiquesList.length === 1 ? "" : "s"}
+                Structured Review Open
               </span>
               <button
                 type="button"
                 className="critique-open-btn"
-                onClick={() => setShowCritiqueModal(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onSelect) {
+                    onSelect(post, pins);
+                  } else {
+                    setShowCritiqueModal(true);
+                  }
+                }}
               >
                 Critique Piece
               </button>
@@ -1033,119 +1041,8 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
               </button>
             </div>
 
-            <div className="critique-modal-body">
-              {/* Creator's specific question */}
-              {post.critique_question && (
-                <div className="critique-question-box">
-                  <div className="critique-question-label">Creator's Specific Focus Question:</div>
-                  <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
-                    "{post.critique_question}"
-                  </div>
-                </div>
-              )}
-
-              {/* Structured Submission Form (What works / What to try) */}
-              <form onSubmit={handleSubmitCritique} className="critique-form">
-                <div className="critique-field-group">
-                  <label className="critique-field-label critique-field-label--works">
-                    <FiCheck /> What Works (Strengths & Effective Elements) *
-                  </label>
-                  <textarea
-                    className="critique-textarea"
-                    placeholder="e.g. Strong atmospheric lighting, clear silhouette, great anatomical accuracy..."
-                    value={whatWorks}
-                    onChange={(e) => setWhatWorks(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="critique-field-group">
-                  <label className="critique-field-label critique-field-label--try">
-                    <FiStar /> What to Try (Constructive Ideas & Alternate Variations) *
-                  </label>
-                  <textarea
-                    className="critique-textarea"
-                    placeholder="e.g. Try pushing the rim light contrast higher, or experiment with warmer bounce light..."
-                    value={whatToTry}
-                    onChange={(e) => setWhatToTry(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="critique-submit-btn"
-                  disabled={isSubmittingCritique}
-                >
-                  {isSubmittingCritique ? "Submitting..." : "Submit Structured Critique"}
-                </button>
-              </form>
-
-              {/* Critiques List */}
-              <div className="critique-list-header">
-                Community Reviews ({critiquesList.length})
-              </div>
-
-              {critiquesList.length === 0 ? (
-                <p style={{ fontSize: "13px", color: "var(--text-2)", textAlign: "center", margin: "10px 0" }}>
-                  No critiques yet. Be the first to provide constructive feedback!
-                </p>
-              ) : (
-                critiquesList.map((critique, cIdx) => (
-                  <div key={critique._id || cIdx} className="critique-card">
-                    <div className="critique-card-header">
-                      <div className="critique-author-info">
-                        {critique.profile_picture ? (
-                          <img
-                            src={`http://localhost:9000${critique.profile_picture}`}
-                            alt={critique.username}
-                            className="critique-author-avatar"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="critique-author-avatar" style={{ backgroundColor: "var(--rule)" }} />
-                        )}
-                        <span className="critique-author-name">@{critique.username}</span>
-
-                        {/* Critic Badge indicator */}
-                        {(critique.is_helpful || critique.author?.criticBadges > 0) && (
-                          <span className="critic-badge-tag">★ Critic</span>
-                        )}
-                      </div>
-
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-2)" }}>
-                        {new Date(critique.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <div className="critique-structured-body">
-                      <div className="critique-block critique-block--works">
-                        <div className="critique-block-title critique-block-title--works">WHAT WORKS:</div>
-                        <p className="critique-block-text">{critique.what_works}</p>
-                      </div>
-
-                      <div className="critique-block critique-block--try">
-                        <div className="critique-block-title critique-block-title--try">WHAT TO TRY:</div>
-                        <p className="critique-block-text">{critique.what_to_try}</p>
-                      </div>
-                    </div>
-
-                    {/* Author Helpful Button */}
-                    {isAuthor && (
-                      <button
-                        type="button"
-                        className={`critique-helpful-btn ${critique.is_helpful ? "is-helpful" : ""}`}
-                        disabled={critique.is_helpful}
-                        onClick={() => handleMarkHelpful(critique._id)}
-                      >
-                        {critique.is_helpful ? <><FiCheck /> Marked Helpful (Critic Badge Awarded)</> : <><FiStar /> Mark as Helpful (Award Critic Badge)</>}
-                      </button>
-                    )}
-                  </div>
-                ))
-              )}
+            <div className="critique-modal-body" style={{ padding: "16px" }}>
+              <CritiquePanel postId={post._id} currentUser={currentUser} />
             </div>
           </div>
         </div>

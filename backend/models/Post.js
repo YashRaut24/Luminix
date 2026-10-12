@@ -224,13 +224,25 @@ const postSchema = new mongoose.Schema(
     },
 
     // 8. Critique Mode
+    critiqueOpen: {
+      type: Boolean,
+      default: false,
+    },
+    critiqueQuestion: {
+      type: String,
+      maxlength: 200,
+      default: "",
+      trim: true,
+    },
     needs_critique: {
       type: Boolean,
       default: false,
     },
     critique_question: {
       type: String,
+      maxlength: 200,
       default: "",
+      trim: true,
     },
     critiques: [
       {

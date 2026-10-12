@@ -505,7 +505,9 @@ function CreatePost(props) {
       // 7. Critique Mode payload
       if (needsCritique) {
         formData.append("needs_critique", true);
+        formData.append("critiqueOpen", true);
         formData.append("critique_question", critiqueQuestion.trim());
+        formData.append("critiqueQuestion", critiqueQuestion.trim());
       }
 
       // 8. Co-Author Invitation payload

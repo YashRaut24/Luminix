@@ -3,6 +3,7 @@ import axios from "axios";
 import socket from "../socket";
 import "./ThreadedComments.css";
 import { FiSend, FiCornerDownRight, FiMessageCircle, FiSmile } from "react-icons/fi";
+import CritiquePanel from "./CritiquePanel";
 
 const EMOJI_MAP = {
   fire: { emoji: "🔥", label: "Fire" },
@@ -213,6 +214,9 @@ const ThreadedComments = ({ postId, initialComments = [], currentUser, mode }) =
 
   return (
     <div className={`threaded-comments-wrapper ${mode ? "dark-theme" : ""}`}>
+      {/* Structured Targeted Critique Panel */}
+      <CritiquePanel postId={postId} currentUser={currentUser} mode={mode} />
+
       <div className="comments-section-header">
         <FiMessageCircle />
         <span>Discussion ({comments.length})</span>

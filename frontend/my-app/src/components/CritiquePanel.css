@@ -1,0 +1,449 @@
+/* ==========================================================================
+   LUMINIX STRUCTURED CRITIQUE PANEL
+   - Replaces vague comments with specific, targeted feedback
+   - 3px left border (success #22c55e for works, warning #eab308 for try next)
+   - Neutral text labels for contrast
+   - Strictly solid colors, zero gradients, zero glow
+   ========================================================================== */
+
+.critique-panel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background-color: var(--surface-2, #18181b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-sm, 4px);
+  margin-bottom: 16px;
+}
+
+.critique-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.critique-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text, #f4f4f5);
+}
+
+.critique-panel-status-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs, 2px);
+  letter-spacing: 0.04em;
+}
+
+.critique-panel-status-pill.is-open {
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+
+.critique-panel-status-pill.is-closed {
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--rule, #27272a);
+  color: var(--text-3, #71717a);
+}
+
+/* Question Banner */
+.critique-question-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+}
+
+.critique-question-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.critique-question-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.critique-question-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #f4f4f5);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.critique-close-btn {
+  padding: 4px 8px;
+  background-color: transparent;
+  color: var(--text-2, #a1a1aa);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.critique-close-btn:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Ask Form (Owner when closed) */
+.critique-ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px dashed var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+}
+
+.critique-ask-desc {
+  font-size: 12px;
+  color: var(--text-2, #a1a1aa);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.critique-input {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: var(--surface, #18181b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+  color: var(--text, #f4f4f5);
+  font-size: 13px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.critique-input:focus {
+  border-color: var(--accent, #6366f1);
+}
+
+.critique-char-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: var(--text-3, #71717a);
+}
+
+/* Two-Field Form (Reviewer) */
+.critique-reviewer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+}
+
+.critique-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.critique-form-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.critique-form-field-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2, #a1a1aa); /* Neutral text for contrast */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.critique-field-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.critique-field-indicator--works {
+  background-color: #22c55e;
+}
+
+.critique-field-indicator--try {
+  background-color: #eab308;
+}
+
+.critique-textarea {
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 10px;
+  background-color: var(--surface, #18181b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+  color: var(--text, #f4f4f5);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.critique-textarea:focus {
+  border-color: var(--accent, #6366f1);
+}
+
+.critique-submit-btn {
+  align-self: flex-end;
+  padding: 6px 14px;
+  background-color: var(--accent, #6366f1);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-xs, 2px);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.critique-submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.critique-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Alert banner for error messages (role="alert") */
+.critique-alert-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid #ef4444;
+  border-radius: var(--radius-xs, 2px);
+  color: #ef4444;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Submitted / "mine" banner */
+.critique-submitted-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: var(--radius-xs, 2px);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #6366f1);
+  text-transform: uppercase;
+}
+
+/* Critiques List */
+.critiques-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.critiques-list-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.critique-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: var(--frame-bg, #09090b);
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+}
+
+.critique-card.is-mine {
+  border-color: var(--accent, #6366f1);
+}
+
+.critique-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.critique-author-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.critique-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full, 9999px);
+  object-fit: cover;
+  border: 1px solid var(--rule, #27272a);
+  background-color: var(--surface, #18181b);
+}
+
+.critique-author-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #f4f4f5);
+}
+
+/* Critic Badge Pill (Computed from 5+ helpful marks across all posts) */
+.critic-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  background-color: var(--surface, #18181b);
+  border: 1px solid #eab308;
+  color: #eab308;
+  border-radius: var(--radius-xs, 2px);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Helpful Button Toggle (Owner) / Tag (Others) */
+.critique-helpful-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background-color: transparent;
+  border: 1px solid var(--rule, #27272a);
+  border-radius: var(--radius-xs, 2px);
+  color: var(--text-2, #a1a1aa);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.critique-helpful-btn:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+.critique-helpful-btn.is-helpful {
+  background-color: #22c55e;
+  border-color: #22c55e;
+  color: #000000;
+  font-weight: 700;
+}
+
+.critique-helpful-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background-color: var(--surface, #18181b);
+  border: 1px solid #22c55e;
+  border-radius: var(--radius-xs, 2px);
+  color: #22c55e;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Two Structured Blocks: 3px left border */
+.critique-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.critique-block {
+  padding: 6px 10px;
+  background-color: var(--surface, #18181b);
+  border-radius: var(--radius-xs, 2px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.critique-block--works {
+  border-left: 3px solid #22c55e; /* Success color */
+}
+
+.critique-block--try {
+  border-left: 3px solid #eab308; /* Warning color */
+}
+
+.critique-block-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-2, #a1a1aa); /* Neutral text for contrast */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.critique-block-content {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text, #f4f4f5);
+  margin: 0;
+  word-break: break-word;
+}
+
+.critique-empty-hint {
+  font-size: 12px;
+  color: var(--text-3, #71717a);
+  text-align: center;
+  margin: 8px 0;
+}

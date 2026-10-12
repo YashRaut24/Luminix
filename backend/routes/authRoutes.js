@@ -13,6 +13,7 @@ const CollabListing = require("../models/CollabListing");
 const WeeklyChallenge = require("../models/WeeklyChallenge");
 const Circle = require("../models/Circle");
 const CommissionInquiry = require("../models/CommissionInquiry");
+const Critique = require("../models/Critique");
 const aiService = require("../services/aiService");
 const paletteService = require("../services/paletteService");
 const { ensureWeeklyChallenge } = require("../services/challengeService");
@@ -141,6 +142,8 @@ router.post("/post", upload.any(), async (req, res) => {
       audio_title,
       needs_critique,
       critique_question,
+      critiqueOpen,
+      critiqueQuestion,
       co_author_username,
       palette,
       mood_calm_energetic,
@@ -288,8 +291,10 @@ router.post("/post", upload.any(), async (req, res) => {
       is_scheduled: isScheduled,
       scheduled_for: scheduledDate,
       published: isPublished,
-      needs_critique: needs_critique === "true" || needs_critique === true,
-      critique_question: critique_question || "",
+      needs_critique: needs_critique === "true" || needs_critique === true || critiqueOpen === "true" || critiqueOpen === true,
+      critiqueOpen: needs_critique === "true" || needs_critique === true || critiqueOpen === "true" || critiqueOpen === true,
+      critique_question: critiqueQuestion || critique_question || "",
+      critiqueQuestion: critiqueQuestion || critique_question || "",
       challenge_id: challenge_id || null,
       circle_id: circle_id || null,
       co_authors: []
@@ -563,111 +568,329 @@ router.post("/series/progress", async (req, res) => {
 // FEEDBACK & COLLABORATION ROUTES
 // ==========================================
 
-// 1. Submit Structured Critique ("What works" / "What to try")
-router.post("/posts/:id/critique", authMiddleware, async (req, res) => {
-  try {
-    const { what_works, what_to_try } = req.body;
-    if (!what_works?.trim() || !what_to_try?.trim()) {
-      return res.status(400).json({ message: "Both 'What works' and 'What to try' are required" });
-    }
+// ==========================================
+// STRUCTURED CRITIQUE & REVIEW SUITE
+// ==========================================
 
+// Helper to compute Critic Badge (>= 5 helpful marks across all posts)
+async function getCriticAuthorSet(authorIds = []) {
+  try {
+    const match = { helpful: true };
+    if (authorIds.length > 0) {
+      match.authorId = { $in: authorIds.map((id) => new mongoose.Types.ObjectId(id)) };
+    }
+    const results = await Critique.aggregate([
+      { $match: match },
+      { $group: { _id: "$authorId", count: { $sum: 1 } } },
+      { $match: { count: { $gte: 5 } } },
+    ]);
+    return new Set(results.map((r) => String(r._id)));
+  } catch (e) {
+    console.error("Critic badge aggregation error:", e);
+    return new Set();
+  }
+}
+
+// 1. GET /posts/:id/critiques - List critiques, sorted helpful-first, with permissions (isOwner, mine)
+router.get("/posts/:id/critiques", async (req, res) => {
+  try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    // Determine current user from cookie or authorization header
+    let currentUserId = null;
+    const token = req.cookies.luminix_token || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUserId = decoded.id;
+      } catch (e) {}
+    }
+
+    const isOwner = Boolean(currentUserId && String(post.author) === String(currentUserId));
+    const critiqueOpen = Boolean(post.critiqueOpen ?? post.needs_critique);
+    const critiqueQuestion = post.critiqueQuestion || post.critique_question || "";
+
+    // Fetch critiques from Critique collection, sorted helpful first
+    let critiques = await Critique.find({ postId: post._id })
+      .sort({ helpful: -1, createdAt: -1 })
+      .lean();
+
+    // Migrate any legacy embedded post.critiques if collection is empty
+    if (critiques.length === 0 && post.critiques && post.critiques.length > 0) {
+      for (const leg of post.critiques) {
+        if (leg.author) {
+          try {
+            await Critique.create({
+              postId: post._id,
+              authorId: leg.author,
+              authorName: leg.username || "Creator",
+              authorAvatar: leg.profile_picture || "",
+              works: leg.what_works || leg.works || "Great composition and color balance.",
+              tryNext: leg.what_to_try || leg.tryNext || "Consider adjusting contrast in shadows.",
+              helpful: Boolean(leg.is_helpful || leg.helpful),
+              createdAt: leg.created_at || new Date(),
+            });
+          } catch (migErr) {}
+        }
+      }
+      critiques = await Critique.find({ postId: post._id })
+        .sort({ helpful: -1, createdAt: -1 })
+        .lean();
+    }
+
+    // Compute Critic badges across all authors in the list
+    const authorIds = critiques.map((c) => c.authorId);
+    const criticSet = await getCriticAuthorSet(authorIds);
+
+    let mine = null;
+    const formattedCritiques = critiques.map((c) => {
+      const isMine = Boolean(currentUserId && String(c.authorId) === String(currentUserId));
+      const formatted = {
+        _id: c._id,
+        postId: c.postId,
+        authorId: c.authorId,
+        authorName: c.authorName,
+        authorAvatar: c.authorAvatar,
+        works: c.works,
+        tryNext: c.tryNext,
+        helpful: Boolean(c.helpful),
+        createdAt: c.createdAt,
+        isCritic: criticSet.has(String(c.authorId)),
+      };
+      if (isMine) mine = formatted;
+      return formatted;
+    });
+
+    res.status(200).json({
+      critiqueOpen,
+      critiqueQuestion,
+      isOwner,
+      canCritique: Boolean(currentUserId && !isOwner && critiqueOpen && !mine),
+      mine,
+      critiques: formattedCritiques,
+    });
+  } catch (err) {
+    console.error("Critique fetch error:", err);
+    res.status(500).json({ message: "Failed to load critiques" });
+  }
+});
+
+// Also alias GET /posts/:id/critique to the same handler
+router.get("/posts/:id/critique", async (req, res) => {
+  req.url = `/posts/${req.params.id}/critiques`;
+  router.handle(req, res);
+});
+
+// 2. POST /posts/:id/critique/toggle - Owner opens or closes critique (min 5 chars question)
+router.post("/posts/:id/critique/toggle", authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    // RULE: Only the owner opens or closes critique
+    if (String(post.author) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Only the post's owner can open or close critique." });
+    }
+
+    const { open, question } = req.body;
+    const shouldOpen = open !== undefined ? Boolean(open) : !(post.critiqueOpen ?? post.needs_critique);
+
+    if (shouldOpen) {
+      const q = (question || req.body.critiqueQuestion || "").trim();
+      if (!q || q.length < 5) {
+        return res.status(400).json({ message: "Please provide a specific focus question of at least 5 characters." });
+      }
+      if (q.length > 200) {
+        return res.status(400).json({ message: "The question must be 200 characters or fewer." });
+      }
+      post.critiqueOpen = true;
+      post.critiqueQuestion = q;
+      post.needs_critique = true;
+      post.critique_question = q;
+    } else {
+      post.critiqueOpen = false;
+      post.needs_critique = false;
+      // Closing critique keeps existing critiques visible and preserves the question
+    }
+
+    await post.save();
+
+    res.status(200).json({
+      message: post.critiqueOpen ? "Critique is now open for this post." : "Critique has been closed.",
+      critiqueOpen: post.critiqueOpen,
+      critiqueQuestion: post.critiqueQuestion,
+    });
+  } catch (err) {
+    console.error("Critique toggle error:", err);
+    res.status(500).json({ message: "Failed to update critique status." });
+  }
+});
+
+// 3. POST /posts/:id/critique - Reviewer submits structured critique (works & tryNext, 10-500 chars)
+router.post("/posts/:id/critique", authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    // RULE: Owners cannot critique their own posts
+    if (String(post.author) === String(req.user.id)) {
+      return res.status(403).json({ message: "Owners cannot critique their own posts." });
+    }
+
+    // RULE: Submitting requires the post to be open
+    const isOpen = Boolean(post.critiqueOpen ?? post.needs_critique);
+    if (!isOpen) {
+      return res.status(400).json({ message: "Critique is closed for this post." });
+    }
+
+    const works = (req.body.works || req.body.what_works || "").trim();
+    const tryNext = (req.body.tryNext || req.body.what_to_try || "").trim();
+
+    if (works.length < 10 || works.length > 500) {
+      return res.status(400).json({ message: "'What works' must be between 10 and 500 characters." });
+    }
+    if (tryNext.length < 10 || tryNext.length > 500) {
+      return res.status(400).json({ message: "'What to try next' must be between 10 and 500 characters." });
+    }
+
+    // EDGE CASE: Duplicate submission returns 409 with a clear message
+    const existing = await Critique.findOne({ postId: post._id, authorId: req.user.id });
+    if (existing) {
+      return res.status(409).json({ message: "You have already submitted a critique for this post." });
+    }
+
     const user = await User.findById(req.user.id);
-    const newCritique = {
+    let newCritique;
+    try {
+      newCritique = await Critique.create({
+        postId: post._id,
+        authorId: user._id,
+        authorName: user.name,
+        authorAvatar: user.profileImage || "",
+        works,
+        tryNext,
+        helpful: false,
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        return res.status(409).json({ message: "You have already submitted a critique for this post." });
+      }
+      throw createErr;
+    }
+
+    // Keep post.critiques in sync
+    post.critiques.push({
       author: user._id,
       username: user.name,
       profile_picture: user.profileImage || "",
-      what_works: what_works.trim(),
-      what_to_try: what_to_try.trim(),
+      what_works: works,
+      what_to_try: tryNext,
       is_helpful: false,
-      created_at: new Date()
-    };
-
-    post.critiques.push(newCritique);
+      created_at: new Date(),
+    });
     await post.save();
 
-    const createdCritique = post.critiques[post.critiques.length - 1];
+    // Check if author has Critic badge
+    const criticSet = await getCriticAuthorSet([user._id]);
+    const formatted = {
+      ...newCritique.toObject(),
+      isCritic: criticSet.has(String(user._id)),
+    };
 
     const io = req.app.get("io");
     if (io) {
       io.emit("post_critique_added", {
         postId: post._id,
-        critique: createdCritique
+        critique: formatted,
       });
 
-      if (String(post.author) !== String(user._id)) {
-        io.to(`user_${post.author}`).emit("user_notification", {
-          type: "critique",
-          title: "New Structured Critique 🎯",
-          message: `@${user.name} reviewed: "${post.critique_question || "Your artwork"}"`,
-          avatar: user.profileImage || "",
-          postId: post._id,
-          timestamp: new Date()
-        });
-      }
+      io.to(`user_${post.author}`).emit("user_notification", {
+        type: "critique",
+        title: "New Structured Critique 🎯",
+        message: `@${user.name} reviewed: "${post.critiqueQuestion || post.critique_question || "Your artwork"}"`,
+        avatar: user.profileImage || "",
+        postId: post._id,
+        timestamp: new Date(),
+      });
     }
 
     res.status(201).json({
-      message: "Critique submitted successfully",
-      critique: createdCritique,
-      critiques: post.critiques
+      message: "Critique submitted successfully.",
+      critique: formatted,
     });
   } catch (err) {
-    console.error("Critique error:", err);
-    res.status(500).json({ message: "Failed to submit critique" });
+    console.error("Critique submission error:", err);
+    res.status(500).json({ message: "Failed to submit critique." });
   }
 });
 
-// 2. Mark Critique as Helpful (Awards "Critic" Badge)
+// 4. POST /posts/:id/critique/:critiqueId/helpful - Owner toggles "helpful" (Critic badge computed at 5)
 router.post("/posts/:id/critique/:critiqueId/helpful", authMiddleware, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    // RULE: Only the owner toggles "helpful"
     if (String(post.author) !== String(req.user.id)) {
-      return res.status(403).json({ message: "Only the post author can mark feedback as helpful" });
+      return res.status(403).json({ message: "Only the post owner can mark a critique as helpful." });
     }
 
-    const critique = post.critiques.id(req.params.critiqueId);
-    if (!critique) return res.status(404).json({ message: "Critique not found" });
+    // Find critique in collection (or fallback to embedded)
+    let critique = await Critique.findById(req.params.critiqueId);
+    if (!critique) {
+      const embedded = post.critiques.id(req.params.critiqueId);
+      if (embedded && embedded.author) {
+        critique = await Critique.findOne({ postId: post._id, authorId: embedded.author });
+      }
+    }
+    if (!critique) return res.status(404).json({ message: "Critique not found." });
 
-    if (critique.is_helpful) {
-      return res.status(200).json({ message: "Already marked helpful", critique });
+    // Toggle helpful state
+    critique.helpful = !critique.helpful;
+    await critique.save();
+
+    // Sync embedded if present
+    const legCrit = post.critiques.id(req.params.critiqueId);
+    if (legCrit) {
+      legCrit.is_helpful = critique.helpful;
+      await post.save();
     }
 
-    critique.is_helpful = true;
-    await post.save();
+    // Compute Critic badge via aggregation (helpful marks >= 5)
+    const authorHelpfulCount = await Critique.countDocuments({
+      authorId: critique.authorId,
+      helpful: true,
+    });
+    const hasCriticBadge = authorHelpfulCount >= 5;
 
-    // Increment reviewer's Critic Badges counter
-    let reviewerBadges = 1;
-    if (critique.author) {
-      const reviewer = await User.findByIdAndUpdate(
-        critique.author,
-        { $inc: { criticBadges: 1 } },
-        { new: true }
-      );
-      if (reviewer) reviewerBadges = reviewer.criticBadges;
-
+    // Notify author if marked helpful
+    if (critique.helpful) {
       const io = req.app.get("io");
       if (io) {
-        io.to(`user_${critique.author}`).emit("user_notification", {
+        io.to(`user_${critique.authorId}`).emit("user_notification", {
           type: "critic_badge",
-          title: "Critic Badge Earned! ⭐",
-          message: `The creator marked your feedback as helpful! You now have ${reviewerBadges} Critic badge(s).`,
-          timestamp: new Date()
+          title: hasCriticBadge ? "Critic Badge Unlocked! ⭐" : "Feedback Marked Helpful! 💡",
+          message: hasCriticBadge
+            ? "You earned the Critic badge for providing 5+ helpful critiques!"
+            : `The creator found your critique helpful! (${authorHelpfulCount}/5 towards Critic badge)`,
+          timestamp: new Date(),
         });
       }
     }
 
     res.status(200).json({
-      message: "Critique marked as helpful! Critic badge awarded.",
-      critique
+      message: critique.helpful ? "Critique marked as helpful!" : "Helpful mark removed.",
+      critique: {
+        ...critique.toObject(),
+        isCritic: hasCriticBadge,
+      },
+      helpfulCount: authorHelpfulCount,
+      hasCriticBadge,
     });
   } catch (err) {
-    console.error("Helpful critique error:", err);
-    res.status(500).json({ message: "Failed to update critique" });
+    console.error("Helpful critique toggle error:", err);
+    res.status(500).json({ message: "Failed to update helpful status." });
   }
 });
 
