@@ -17,6 +17,7 @@ const Critique = require("../models/Critique");
 const aiService = require("../services/aiService");
 const paletteService = require("../services/paletteService");
 const { ensureWeeklyChallenge } = require("../services/challengeService");
+const shareCardService = require("../services/shareCardService");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -3106,130 +3107,140 @@ function escapeXml(unsafe) {
 }
 
 // ----------------------------------------------------------------------------
-// 1. AUTO SHARE CARDS
+// 1. AUTO SHARE CARDS (Open Graph Preview Suite with Sharp 1200x630 PNG)
 // ----------------------------------------------------------------------------
 
-// GET /posts/:id/share-card - Generates a 1200x630 OpenGraph share card image
+// 1. GET /share/:id/card.png - Public OpenGraph 1200x630 preview PNG image (sharp compositing + disk cache)
+router.get("/share/:id/card.png", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Security: Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).send("Not found");
+    }
+
+    const post = await Post.findById(id).populate("author", "name username");
+    if (!post) {
+      return res.status(404).send("Not found");
+    }
+
+    // Security: Only public posts have a share page or card. Private posts return 404
+    if ((post.is_scheduled && !post.published) || post.circle_id) {
+      return res.status(404).send("Not found");
+    }
+
+    const pngBuffer = await shareCardService.getOrGenerateShareCard(post);
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(pngBuffer);
+  } catch (err) {
+    console.error("Error generating share card image:", err);
+    res.status(500).send("Failed to generate preview image");
+  }
+});
+
+// Legacy / alias route: GET /posts/:id/share-card
 router.get("/posts/:id/share-card", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate("author", "name email profileImage lumiTag open_for_commissions");
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).send("Not found");
+    }
+
+    const post = await Post.findById(id).populate("author", "name username");
+    if (!post || (post.is_scheduled && !post.published) || post.circle_id) {
+      return res.status(404).send("Not found");
+    }
+
+    const pngBuffer = await shareCardService.getOrGenerateShareCard(post);
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(pngBuffer);
+  } catch (err) {
+    res.status(500).send("Failed to generate share card");
+  }
+});
+
+// 2. GET /share/:id - Server-rendered public HTML page with Open Graph and Twitter tags + redirect
+router.get("/share/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Security: Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).redirect("http://localhost:5173/feed");
+    }
+
+    const post = await Post.findById(id).populate("author", "name username");
     if (!post) {
-      return res.status(404).send("Post not found");
+      return res.status(404).redirect("http://localhost:5173/feed");
+    }
+
+    // Security: Only public posts have a share page or card. Private posts return 404 or redirect home
+    if ((post.is_scheduled && !post.published) || post.circle_id) {
+      return res.status(404).redirect("http://localhost:5173/feed");
     }
 
     const host = req.get("host") || "localhost:9000";
     const protocol = req.protocol || "http";
     const serverUrl = `${protocol}://${host}`;
+    const cardUrl = `${serverUrl}/share/${post._id}/card.png`;
+    const shareUrl = `${serverUrl}/share/${post._id}`;
+    const appUrl = `http://localhost:5173/feed?postId=${post._id}`;
 
-    let imgUrl = post.file_url;
-    if (imgUrl && !imgUrl.startsWith("http")) {
-      imgUrl = `${serverUrl}${imgUrl}`;
-    }
-
-    let avatarUrl = post.author?.profileImage;
-    if (avatarUrl && !avatarUrl.startsWith("http")) {
-      avatarUrl = `${serverUrl}${avatarUrl}`;
-    }
-
-    const title = escapeXml(post.caption ? (post.caption.length > 55 ? post.caption.slice(0, 55) + "..." : post.caption) : post.file_name || "Creative Proof");
-    const authorName = escapeXml(post.author?.name || post.username || "Creator");
-    const authorTag = escapeXml(post.author?.lumiTag || `@${authorName.toLowerCase().replace(/\s+/g, "")}`);
-    const stampCount = post.likes ? post.likes.length : 0;
-    const remixCount = post.remix_count || 0;
-    const toolsStr = escapeXml((post.tools && post.tools.length > 0) ? post.tools.slice(0, 2).join(", ") : "Digital");
-    const isOpenForCommissions = !!post.author?.open_for_commissions;
-
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
-  <!-- Solid Darkroom Canvas Background -->
-  <rect width="1200" height="630" fill="#090c10" />
-
-  <!-- Inner Workspace Frame Border -->
-  <rect x="24" y="24" width="1152" height="582" rx="8" fill="#0e131b" stroke="#232836" stroke-width="2" />
-
-  <!-- Left Artwork Plate -->
-  <rect x="48" y="48" width="534" height="534" rx="4" fill="#040608" stroke="#1b212d" stroke-width="1" />
-  <image href="${escapeXml(imgUrl)}" x="49" y="49" width="532" height="532" preserveAspectRatio="xMidYMid slice" />
-
-  <!-- Top Spine Mark -->
-  <rect x="620" y="48" width="220" height="32" rx="4" fill="#161b26" stroke="#6366f1" stroke-width="1.5" />
-  <text x="634" y="69" fill="#6366f1" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">LUMINIX // DARKROOM</text>
-
-  <!-- Frame Title / Caption -->
-  <text x="620" y="145" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="34" font-weight="700">${title}</text>
-
-  <!-- Creator Identification Card -->
-  <g transform="translate(620, 200)">
-    <rect width="510" height="76" rx="4" fill="#141923" stroke="#232836" stroke-width="1" />
-    <circle cx="40" cy="38" r="24" fill="#242c3d" stroke="#6366f1" stroke-width="1" />
-    ${avatarUrl ? `<image href="${escapeXml(avatarUrl)}" x="16" y="14" width="48" height="48" clip-path="circle(24px at 24px 24px)" preserveAspectRatio="xMidYMid slice" />` : ""}
-    <text x="76" y="32" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="18" font-weight="600">${authorName}</text>
-    <text x="76" y="54" fill="#94a3b8" font-family="monospace" font-size="13">${authorTag}</text>
-  </g>
-
-  <!-- Frame Metadata & Tool Badges -->
-  <text x="620" y="330" fill="#94a3b8" font-family="monospace" font-size="14" letter-spacing="0.5">PROOF METRICS: ★ ${stampCount} STAMPS  •  ↻ ${remixCount} REMIXES</text>
-  <text x="620" y="365" fill="#64748b" font-family="monospace" font-size="13">CRAFTED WITH: ${toolsStr.toUpperCase()}</text>
-
-  <!-- Commissions Status Indicator -->
-  ${
-    isOpenForCommissions
-      ? `<g transform="translate(620, 410)">
-          <rect width="260" height="36" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
-          <circle cx="18" cy="18" r="4" fill="#34d399" />
-          <text x="32" y="23" fill="#6ee7b7" font-family="monospace" font-size="12" font-weight="700" letter-spacing="1">OPEN FOR COMMISSIONS</text>
-        </g>`
-      : ""
-  }
-
-  <!-- Footer Public Web Backlink -->
-  <line x1="620" y1="520" x2="1130" y2="520" stroke="#232836" stroke-width="1" />
-  <text x="620" y="555" fill="#64748b" font-family="monospace" font-size="13">VIEW PROOF WORKSPACE: luminix.art/portfolio/${authorTag}</text>
-</svg>`;
-
-    res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=86400");
-    res.send(svg);
-  } catch (err) {
-    console.error("Share card error:", err);
-    res.status(500).send("Failed to generate share card");
-  }
-});
-
-// GET /share/:id - HTML page with full OpenGraph / Twitter metadata
-router.get("/share/:id", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id).populate("author", "name lumiTag");
-    if (!post) return res.status(404).send("Not found");
-
-    const host = req.get("host") || "localhost:9000";
-    const protocol = req.protocol || "http";
-    const shareCardUrl = `${protocol}://${host}/posts/${post._id}/share-card`;
-    const appUrl = `http://localhost:5173/feed`;
+    // Security: Escape user inputs for HTML/XML
+    const caption = shareCardService.escapeXml(post.caption ? post.caption.trim() : "Creative Proof");
+    const creator = shareCardService.escapeXml(post.username || post.author?.username || post.author?.name || "creator");
 
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>${escapeXml(post.caption || "Artwork")} by ${escapeXml(post.author?.name || "Creator")} // Luminix</title>
-  <meta name="description" content="View artwork proof, process timelapse and interactive color palette on Luminix Darkroom." />
-  <meta property="og:title" content="${escapeXml(post.caption || "Proof Frame")} // Luminix" />
-  <meta property="og:description" content="Created by ${escapeXml(post.author?.name || "Creator")}. Open in Luminix Darkroom workspace." />
-  <meta property="og:image" content="${shareCardUrl}" />
+  <title>${caption} by @${creator} // Luminix</title>
+  <meta name="description" content="View artwork proof, process timelapse, and dominant color palette on Luminix." />
+
+  <!-- Open Graph Protocol (WhatsApp, Slack, LinkedIn, Facebook) -->
+  <meta property="og:site_name" content="Luminix" />
   <meta property="og:type" content="article" />
+  <meta property="og:url" content="${shareUrl}" />
+  <meta property="og:title" content="${caption} by @${creator} // Luminix" />
+  <meta property="og:description" content="View artwork proof, process timelapse, and dominant color palette on Luminix Darkroom." />
+  <meta property="og:image" content="${cardUrl}" />
+  <meta property="og:image:secure_url" content="${cardUrl}" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeXml(post.caption || "Proof Frame")} // Luminix" />
-  <meta name="twitter:image" content="${shareCardUrl}" />
+  <meta name="twitter:site" content="@luminix" />
+  <meta name="twitter:title" content="${caption} by @${creator} // Luminix" />
+  <meta name="twitter:description" content="View artwork proof, process timelapse, and dominant color palette on Luminix Darkroom." />
+  <meta name="twitter:image" content="${cardUrl}" />
+
+  <!-- Humans redirect into the app via meta refresh & JS replace -->
   <meta http-equiv="refresh" content="0; url=${appUrl}" />
+  <script>
+    if (typeof window !== "undefined") {
+      window.location.replace("${appUrl}");
+    }
+  </script>
 </head>
-<body style="background:#090c10;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
-  <p>Redirecting to Luminix Darkroom workspace...</p>
+<body style="background:#09090b;color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <div style="text-align:center;padding:24px;border:1px solid #27272a;background:#18181b;border-radius:4px;max-width:400px;">
+    <p style="font-family:monospace;font-size:12px;color:#6366f1;font-weight:700;letter-spacing:1px;margin:0 0 8px 0;">LUMINIX DARKROOM</p>
+    <p style="font-size:14px;color:#a1a1aa;margin:0;">Opening "${caption}"...</p>
+    <p style="font-size:12px;color:#71717a;margin:12px 0 0 0;">If not redirected automatically, <a href="${appUrl}" style="color:#6366f1;text-decoration:none;">click here</a>.</p>
+  </div>
 </body>
 </html>`;
 
-    res.setHeader("Content-Type", "text/html");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   } catch (err) {
+    console.error("Share page error:", err);
     res.status(500).send("Share page error");
   }
 });

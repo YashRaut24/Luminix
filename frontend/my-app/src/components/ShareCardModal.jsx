@@ -10,8 +10,8 @@ export default function ShareCardModal({ isOpen, onClose, post }) {
   if (!isOpen || !post) return null;
 
   const serverUrl = "http://localhost:9000";
-  const shareCardUrl = `${serverUrl}/posts/${post._id}/share-card`;
-  const shareWebUrl = `${window.location.origin}/share/${post._id}`;
+  const shareCardUrl = `${serverUrl}/share/${post._id}/card.png`;
+  const shareWebUrl = `${serverUrl}/share/${post._id}`;
   const embedUrl = `${window.location.origin}/embed/frame/${post._id}`;
 
   const creatorName = post.author?.name || post.username || "Creator";
@@ -39,7 +39,7 @@ export default function ShareCardModal({ isOpen, onClose, post }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `luminix-${post._id}-share-card.svg`;
+      a.download = `luminix-${post._id}-share-card.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

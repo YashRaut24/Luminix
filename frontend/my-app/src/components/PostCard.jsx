@@ -106,6 +106,8 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
 
   // Growth & Sharing States
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
+  const shareToastTimeout = useRef(null);
   const [showCommissionModal, setShowCommissionModal] = useState(false);
   const [showAltPopover, setShowAltPopover] = useState(false);
 
@@ -302,6 +304,40 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
         },
       },
     });
+  };
+
+  const handleShareClick = async (e) => {
+    e.stopPropagation();
+    const shareUrl = `http://localhost:9000/share/${post._id}`;
+    const shareTitle = `${post.caption || "Proof Frame"} by @${post.username || "creator"} // Luminix`;
+    const shareText = `Check out "${post.caption || "artwork"}" by @${post.username || "creator"} on Luminix Darkroom:`;
+
+    // 1. Web Share API when available (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err.name === "AbortError") return; // User closed native share sheet
+      }
+    }
+
+    // 2. Fallback: Copy link and show toast
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowShareToast(true);
+      if (shareToastTimeout.current) clearTimeout(shareToastTimeout.current);
+      shareToastTimeout.current = setTimeout(() => {
+        setShowShareToast(false);
+      }, 2500);
+    } catch (err) {
+      // In case clipboard permissions are blocked, open share modal
+      setShowShareModal(true);
+    }
   };
 
   const handleMediaClick = (e) => {
@@ -835,10 +871,10 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
           <button
             type="button"
             className="darkroom-frame__btn"
-            onClick={() => setShowShareModal(true)}
-            title="Generate Auto Share Card and Embed Code"
+            onClick={handleShareClick}
+            title="Share Frame (Web Share API on mobile, Copy Link with preview)"
           >
-            SHARE
+            <FiShare2 style={{ marginRight: "4px" }} /> SHARE
           </button>
 
           {isAuthor ? (
@@ -1162,6 +1198,19 @@ function PostCard({ post, index = 0, isSelected, onSelect, onAddPin, onSelectCol
         onClose={() => setShowCommissionModal(false)}
         creator={post.author || { _id: post.author, name: post.username }}
       />
+
+      {/* "Link copied" toast (role="status", sits above mobile bottom bar) */}
+      {showShareToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="share-copied-toast"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <FiCheck style={{ color: "var(--accent)" }} />
+          <span>Link copied to clipboard</span>
+        </div>
+      )}
     </>
   );
 }
